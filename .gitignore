@@ -1,2 +1,2 @@
 # Environment variables,like api keys should be ignored 
-./server/.env
+.server/.env
