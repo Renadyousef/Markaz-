@@ -2,3 +2,5 @@
 .src/server/.env
 .src/server/src/config/serviceAccount.json"src/server/src/config/serviceAccount.json" 
 "src/server/src/config/serviceAccount.json" 
+src/server/src/config/serviceAccount.json 
+src/server/.env 
