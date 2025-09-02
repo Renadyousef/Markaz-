@@ -1,0 +1,2 @@
+# Environment variables,like api keys should be ignored 
+.env
