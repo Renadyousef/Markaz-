@@ -1,0 +1,14 @@
+/*Meant for app-level or shared component styles. our css*/
+
+/*Lnading page componenets styles*/
+.btn.custom-signin,
+.btn.custom-signup {
+  background-color: orange;
+  color: white;
+  border: none;
+}
+
+.btn.custom-signin:hover,
+.btn.custom-signup:hover {
+  background-color: darkorange;
+}
