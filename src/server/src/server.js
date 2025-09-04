@@ -16,7 +16,6 @@ const app=express()
 const PORT=5000;
 
 
-
 //app routes
 app.post('/',(req,res)=>{
     res.send("welcome abroed")
