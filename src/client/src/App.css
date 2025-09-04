@@ -12,3 +12,78 @@
 .btn.custom-signup:hover {
   background-color: darkorange;
 }
+
+/*Sign up css*/
+/* Base styles (applied on all screens) */
+.sign-up-container {
+  width: 100%;
+  max-width: 360px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sign-up-container label {
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  color: #333;
+  align-self: flex-start;
+}
+
+.sign-up-container input[type="text"],
+.sign-up-container input[type="email"],
+.sign-up-container input[type="password"] {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border 0.3s, box-shadow 0.3s;
+}
+
+.sign-up-container input[type="text"]:focus,
+.sign-up-container input[type="email"]:focus,
+.sign-up-container input[type="password"]:focus {
+  border-color: #e5b046;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+
+.sign-up-container input[type="submit"] {
+  padding: 0.7rem;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: #fda838;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.sign-up-container input[type="submit"]:hover {
+  background-color: #f98900;
+}
+
+/* Small screens tweaks:responsive design */
+@media (max-width: 400px) {
+  .sign-up-container {
+    max-width: 90%;
+    padding: 1.5rem;
+  }
+  
+  .sign-up-container input[type="submit"] {
+    font-size: 0.95rem;
+  }
+}
+.sign-up-container label.required::after {
+  content: "*";
+  color: red;
+  margin-left: 2px;
+}
+
+
