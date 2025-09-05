@@ -31,6 +31,8 @@ export default function SignIn({ setToken }) { // receive setToken from App.jsx
       console.log(res.data);
 
       // 4. Save JWT token coming from backend so we can remember user in client
+      localStorage.removeItem("token");
+
       const token = res.data.token;
       localStorage.setItem("token", token);
 
