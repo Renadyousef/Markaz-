@@ -1,6 +1,6 @@
 //this is for routing incoming requests to accept them and point them to my handelr function in controllers
 const express = require("express");
-const { signup} = require("../controllers/authController");
+const { signup,login} = require("../controllers/authController");
 
 const router = express.Router();
 
@@ -8,6 +8,6 @@ const router = express.Router();
 router.post("/signup", signup); // React axios.post(.../signup) passing function from controllers
 
 // POST /auth/login
-//router.post("/login", login);
+router.post("/login", login);
 
 module.exports = router;

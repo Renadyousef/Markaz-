@@ -1,4 +1,4 @@
-/** front end validations
+/** front end validations validation.js 
  * 
  1. Password Strength
 
@@ -21,5 +21,10 @@ Ensure names contain only letters (Arabic letters)
 export function validateName(name) {
   const re = /^[\u0621-\u064A\s]+$/; // Arabic letters and spaces
   return re.test(name);
+}
+
+export function validateEmail(email) {
+  const re = /\S+@\S+\.\S+/;
+  return re.test(email);
 }
 

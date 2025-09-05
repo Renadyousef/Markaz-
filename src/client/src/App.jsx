@@ -1,12 +1,18 @@
-import './App.css'
-//here is where u render all components
-//for example in the componenentes u need auth serivce below:
-import {auth} from './config/firebase-config'
-import LandingPage from './components/landingPage/LandingPage'
-import SignUp from './components/auth/SignUp'
-import SignIn from './components/auth/SignIn'
+import './App.css';
+import { useState } from 'react'; // <--- added
+import LandingPage from './components/landingPage/LandingPage';
+import SignUp from './components/auth/SignUp';
+import SignIn from './components/auth/SignIn';
+import HomePage from './components/homePage/HomePage'; // welcome page
+
 function App() {
-  return <SignUp/>
+  const [token, setToken] = useState(localStorage.getItem("token") || null);
+
+  return token ? (
+    <HomePage token={token} />  // show home if logged in
+  ) : (
+    <SignIn setToken={setToken} /> // show login if not
+  );
 }
 
-export default App
+export default App;
