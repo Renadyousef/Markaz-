@@ -52,7 +52,7 @@ const login = async (req, res) => {
     const token = jwt.sign(
       { id: userDoc.id, email: user.email }, // payload
       JWT_SECRET, // secret
-      { expiresIn: "1h" } // token expires in 1 hour
+    // token expires in 1 hour:not anymore since its not security sesntive system
     );
 
     // 4. login successful and we send *JWT to front end

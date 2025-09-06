@@ -18,6 +18,11 @@ function verifyToken(req, res, next) {
     next();
   } catch (err) {
     console.log("Token verification failed:", err.message); // DEBUG
+
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({ msg: "Unauthorized: Token expired" });
+    }
+
     return res.status(403).json({ msg: "Forbidden: Invalid token" });
   }
 }

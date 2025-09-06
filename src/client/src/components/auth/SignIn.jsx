@@ -2,7 +2,7 @@ import { validatePassword, validateEmail } from "./validation";
 import { useState } from "react";
 import axios from "axios";
 
-export default function SignIn({ setToken }) { // receive setToken from App.jsx
+export default function SignIn({ setToken }) { // receive setToken state set from from App.jsx
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (event) => {
