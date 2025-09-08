@@ -2,7 +2,7 @@ import { useState } from "react";
 import { validatePassword, validateName } from "./validation";
 import axios from "axios";
 
-export default function SignUp() {
+export default function SignUp({ setToken }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [fieldMessage, setFieldMessage] = useState({
     first_name: "",
@@ -46,9 +46,23 @@ export default function SignUp() {
       email,
       password,
     });
+    
+    //set token in LS
+     // 1. get the token from response
+  const token = res.data.token;
+  if (token) {
+    // 2. save token in localStorage
+    localStorage.setItem("token", token);
+    setToken(token)
+    alert("تم إنشاء الحساب بنجاح! سيتم تحويلك إلى الصفحة الرئيسية.");
+  }
+else{
+   alert("تم إنشاء الحساب بنجاح! الرجاء تسجيل الدخول الآن.");
+
+}
 
     console.log(res.data); // should be { msg: "User created successfully" }
-    alert("تم إنشاء الحساب بنجاح!");
+   
   } catch (error) {
     console.error(error.response?.data || error.message);
     setErrorMessage(error.response?.data?.msg || "حدث خطأ أثناء إنشاء الحساب");
