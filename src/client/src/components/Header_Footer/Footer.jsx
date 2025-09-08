@@ -3,7 +3,7 @@ export default function Footer() {
     <footer className="mkzFooter" dir="rtl">
       <div className="mkzFooter__top">
         <a href="#" className="mkzBrand">
-          <img src="/markaz-logo.png" alt="شعار مركز" />
+          <img src="/logo.png" alt="شعار مركز" />
           <span>مركز</span>
         </a>
       </div>
@@ -11,7 +11,6 @@ export default function Footer() {
       <ul className="mkzLinks">
         <li><a href="#">عن المشروع</a></li>
         <li><a href="#">سياسة الخصوصية</a></li>
-        <li><a href="#">التراخيص</a></li>
         <li><a href="#">تواصل معنا</a></li>
       </ul>
 

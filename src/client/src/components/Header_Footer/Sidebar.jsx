@@ -24,7 +24,7 @@ export default function Sidebar({ open, onClose, active, onSelect }) {
         <div className="sideHead">
           <div className="sideTitle">
             <div className="titleLogo">
-              <img src="/markaz-logo.png" alt="Logo" draggable="false" />
+              <img src="/logo.png" alt="Logo" draggable="false" />
             </div>
           </div>
           <button className="iconBtn closeBtn" onClick={onClose} aria-label="إغلاق">
