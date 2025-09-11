@@ -26,7 +26,16 @@ const signup = async (req, res) => {
         password: hashedPassword
     });
 
-    res.status(201).json({ msg: "تم إنشاء الحساب بنجاح" });
+// After adding the new user
+const snapshotAfterAdd = await Students.where("email", "==", email).get();
+const newUserDoc = snapshotAfterAdd.docs[0];
+
+const token = jwt.sign(
+  { id: newUserDoc.id, email: newUserDoc.data().email },
+  JWT_SECRET
+);
+
+res.status(201).json({ msg: "تم إنشاء الحساب بنجاح", token });
   } catch (error) {
     res.status(500).json({ msg: "فشل إنشاء الحساب", error: error.message });
   }
