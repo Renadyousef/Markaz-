@@ -137,29 +137,27 @@
 
 /* Password field wrapper */
 .password-wrapper {
-  display: flex;
-  align-items: center;
+  position: relative;
   width: 100%;
-
-
-
+  display: block;
 }
 
 .password-wrapper input {
-  flex: 1;                /* input takes all remaining space */
-  border: none;           /* remove input border, use wrapper's border */
-  padding: 0.6rem 0.8rem;
-  font-size: 1rem;
-  outline: none;
+  width: 100%;
+  padding-right: 2.5rem; /* space for the eye icon */
   box-sizing: border-box;
+  display: block;
 }
 
 .password-wrapper button {
+  position: absolute;
+  right: 0.5rem; /* distance from right edge */
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
   color: #555;
   font-size: 1rem;
-  padding: 0 0.5rem;
+  padding: 0;
 }
-
