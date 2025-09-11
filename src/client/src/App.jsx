@@ -1,4 +1,5 @@
 import './App.css';
+import './components/Header_Footer/ui.css'
 import { useState } from 'react';
 import AuthPage from './components/auth/AuthPage';
 import HomePage from './components/homePage/HomePage';

@@ -1,13 +1,15 @@
 import { useState } from "react";
 import SignUp from "./SignUp";
 import SignIn from "./SignIn";
+import Footer from '../Header_Footer/Footer'
+
 
 
 export default function AuthPage({ setToken }) {
   const [activeTab, setActiveTab] = useState("signin");
 
   return (
-    <div className="auth-container">
+    <><div className="auth-container">
       <div className="auth-tabs">
         <button
           className={activeTab === "signin" ? "tab active" : "tab"}
@@ -19,7 +21,7 @@ export default function AuthPage({ setToken }) {
           className={activeTab === "signup" ? "tab active" : "tab"}
           onClick={() => setActiveTab("signup")}
         >
-            إنشاء حساب
+          إنشاء حساب
         </button>
       </div>
 
@@ -30,6 +32,7 @@ export default function AuthPage({ setToken }) {
           <SignUp setToken={setToken} />
         )}
       </div>
-    </div>
+
+    </div><Footer /></>
   );
 }
