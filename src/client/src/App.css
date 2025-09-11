@@ -133,3 +133,33 @@
     padding: 10px 0;
   }
 }
+
+
+/* Password field wrapper */
+.password-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+
+
+}
+
+.password-wrapper input {
+  flex: 1;                /* input takes all remaining space */
+  border: none;           /* remove input border, use wrapper's border */
+  padding: 0.6rem 0.8rem;
+  font-size: 1rem;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.password-wrapper button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  font-size: 1rem;
+  padding: 0 0.5rem;
+}
+

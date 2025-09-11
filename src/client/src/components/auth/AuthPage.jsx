@@ -9,7 +9,9 @@ export default function AuthPage({ setToken }) {
   const [activeTab, setActiveTab] = useState("signin");
 
   return (
-    <><div className="auth-container">
+   
+   
+      <div className="auth-container ">
       <div className="auth-tabs">
         <button
           className={activeTab === "signin" ? "tab active" : "tab"}
@@ -33,6 +35,8 @@ export default function AuthPage({ setToken }) {
         )}
       </div>
 
-    </div><Footer /></>
+    </div>
+
+
   );
 }
