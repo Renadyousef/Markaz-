@@ -1,3 +1,7 @@
 # Environment variables, like API keys, should be ignored
 src/server/.env
 src/server/src/config/serviceAccount.json
+.history/
+node_modules/
+*.swp
+.DS_Store
