@@ -30,7 +30,7 @@ export default function SignIn({ setToken }) {
       setToken(token);
       alert("تم تسجيل الدخول بنجاح!");
     } catch (error) {
-      setErrorMessage(error.response?.data?.msg || "حدث خطأ أثناء تسجيل الدخول");
+      setErrorMessage(error.response?.data?.msg || "حدث خطأ أثناء تسجيل الدخول");//this where error rises
     }
   };
 

@@ -1,32 +1,4 @@
-/*import LandingHeader from "./LandingHeader"
-export default function LandingPage(){
-    return <LandingHeader/>
-}*/
-
-/*import { Link } from "react-router-dom";
-import LandingHeader from "./LandingHeader";
 import "./landing.css";
-
-export default function LandingPage() {
-  return (
-    <main className="landing-bg">
-      <div className="landing-actions">
-      <Link to="/signin" className="btn primary">تسجيل الدخول</Link>
-       <Link to="/signup" className="btn ghost">انشاء حساب</Link>
-      </div>
-
-      <LandingHeader />
-    </main>
-  );
-}*/ //mine
-
-// LandingPage.jsx
-// LandingPage.jsx
-// LandingPage.jsx
-// LandingPage.jsx
-import "./landing.css";
-import { Link } from "react-router-dom";
-
 
 const features = [
   { icon: "/Chatbot.svg", title: "شات بوت",
@@ -43,7 +15,7 @@ const features = [
     desc: "مؤقّت بومودورو وأهداف قابلة للقياس.\nجلسات قصيرة مركّزة مع فواصل راحة.\nادخل في حالة تركيز عميق بسهولة." },
 ];
 
-export default function LandingPage() {
+export default function LandingPage({ goTo }) { // receive goTo as prop
   const goToFeatures = () => {
     document.getElementById("features")?.scrollIntoView({
       behavior: "smooth",
@@ -53,17 +25,18 @@ export default function LandingPage() {
 
   return (
     <main dir="rtl">
-      {/* === HERO === */}
+      {/* === HERO SECTION === */}
       <section className="landing-bg">
         <img src="/logo.svg" alt="شعار مركز" className="site-logo" />
 
         <div className="hero-header">
-  
-
-<Link to="/authpage" className="chip chip--primary">ابدا الان</Link>
-
-
-    
+          {/* Button now uses goTo instead of Link */}
+          <button className="chip chip--primary" onClick={() => goTo("auth")}>
+            ابدا الان
+          </button>
+          <button className="chip chip--ghost" onClick={() => goTo("auth")}>
+            إنشاء حساب
+          </button>
         </div>
 
         <div className="hero-text">
@@ -75,7 +48,6 @@ export default function LandingPage() {
             تساعدك على الإبداع والتطوّر، وابدأ رحلتك نحو النجاح بثقة وسلاسة.
           </p>
 
-          {/* NEW: smooth scroll button */}
           <button type="button" className="cta-explore" onClick={goToFeatures}>
             تعرّف أكثر
           </button>
@@ -92,26 +64,22 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* === FEATURES (target) === */}
-       {/* === FEATURES (target) === */}
-<section id="features" className="features" aria-label="features">
-  <div className="features__container">
-    <div className="features__grid">
-      {features.map((f, idx) => (
-        <article className="feature-card" key={f.title}>
-          {/* fixed box so the card size never changes */}
-          <div className="feature-card__icon-box" data-card={idx + 1}>
-            <img className="feature-card__icon" src={f.icon} alt="" />
+      {/* === FEATURES SECTION === */}
+      <section id="features" className="features" aria-label="features">
+        <div className="features__container">
+          <div className="features__grid">
+            {features.map((f, idx) => (
+              <article className="feature-card" key={idx}>
+                <div className="feature-card__icon-box" data-card={idx + 1}>
+                  <img className="feature-card__icon" src={f.icon} alt="" />
+                </div>
+                <h3 className="feature-card__title">{f.title}</h3>
+                <p className="feature-card__desc">{f.desc}</p>
+              </article>
+            ))}
           </div>
-
-          <h3 className="feature-card__title">{f.title}</h3>
-          <p className="feature-card__desc">{f.desc}</p>
-        </article>
-      ))}
-    </div>
-  </div>
-</section>
-
+        </div>
+      </section>
     </main>
   );
 }
