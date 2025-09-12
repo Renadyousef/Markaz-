@@ -1,7 +1,7 @@
 import { validatePassword, validateEmail } from "./validation";
 import { useState } from "react";
 import axios from "axios";
-
+import { Link } from "react-router-dom";//reset password
 export default function SignIn({ setToken }) { // receive setToken state set from from App.jsx
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -57,6 +57,9 @@ export default function SignIn({ setToken }) { // receive setToken state set fro
       {errorMessage && <div style={{ color: "red", fontWeight: "bold" }}>{errorMessage}</div>}
 
       <input type="submit" value="تسجيل الدخول" />
+
+      <Link to="/forgot-password" className="auth-link">هل نسيت كلمة المرور؟</Link>
+      
     </form>
   );
 }
