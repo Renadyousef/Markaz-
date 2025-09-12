@@ -1,0 +1,68 @@
+/* ===================== Weekly Progress (الدوائر) ===================== */
+/* قبل الاكتمال: برتقالي واضح – عند الاكتمال: أخضر */
+.ringFg{
+  fill: none;
+  stroke: #f59e0b !important;   /* برتقالي قبل الاكتمال */
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset .6s ease, stroke .3s ease;
+}
+.ringFg.isDone{
+  stroke: #16a34a !important;   /* أخضر عند الاكتمال */
+}
+
+/* إذا عندك فئة wp2Soft وتبين نفس البرتقالي قبل الاكتمال */
+.wp2Soft .ringFg{ stroke:#f59e0b !important; }
+.wp2Soft .ringFg.isDone{ stroke:#16a34a !important; }
+
+
+/* ===================== Upload Box (العنوان + الوصف جنب الأيقونة) ===================== */
+/* الأيقونة – تبقى على اليسار (أو اليمين حسب RTL) */
+.uploadBox__ico{ flex: 0 0 auto; }
+
+/* صف: أيقونة + (عنوان + وصف) + زر */
+.uploadBox__content{
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+/* العنوان + الوصف في سطر واحد جنب الأيقونة */
+.uploadBox__text{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;           /* يلغي أي دفع للأسفل */
+}
+
+/* العنوان */
+.uploadBox__title{
+  margin: 0;
+  font-weight: 900;
+  font-size: 15px;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+/* الوصف يجي مباشرة بعد العنوان في نفس السطر */
+.uploadBox__sub{
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+  white-space: nowrap;
+  opacity: .95;
+}
+
+/* زر اختيار ملف يبقى على الطرف الآخر */
+.uploadBox__btn{
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid #ffd6a8;
+  background: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: .15s;
+}
+.uploadBox__btn:hover{ background:#fff8f0; }
