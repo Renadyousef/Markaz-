@@ -11,6 +11,7 @@ const authRoutes = require("./routes/authRoutes");
 const homeRoutes = require("./routes/homeRoutes");
 const sidebarRoutes = require("./routes/sidebarRoutes");
 const userRoutes = require("./routes/userRoutes");
+const profileRoutes = require("./routes/profileRoutes"); 
 
 const app = express();
 
@@ -23,7 +24,7 @@ app.use("/auth", authRoutes);       // POST /auth/signin
 app.use("/home", homeRoutes);       // GET /home/me (يتطلب توكن)
 app.use("/sidebar", sidebarRoutes); // GET /sidebar/me (يتطلب توكن)
 app.use("/user", userRoutes);       // تجريب session أو جلب بيانات المستخدم
-
+app.use("/profile", profileRoutes);
 // ========== 404 ==========
 app.use((req, res) => {
   res.status(404).json({
