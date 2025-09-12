@@ -1,5 +1,6 @@
 import {initializeApp} from 'firebase/app'
 import { getAuth } from "firebase/auth";
+
 //all services intlized here and to use them we import them in files
 //services used firebase Auth
 const firebaseConfig = {

@@ -1,0 +1,271 @@
+/* CANVAS */
+.landing-bg{
+  position: relative;
+  min-height: 100vh;
+  background: url("/background.svg") center / cover no-repeat;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* LOGO */
+.site-logo{
+  position: absolute;
+  top: -95px; right: -35px;
+  width: clamp(280px, 312vw, 200px);
+  height: auto;
+  z-index: 100;
+}
+
+/* HEADER BUTTONS */
+.hero-header{
+  position:absolute; top:16px; left:16px;
+  display:flex; gap:12px; z-index:90;
+}
+.chip{ padding:10px 18px; border-radius:999px; font-weight:700; text-decoration:none;
+       box-shadow:0 4px 12px rgba(0,0,0,.06); border:1px solid transparent; }
+.chip--primary{ background:linear-gradient(135deg,#ff914d,#ff914d); color:#fff; }
+.chip--light{ background:#fdf5ed; color:#2b2b2b; border-color:#fef3e9; }
+
+/* LEFT TEXT */
+.hero-text{
+  position:absolute; top:42%; left:64px; transform:translateY(-10%);
+  max-width:560px; z-index:80; color:#111827;
+}
+.hero-title{ margin:0 0 10px; font-weight:800; font-size:clamp(32px,5vw,64px); line-height:1.15; }
+.accent{ color:#ff914d; }
+.hero-subtitle{ margin:0; font-size:clamp(16px,2vw,20px); line-height:1.9; color:#374151; }
+
+/* === BOOK GROUP (anchor all icons to the book) === */
+.book-group{
+  position:absolute;
+  right:-25.5%;                /* same anchor you used */
+  bottom:-17%;
+  width: clamp(1250px, 60vw, 1100px);   /* book size */
+  z-index:70;
+}
+.book{
+  display:block;
+  width:100%;
+  height:auto;
+  filter: drop-shadow(0 18px 32px rgba(0,0,0,.18));
+  pointer-events:none;
+}
+
+/* ICONS — size & position are % of the BOOK width/height */
+.book-group .icon{
+  position:absolute;
+  background-position:center;
+  background-repeat:no-repeat;
+  background-size:contain;
+  pointer-events:none;
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,.12));
+  z-index:75;
+}
+
+/* Timer: bigger (≈ 28% of book width) */
+.book-group .i-timer{
+  background-image:url("/timer.svg");
+  width:58%; height:58%;
+  left:-6.5%; top:24%;
+}
+
+/* Others (≈ 16% of book width) — tweak % to match your mock exactly */
+.book-group .i-tasklist{
+  background-image:url("/TaskList.svg");
+ width:40%; height:40%;
+  left:31.5%; top:18%;
+  transform: rotate(-14deg);
+}
+.book-group .i-chatbot{
+  background-image:url("/Chatbot.svg");
+   width:58%; height:58%;
+  left:1.5%; top:-3%;
+}
+.book-group .i-flashcards{
+  background-image:url("/Flashcards.svg");
+ width:100%; height:100%;
+  left:-7%; top:-2%;
+}
+.book-group .i-quiz{
+  background-image:url("/Quiz.svg");
+  width:58%; height:58%;
+  left:-3.5%; top:1%;
+  transform: rotate(10deg);
+}
+.book-group .i-progress{
+  background-image:url("/Progress.svg");
+  width:37%; height:37%;
+  left:37.5%; top:35%;
+}
+
+/* Small screens: pull text in a bit */
+@media (max-width: 900px){
+  .hero-text{ left:24px; top:26%; transform:none; }
+}
+
+
+/* =========================
+   Section 2 — Features grid
+   ========================= */
+.features{
+  position: relative;
+  padding: 72px 0 100px;                   /* space around the grid */
+  background: url("/backgroundSection2.svg") center / cover no-repeat;
+  z-index: 1;                               /* its own layer, below any fixed headers */
+}
+
+.features__container{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.features__grid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+/* Card */
+.feature-card{
+  position: relative;
+  text-align: center;
+  padding: 36px 24px 42px;
+  border-radius: 22px;
+  background: #fbe3d7;                      /* soft peach like the mock */
+  box-shadow: 0 1px 0 rgba(0,0,0,.03),
+              0 16px 40px rgba(0,0,0,.06);
+}
+
+/* floor shadow under the card */
+.feature-card::after{
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -16px;
+  transform: translateX(-50%);
+  width: 70%;
+  height: 26px;
+  background: radial-gradient(ellipse at center,
+              rgba(0,0,0,.22) 0%,
+              rgba(0,0,0,.12) 35%,
+              rgba(0,0,0,0) 70%);
+  filter: blur(6px);
+  opacity: .35;
+  pointer-events: none;
+}
+
+/* Icon + text */
+/* fixed icon box so cards don't grow/shrink */
+
+
+.feature-card__title{
+  margin: 6px 0 10px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  font-size: clamp(20px, 2.2vw, 28px);
+  color: #161a22;
+}
+.feature-card__desc{
+  margin: 0 auto;
+  max-width: 36ch;
+  color: #374151;
+  line-height: 1.7;
+  font-size: 16px;
+}
+
+/* Responsive layout */
+@media (max-width: 1024px){
+  .features__grid{ grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px){
+  .features__grid{ grid-template-columns: 1fr; }
+  .feature-card{ padding: 28px 20px 36px; }
+}
+/* Smooth-scroll button */
+.cta-explore{
+  margin-top: 14px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-weight: 700;
+  border: 1px solid #f7c99f;
+  background: #f4c29381;
+  color: #2b2b2b;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .2s ease;
+}
+.cta-explore:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(0,0,0,.10);
+}
+.cta-explore:active{ transform: translateY(0); }
+
+/* Optional global CSS smooth scroll (works for #features links too) */
+/* html { scroll-behavior: smooth; } */
+.feature-card__desc { white-space: pre-line; }
+
+/* fixed box: keeps card size constant */
+.feature-card__icon-box{
+  position: relative;
+  width: 110px;     /* change if you want more/less reserved space */
+  height: 110px;
+  margin: 8px auto 14px;
+  overflow: visible; /* allows negative top to show */
+}
+
+/* absolutely position every icon inside its box */
+.feature-card__icon{
+  position: absolute;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  /* no centering transform—we’ll use left/top exactly like you want */
+}
+/* 1) شات بوت */
+.features__grid .feature-card:nth-child(1) .feature-card__icon{
+ width: 780%;
+  height: 780%;
+  left: -455%;
+  top: -330%;
+}
+
+/* 2) الاختبارات */
+.features__grid .feature-card:nth-child(2) .feature-card__icon{
+  width: 800%;
+  height: 800%;
+  left: -420.5%;
+  top: -380%;
+}
+
+/* 3) البطاقات التعليمية */
+.features__grid .feature-card:nth-child(3) .feature-card__icon{
+ width: 720%;
+  height: 720%;
+  left: -387%;
+  top: -150%;
+}
+
+/* 4) متابعة التقدم */
+.features__grid .feature-card:nth-child(4) .feature-card__icon{
+  width: 550%;
+  height: 550%;
+  left: -278%;
+  top: -210%;
+}
+
+/* 5) المهام */
+.features__grid .feature-card:nth-child(5) .feature-card__icon{
+ width: 600%;
+  height: 600%;
+  left: -330.5%;
+  top: -246%;
+}
+
+/* 6) جلسات المذاكرة (timer) */
+.features__grid .feature-card:nth-child(6) .feature-card__icon{
+  width: 800%;
+  height: 800%;
+  left: -410.5%;
+  top: -330%;
+}
