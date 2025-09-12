@@ -25,6 +25,8 @@ export default function LandingPage() {
 // LandingPage.jsx
 // LandingPage.jsx
 import "./landing.css";
+import { Link } from "react-router-dom";
+
 
 const features = [
   { icon: "/Chatbot.svg", title: "شات بوت",
@@ -56,8 +58,12 @@ export default function LandingPage() {
         <img src="/logo.svg" alt="شعار مركز" className="site-logo" />
 
         <div className="hero-header">
-          <a href="/signin" className="chip chip--primary">تسجيل الدخول</a>
-          <a href="/signup" className="chip chip--light">إنشاء حساب</a>
+  
+
+<Link to="/authpage" className="chip chip--primary">ابدا الان</Link>
+
+
+    
         </div>
 
         <div className="hero-text">

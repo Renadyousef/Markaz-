@@ -28,6 +28,7 @@ import SignUp from "./components/auth/SignUp";
 import SignIn from "./components/auth/SignIn";
 import HomePage from "./components/homePage/HomePage";
 import ResetPassword from "./components/resetPassword/resetPassword"; 
+import AuthPage from "./components/auth/AuthPage";
 
 
 export default function App() {
@@ -43,7 +44,7 @@ export default function App() {
         <Route path="/signin" element={<SignIn setToken={setToken} />} />
         <Route path="/signup" element={<SignUp />} />
          <Route path="/forgot-password" element={<ResetPassword />} />
-
+<Route path="/authpage" element={<AuthPage />} />
         {/* Protected home */}
         <Route
           path="/home"
