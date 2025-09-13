@@ -209,10 +209,10 @@ export default function Profile() {
         <svg className="wave" viewBox="0 0 1440 140" preserveAspectRatio="none" aria-hidden="true">
           <defs>
             <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%"   stopColor="#FFD8A8" />
-              <stop offset="55%"  stopColor="#FDBA74" />
+  <stop offset="0%"   stopColor="#FFD8A8" />
+  <stop offset="55%"  stopColor="#FDBA74" />
               <stop offset="100%" stopColor="#F59E0B" />
-            </linearGradient>
+</linearGradient>
           </defs>
           <path d="M0,64 C240,100 480,40 720,64 C960,88 1200,76 1440,60 L1440,160 L0,160 Z" fill="url(#waveGrad)"/>
         </svg>
