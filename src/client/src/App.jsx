@@ -7,7 +7,9 @@ import LandingPage from "./components/landingPage/LandingPage";
 import AuthPage from "./components/auth/AuthPage";
 import SignIn from "./components/auth/SignIn"; 
 import HomePage from "./components/homePage/HomePage";
-import ProfilePage from "./components/profile/profile.jsx";
+import ProfilePage from "./components/profile/Profile.jsx";
+
+
 
 /* الواجهة */
 import Header from "./components/Header_Footer/Header";
