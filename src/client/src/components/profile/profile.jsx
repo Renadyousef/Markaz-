@@ -210,26 +210,31 @@ export default function Profile() {
       {/* رأس الصفحة */}
       <header className="hero">
         {/* زر رجوع: سهم داخل دائرة برتقالي */}
-        <button className="round-icon-btn back" onClick={handleBackClick} aria-label="رجوع">
-          <svg viewBox="0 0 24 24" width="22" height="22" style={{ transform: "scaleX(-1)" }}>
-            <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" fill="currentColor"/>
-          </svg>
-        </button>
+        
 
-        <svg className="wave" viewBox="0 0 1440 140" preserveAspectRatio="none">
-          <path d="M0,64 C240,100 480,40 720,64 C960,88 1200,76 1440,60 L1440,160 L0,160 Z" />
-        </svg>
+        <svg className="wave" viewBox="0 0 1440 140" preserveAspectRatio="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stopColor="#FFD8A8" />
+      <stop offset="55%"  stopColor="#FDBA74" />
+      <stop offset="100%" stopColor="#F59E0B" />
+    </linearGradient>
+  </defs>
+  <path d="M0,64 C240,100 480,40 720,64 C960,88 1200,76 1440,60 L1440,160 L0,160 Z" fill="url(#waveGrad)"/>
+</svg>
+
       </header>
 
       {/* المحتوى */}
       <main className="orange-area">
         <div className="avatar-wrap">
           <img
-            className="avatar"
-            src="/avatar.svg"
-            onError={(e)=>{ e.currentTarget.src="https://i.pravatar.cc/160?img=5"; }}
-            alt="صورة المستخدم"
-          />
+  className="avatar"
+  src="/profile.png"
+  alt="صورة المستخدم"
+/>
+
+
         </div>
 
         <h3 className="p-name">{`${sanitizeArabic(firstName)} ${sanitizeArabic(lastName)}`.trim()}</h3>
@@ -320,7 +325,26 @@ export default function Profile() {
           --orange:#FDA838;
           --bg:#ffffff;
         }
-        .profile-onepage{ min-height:100vh; background:var(--orange); position:relative; color:#111; }
+.profile-onepage{ min-height:100vh; background:transparent; position:relative; color:#111; }
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+body{ position: relative; }
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(180deg, #fff7ed 0%, #fff 20%, #fff5eb 60%, #fff 100%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+
+
         .hero{ height:28vh; background:#fff; border-top-left-radius:18px; border-top-right-radius:18px; position:relative; }
         .round-icon-btn{
           position:absolute; top:14px; left:16px; z-index:2; width:40px; height:40px;
@@ -330,7 +354,8 @@ export default function Profile() {
         }
         .round-icon-btn:hover{ background:#fff7ec; }
         .wave{ position:absolute; bottom:-1px; left:0; right:0; width:100%; height:140px; }
-        .wave path{ fill:var(--orange); }
+.wave path{ filter: drop-shadow(0 -2px 6px rgba(0,0,0,.06)); }
+
         .orange-area{
           min-height:72vh; padding:80px 16px 36px;
           display:flex; flex-direction:column; align-items:center; text-align:center;
