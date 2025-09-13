@@ -5,33 +5,27 @@ import "./App.css";
 /* الصفحات */
 import LandingPage from "./components/landingPage/LandingPage";
 import AuthPage from "./components/auth/AuthPage";
-import SignIn from "./components/auth/SignIn"; // احتياطي إن احتجتيه بمفرده
+import SignIn from "./components/auth/SignIn"; 
 import HomePage from "./components/homePage/HomePage";
+import ProfilePage from "./components/profile/profile.jsx";
 
-/* هيكل الواجهة */
+/* الواجهة */
 import Header from "./components/Header_Footer/Header";
 import Sidebar from "./components/Header_Footer/Sidebar";
 import Footer from "./components/Header_Footer/Footer";
 
 export default function App() {
-  // ===== حالة التوكن =====
-  const [token, setToken] = useState(
-    localStorage.getItem("token") || null
-  );
+  const [token, setToken] = useState(localStorage.getItem("token") || null);
 
-  // ===== تنسيق RTL عام =====
   useEffect(() => {
     document.documentElement.setAttribute("dir", "rtl");
     document.documentElement.setAttribute("lang", "ar");
   }, []);
 
-  // ===== تنقّل قبل تسجيل الدخول =====
-  // القيم الممكنة: "landing" | "auth"
+  // يبدأ دايمًا من landing
   const [page, setPage] = useState("landing");
-  // تبويب صفحة المصادقة: "signin" | "signup"
   const [authTab, setAuthTab] = useState("signin");
 
-  // دالة تنقّل عامة قبل تسجيل الدخول
   const goTo = (p, tab = "signin") => {
     if (p === "auth") {
       setPage("auth");
@@ -41,20 +35,16 @@ export default function App() {
     }
   };
 
-  // عند نجاح الدخول: خزني التوكن وادخلي للـHome (الـShell بيظهر تلقائي)
   const handleLogin = (newToken) => {
-    try {
-      if (newToken) localStorage.setItem("token", newToken);
-    } catch (_) {
-      // في حال المتصفح يمنع التخزين المحلي
-    }
+    if (newToken) localStorage.setItem("token", newToken);
     setToken(newToken);
+    setPage("home"); // بعد تسجيل الدخول يفتح الهوم
   };
 
-  // ===== هيكل الواجهة بعد تسجيل الدخول =====
-  const [open, setOpen] = useState(false); // فتح/إغلاق السايدبار
+  const [open, setOpen] = useState(false);
 
-  if (token) {
+  // ===== بعد تسجيل الدخول =====
+  if (token && page !== "landing" && page !== "auth") {
     return (
       <div className="app-shell">
         {/* الهيدر */}
@@ -62,11 +52,18 @@ export default function App() {
 
         <div className="app-body">
           {/* السايدبار */}
-          <Sidebar open={open} onClose={() => setOpen(false)} />
+          <Sidebar
+            open={open}
+            onClose={() => setOpen(false)}
+            active={page}                 // ✅ يحدد العنصر المفعّل
+            onProfile={() => setPage("profile")}
+            onSelect={(key) => setPage(key)}
+          />
 
-          {/* الصفحة الرئيسية داخل المحتوى */}
+          {/* المحتوى */}
           <main className="content-area">
-            <HomePage token={token} />
+            {page === "home" && <HomePage token={token} />}
+            {page === "profile" && <ProfilePage />}
           </main>
         </div>
 
@@ -76,7 +73,7 @@ export default function App() {
     );
   }
 
-  // ===== واجهات قبل تسجيل الدخول =====
+  // ===== قبل تسجيل الدخول =====
   return (
     <>
       {page === "landing" && <LandingPage goTo={goTo} />}
@@ -84,7 +81,7 @@ export default function App() {
         <AuthPage
           initialTab={authTab}
           setToken={handleLogin}
-          goTo={goTo} // مفيد للرجوع للـLanding إذا احتجتي زر "رجوع"
+          goTo={goTo}
         />
       )}
     </>

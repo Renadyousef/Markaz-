@@ -442,3 +442,35 @@ html[dir="rtl"] .menuDropdown {
   display: flex;
   align-items: center;
 }
+/* اللوقو في السايدبار */
+.titleLogo {
+  width: 60px;            /* كبّري الحجم */
+  height: 60px;
+  border-radius: 16px;    /* زوايا ناعمة */
+  background: transparent; /* ألغِ الخلفية الرمادية */
+  display: grid;
+  place-items: center;
+}
+
+.titleLogo img {
+  width: 52px;            /* يكبر داخل الحاوية */
+  height: 52px;
+  object-fit: contain;    /* يحافظ على التناسب */
+}
+/* اللوقو في الهيدر */
+.logoBox {
+  width: 60px;             /* نفس حجم السايدبار */
+  height: 60px;
+  background: transparent; /* بدون خلفية */
+  border-radius: 16px;     /* زوايا ناعمة */
+  box-shadow: none;
+  display: grid;
+  place-items: center;
+}
+
+.logoBox img {
+  width: 52px;             /* نفس مقاس الصورة */
+  height: 52px;
+  object-fit: contain;     /* يحافظ على التناسب */
+  display: block;
+}

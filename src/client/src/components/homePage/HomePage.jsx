@@ -306,7 +306,7 @@ export default function HomePage() {
                 ? "جاري التحميل…"
                 : errorMsg
                   ? "مرحباً بعودتك!"
-                  : `مرحباً بعودتك ${firstName ? firstName : "صديقتي"}!`}
+                  : `مرحباً بعودتك ${firstName ? firstName : "صديقي"}!`}
             </h1>
             <p>جاهزة لمتابعة رحلتك الدراسية؟</p>
             {errorMsg && (

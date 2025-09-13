@@ -27,7 +27,7 @@ export default function Header({ onMenuClick, sticky }) {
         {/* اليسار: اللوجو */}
         <div className="brand" dir="rtl">
           <div className="logoBox">
-            <img src="/logo.png" alt="شعار مركز" />
+            <img src="/logo1.png" alt="شعار مركز" />
           </div>
         </div>
 

@@ -23,7 +23,6 @@ export default function Sidebar({
     </svg>
   );
 
-  // إغلاق قائمة الخيارات عند الضغط برا
   useEffect(() => {
     const onDocClick = (e) => {
       if (!menuRef.current) return;
@@ -33,14 +32,12 @@ export default function Sidebar({
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
 
-  // الهيدر للتوكن
   function getAuthHeaders() {
     let t = localStorage.getItem("token") || sessionStorage.getItem("token") || "";
     t = t.replace(/^Bearer\s+/i, "");
     return t ? { Authorization: `Bearer ${t}` } : {};
   }
 
-  // جلب الاسم
   useEffect(() => {
     (async () => {
       try {
@@ -56,7 +53,6 @@ export default function Sidebar({
     })();
   }, []);
 
-  // تسجيل الخروج
   const handleLogout = () => {
     localStorage.removeItem("token");
     sessionStorage.removeItem("token");
@@ -79,15 +75,13 @@ export default function Sidebar({
 
   return (
     <>
-      {/* ✅ الـ overlay يشتغل بس عند الفتح */}
       {open && <div className="overlay overlayShow" onClick={onClose} />}
 
       <aside className={`sidebar ${open ? "sidebarOpen" : ""}`} aria-hidden={!open}>
-        {/* رأس الشريط */}
         <div className="sideHead">
           <div className="sideTitle">
             <div className="titleLogo">
-              <img src="/logo.png" alt="Logo" draggable="false" />
+              <img src="/logo1.png" alt="Logo" draggable="false" />
             </div>
           </div>
           <button className="iconBtn closeBtn" onClick={onClose} aria-label="إغلاق">
@@ -98,13 +92,12 @@ export default function Sidebar({
           </button>
         </div>
 
-        {/* عناصر التنقل */}
         <nav className="list" aria-label="القائمة">
           {items.map(({ key, label, icon: Icon }) => (
             <a
               key={key}
               href="#"
-              className={`item ${active === key ? "active" : ""}`}
+              className={`item ${active === key ? "active" : ""}`}  
               onClick={(e) => { e.preventDefault(); onSelect?.(key); onClose?.(); }}
             >
               <span className="icon"><Icon /></span>
@@ -115,7 +108,13 @@ export default function Sidebar({
 
         {/* أسفل الشريط */}
         <div className="profileFooter" ref={menuRef}>
-          <div className="profileInfo">
+          <div
+            className="profileInfo"
+            onClick={() => {
+              onProfile?.();   // يفتح البروفايل
+              onClose?.();     // ✅ يقفل السايدبار
+            }}
+          >
             <UserOutline className="avatarIcon" />
             <div className="names">
               <div className="name" title={fullName}>{fullName}</div>
@@ -134,7 +133,14 @@ export default function Sidebar({
 
             {menuOpen && (
               <div className="menuDropdown" role="menu" aria-label="خيارات الحساب">
-                <button className="menuItem" onClick={() => { setMenuOpen(false); onProfile?.(); }}>
+                <button
+                  className="menuItem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onProfile?.();
+                    onClose?.();   // ✅ يقفل السايدبار
+                  }}
+                >
                   <span className="miLabel">الملف الشخصي</span>
                 </button>
 
@@ -153,69 +159,15 @@ export default function Sidebar({
         </div>
       </aside>
 
-      {/* ✅ مودال التأكيد */}
       {confirmOpen && (
         <div className="confirmOverlay">
           <div className="confirmBox">
             <div className="confirmMessage">هل أنت متأكد أنك تريد تسجيل الخروج؟</div>
             <div className="confirmActions">
-              <button className="btnCancel" onClick={() => setConfirmOpen(false)}>
-                إلغاء
-              </button>
-              <button className="btnConfirm" onClick={handleLogout}>
-                نعم، تأكيد
-              </button>
+              <button className="btnCancel" onClick={() => setConfirmOpen(false)}>إلغاء</button>
+              <button className="btnConfirm" onClick={handleLogout}>نعم، تأكيد</button>
             </div>
           </div>
-
-          <style>{`
-            .confirmOverlay {
-              position: fixed;
-              inset: 0;
-              background: rgba(0,0,0,.4);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              z-index: 9999;
-            }
-            .confirmBox {
-              background: #fff;
-              padding: 24px 20px;
-              border-radius: 14px;
-              box-shadow: 0 8px 25px rgba(0,0,0,.15);
-              width: 90%;
-              max-width: 360px;
-              text-align: center;
-              font-family: "Tajawal", sans-serif;
-            }
-            .confirmMessage {
-              font-size: 18px;
-              margin-bottom: 18px;
-              color: #111827;
-              font-weight: 600;
-            }
-            .confirmActions {
-              display: flex;
-              justify-content: space-between;
-              gap: 10px;
-            }
-            .btnCancel {
-              flex:1;
-              padding:10px;
-              background:#f3f4f6;
-              border:1px solid #d1d5db;
-              border-radius:8px;
-            }
-            .btnConfirm {
-              flex:1;
-              padding:10px;
-              background:#ef4444;
-              color:white;
-              border:none;
-              border-radius:8px;
-              font-weight:bold;
-            }
-          `}</style>
         </div>
       )}
     </>
