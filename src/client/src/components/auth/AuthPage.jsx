@@ -29,6 +29,7 @@ export default function AuthPage({ setToken, initialTab = "signin" }) {
 
       <div className="auth-form">
         {activeTab === "signin" ? <SignIn setToken={setToken} /> : <SignUp setToken={setToken} />}
+       
       </div>
     </div>
   );
