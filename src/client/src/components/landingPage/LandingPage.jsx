@@ -23,7 +23,7 @@ export default function LandingPage({ goTo }) { // receive goTo as prop
     });
   };
 
-  return (
+  return  (
     <main dir="rtl">
       {/* === HERO SECTION === */}
       <section className="landing-bg">
