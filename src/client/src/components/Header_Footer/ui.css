@@ -668,7 +668,6 @@ html[dir="rtl"] .menuDropdown {
   transform: translateX(0);
 }
 
-/* على الموبايل: خليه 70% من العرض بدال 100% */
 @media (max-width: 768px) {
   .sidebar {
     width: 70% !important;   /* أو 280px إذا تبغينه ثابت */

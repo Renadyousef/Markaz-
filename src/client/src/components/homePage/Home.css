@@ -245,14 +245,7 @@ html, body, #root{
 .isCards .featureIcon{ background:#f7f3ee; color:#1f2937; }
 .isChat  .featureIcon{ background:#f7f3ee; color:#1f2937; }
 
-/* لو عدد البطاقات فردي: آخر بطاقة تتمركز */
-@media (min-width: 600px){
-  .featureGrid > .featureCard:nth-last-child(1):nth-child(odd){
-    grid-column: 1 / -1;
-    justify-self: center;
-    width: min(360px, 100%);
-  }
-}
+
 
 /* ===================== Weekly Progress (دوائر) ===================== */
 .wp2Header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
@@ -362,12 +355,7 @@ body::before{
   .uploadBox__sub{ margin-inline-start: 0; }
 }
 
-/* 2) كارد "الدردشة الذكية" يكون في المنتصف دائماً */
-#feature-shortcuts .featureCard.isChat{
-  grid-column: 1 / -1;          /* يمتد على عرض اللوحة */
-  justify-self: center;         /* يتوسّط أفقياً */
-  width: clamp(260px, 32vw, 360px);
-}
+
 
 /* 3) "إضافة ملف" جنب الأيقونة داخل كرت الرفع (بدون تعديل HTML) */
 .uploadBox__content{ gap:10px; }
@@ -742,4 +730,127 @@ body::before{
 .isCards .featureIcon,
 .isChat .featureIcon{
   background:#f8fafc; color:#1f2937; border:1px solid #e9edf4;
+}
+
+/* ≤ 768px (تبلش تصغير) */
+@media (max-width: 768px){
+  .wp2Card{ padding:10px; gap:10px; }
+  .ring{ width:48px; height:48px; }
+  .ringBg, .ringFg{ stroke-width:5; }
+  .ringLabel{ font-size:12px; }
+
+  .wp2Day{ font-size:14px; }
+  .wp2Hours{ font-size:12px; }
+}
+
+/* ≤ 480px (هواتف صغيرة جدًا) */
+@media (max-width: 480px){
+  .wp2Card{ padding:9px; gap:9px; }
+  .ring{ width:40px; height:40px; }
+  .ringBg, .ringFg{ stroke-width:4; }
+  .ringLabel{ font-size:11px; }
+
+  .wp2Day{ font-size:13px; }
+  .wp2Hours{ font-size:11px; }
+}
+/* ========= WeeklyProgress — شبكة مرنة + تصغير قوي للجوال ========= */
+
+/* شبكة مرنة تلقائيًا: تعبّي صفك ببطاقات عرضها الأدنى 160px */
+.wp2Grid{
+  display: grid !important;
+  gap: 12px !important;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+}
+
+/* حجم الدائرة يتحكم فيه متغيّرات */
+:root{
+  --ring-size: 56px;
+  --ring-stroke: 6;
+  --ring-label: 13px;
+  --wp2-day: 15px;
+  --wp2-hours: 13px;
+}
+
+/* آيفون وأصغر (≈390px): نضغطها عمودين حتماً ونصغّر كل شيء */
+@media (max-width: 480px){
+  .wp2Grid{
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .wp2Card{ padding: 8px !important; gap: 8px !important; }
+
+  :root{
+    --ring-size: 32px;     /* تصغير الدائرة */
+    --ring-stroke: 3;
+    --ring-label: 10px;
+    --wp2-day: 12px;
+    --wp2-hours: 11px;
+  }
+}
+
+/* نُجبر الـSVG يتبع المتغيّرات (ويتجاوز width/height المعرّفة بالـJSX) */
+.ring{
+  inline-size: var(--ring-size) !important;
+  block-size:  var(--ring-size) !important;
+  position: relative; display: grid; place-items: center;
+}
+.ringSvg{
+  width: 100% !important;
+  height: 100% !important;
+  transform: rotate(-90deg);
+  display: block;
+}
+.ringBg, .ringFg{ stroke-width: var(--ring-stroke) !important; }
+.ringLabel{
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  font-weight: 800; font-size: var(--ring-label) !important;
+}
+
+.wp2Day{ font-size: var(--wp2-day) !important; font-weight: 800; }
+.wp2Hours{ font-size: var(--wp2-hours) !important; color:#64748b; }
+
+/* (اختياري) قصّ النص إذا ضاق العمود */
+.wp2Info{ min-width: 0; }
+.wp2Day, .wp2Hours{
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* ===== Responsive Footer ===== */
+@media (max-width: 768px){
+  .mkzFooter {
+    padding: 16px 12px;
+  }
+  .mkzBrand span {
+    font-size: 18px;   /* أصغر شوي */
+  }
+  .mkzLinks {
+    gap: 18px;
+    margin-bottom: 12px;
+  }
+  .mkzLinks a {
+    font-size: 14px;   /* الروابط أصغر */
+  }
+  .mkzFooter__bottom {
+    font-size: 12px;   /* الكتابة تحت */
+  }
+}
+
+@media (max-width: 480px){
+  .mkzBrand img {
+    width: 32px;
+    height: 32px;
+  }
+  .mkzBrand span {
+    font-size: 16px;   /* أصغر مرة */
+  }
+  .mkzLinks {
+    gap: 12px;
+  }
+  .mkzLinks a {
+    font-size: 13px;
+  }
+  .mkzFooter__bottom {
+    font-size: 11px;
+  }
 }
