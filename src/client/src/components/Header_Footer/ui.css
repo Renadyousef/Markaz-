@@ -474,3 +474,184 @@ html[dir="rtl"] .menuDropdown {
   object-fit: contain;     /* يحافظ على التناسب */
   display: block;
 }
+
+/* فوتر الحساب */
+.profileFooter{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px 12px;
+  position:sticky; bottom:0;
+  background:#fff;
+  border-top:1px solid #f1f5f9;
+}
+
+/* يدفع زر الخروج لأقصى اليمين (مكان الثلاث نقاط) */
+.flexSpacer{ flex:1; }
+
+/* كتلة الاسم/الأفاتار */
+.profileInfo{ display:flex; align-items:center; gap:10px; cursor:pointer; }
+.profileInfo .name{ max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.profileInfo .sub{ font-size:12px; color:#64748b; }
+
+/* زر الخروج أيقونة فقط */
+.logoutBtn{
+  color:#dc2626;
+  border:none; background:transparent; cursor:pointer;
+  padding:6px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .2s, color .2s;
+}
+.logoutBtn svg{ stroke:#dc2626; width:22px; height:22px; }
+.logoutBtn:hover{ background:#fff1f1; }
+.logoutBtn:hover svg{ stroke:#b91c1c; }
+.avatarImg {
+  width: 40px;              /* حجم مناسب */
+  height: 40px;
+  border-radius: 50%;       /* تخليها دائرية */
+  object-fit: cover;        /* قص الصورة داخل الإطار */
+  border: none;             /* 🔴 يشيل الإطار الرمادي */
+  background: transparent;  /* 🔴 يلغي أي خلفية */
+  box-shadow: none;         /* 🔴 يلغي الظل */
+}
+
+/* ===================== FIX & RESPONSIVE (FINAL) ===================== */
+/* 1) تأكيد سلوك الفتح/الإغلاق بالضغط فقط */
+.sidebar{ transform: translateX(100%) !important; }      /* مغلق افتراضيًا */
+.sidebarOpen{ transform: translateX(0) !important; }     /* يفتح عند إضافة الكلاس */
+
+/* لا تغيّري transform في الميديا كويريز — العرض فقط هو اللي يتغيّر */
+
+/* 2) مقاسات الحاوية والهيدر حسب الشاشة */
+@media (max-width: 1440px){
+  :root{ --container-w: 1120px; }
+}
+@media (max-width: 1024px){
+  :root{ --container-w: 920px; }
+}
+@media (max-width: 768px){
+  :root{ --container-w: 680px; --hdr-h: 64px; }
+}
+@media (max-width: 600px){
+  :root{ --container-w: 100%; --hdr-h: 60px; }
+}
+
+/* 3) الهيدر */
+@media (max-width: 1024px){
+  .headerWrap{ padding: 10px 14px; }
+  .appName{ font-size: 20px; }
+}
+@media (max-width: 768px){
+  .headerBar{ width: calc(100% - 20px); }
+  .headerActions{ gap: 8px; }
+  .iconBtn{ padding: 6px; border-radius: 8px; }
+  .logoBox img{ height: 40px; }
+}
+@media (max-width: 480px){
+  .logoBox img{ height: 34px; }
+  .appName{ display: none; } /* لتوفير مساحة على أصغر شاشات */
+}
+@media (max-width: 768px){
+  .content-area{ padding-top: calc(var(--hdr-h) + 10px); }
+}
+@media (max-width: 480px){
+  .content-area{ padding-top: calc(var(--hdr-h) + 6px); }
+}
+
+/* 4) السايدبار — يتغير العرض فقط (بدون فتح تلقائي) */
+@media (max-width: 1024px){
+  .sidebar{
+    width: 320px !important;
+    border-top-left-radius: 22px;
+    border-bottom-left-radius: 22px;
+  }
+}
+@media (max-width: 768px){
+  .sidebar{
+    width: 100% !important;            /* يغطي عرض الشاشة */
+    border-radius: 0 !important;       /* بدون حواف */
+    box-shadow: none;                  /* بدون ظل جانبي على الموبايل */
+  }
+  .sidebar .sideHead{ padding: 14px; }
+  .titleLogo{ width: 52px; height: 52px; border-radius: 14px; }
+  .titleLogo img{ width: 46px; height: 46px; }
+  .list{ padding: 10px; }
+  .item{ gap: 8px; font-size: 15px; }
+  .item .icon, .item .icon svg{ width: 20px; height: 20px; }
+}
+@media (max-width: 600px){
+  .list{ padding: 8px; }
+  .item{ padding: 10px 12px; font-size: 14px; border-radius: 10px; }
+}
+@media (max-width: 400px){
+  .item{ padding: 9px 10px; border-radius: 8px; }
+}
+
+/* 5) الأوفرلاي — يبان فقط لما السايدبار مفتوح */
+.overlay{ display: none; }                  /* افتراضيًا مخفي */
+.sidebarOpen ~ .overlay,
+.sidebar.sidebarOpen + .overlay,
+.overlay.overlayShow{ display: block; }     /* إظهاره عند الفتح */
+@media (max-width: 768px){
+  .overlay{ background: rgba(2,6,23,.55); } /* تعتيم مناسب للموبايل */
+}
+
+/* 6) فوتر الحساب داخل السايدبار */
+@media (max-width: 768px){
+  .profileFooter{
+    padding: 10px 12px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid #eef2f7;
+    gap: 10px;
+  }
+  .profileInfo .name{ max-width: 180px; }
+  .avatarImg{ width: 36px; height: 36px; }
+  .logoutBtn{ padding: 6px; border-radius: 8px; }
+  .logoutBtn svg{ width: 22px; height: 22px; }
+}
+@media (max-width: 480px){
+  .profileInfo .name{ max-width: 140px; }
+  .avatarImg{ width: 32px; height: 32px; }
+  .logoutBtn svg{ width: 20px; height: 20px; }
+}
+
+/* 7) صورة البروفايل (Responsive) */
+@media (min-width: 1024px){
+  .avatarImg{ width: 44px; height: 44px; }
+}
+@media (max-width: 480px){
+  .avatarImg{ width: 32px; height: 32px; }
+}
+
+/* 8) تصغير أيقونات الأزرار على الشاشات الصغيرة */
+@media (max-width: 480px){
+  .iconBtn svg{ width: 20px; height: 20px; }
+}
+/* مغلق افتراضيًا — يفتح فقط مع .sidebarOpen */
+.sidebar{ transform: translateX(100%) !important; }
+.sidebarOpen{ transform: translateX(0) !important; }
+
+/* موبايل: فل سكرين */
+@media (max-width: 768px){
+  .sidebar{ width: 100% !important; border-radius: 0 !important; box-shadow: none; }
+}
+
+/* أوفرلاي + منع تمرير الخلفية */
+.overlay{ position:fixed; inset:0; background:rgba(2,6,23,.45); display:none; z-index:1100; }
+.overlay.overlayShow{ display:block; }
+.body--noscroll{ overflow:hidden; touch-action:none; }
+
+/* صورة البروفايل */
+.avatarImg{
+  width: 40px; height: 40px; border-radius: 50%;
+  object-fit: cover; border: none; background: transparent; box-shadow: none;
+}
+
+/* زر خروج أيقونة فقط */
+.logoutBtn{ color:#dc2626; }
+.logoutBtn svg{ stroke:#dc2626; }
+.logoutBtn:hover{ background:#fff1f1; }
+.logoutBtn:hover svg{ stroke:#b91c1c; }
+
+/* فوتر الحساب */
+.profileFooter{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-top:1px solid #f1f5f9; background:#fff; }
+.flexSpacer{ flex:1; }

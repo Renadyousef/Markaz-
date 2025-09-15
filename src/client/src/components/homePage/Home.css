@@ -54,7 +54,6 @@ html, body, #root{
   margin: 0 0 16px;              /* مسافة بسيطة أسفل النص */
 }
 
-
 .heroRow{ display:grid; grid-template-columns:1fr; gap:10px; }
 .heroText{ text-align:right; padding-inline:10px; }
 .heroText h1{ margin:0 0 6px; font-size:clamp(28px,4.2vw,38px); font-weight:900; color:var(--text); }
@@ -242,11 +241,9 @@ body::before{
   stroke-linecap:round;
   transition:stroke-dashoffset .6s ease, stroke .3s ease;
 }
-
 .ringFg.isDone{
   stroke:#16a34a; /* أخضر واضح عند الاكتمال */
 }
-
 
 /* 2) كارد "الدردشة الذكية" يكون في المنتصف دائماً */
 #feature-shortcuts .featureCard.isChat{
@@ -447,6 +444,7 @@ body::before{
   transition:.15s;
 }
 .uploadBox__btn:hover{ background:#fff8f0; }
+
 /* ===================== Weekly Progress (الدوائر) ===================== */
 /* قبل الاكتمال: برتقالي واضح – عند الاكتمال: أخضر */
 .ringFg{
@@ -463,7 +461,6 @@ body::before{
 /* إذا عندك فئة wp2Soft وتبين نفس البرتقالي قبل الاكتمال */
 .wp2Soft .ringFg{ stroke:#f59e0b !important; }
 .wp2Soft .ringFg.isDone{ stroke:#16a34a !important; }
-
 
 /* ===================== Upload Box (العنوان + الوصف جنب الأيقونة) ===================== */
 /* الأيقونة – تبقى على اليسار (أو اليمين حسب RTL) */
@@ -515,3 +512,223 @@ body::before{
   transition: .15s;
 }
 .uploadBox__btn:hover{ background:#fff8f0; }
+
+/* ========================================================= */
+/* ================== Responsive-only additions =============*/
+/* ========================================================= */
+
+/* شاشات كبيرة شوي */
+@media (max-width: 1200px){
+  .hp{ padding: 20px clamp(14px,3vw,24px); }
+  .gridWrap{ gap:16px; }
+}
+
+/* لابتوب/تابلت أفقي */
+@media (max-width: 1024px){
+  /* عمود واحد للكتل الرئيسية */
+  .gridWrap{ grid-template-columns: 1fr; }
+
+  /* 3 أعمدة لدوائر التقدّم */
+  .wp2Grid{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+
+  /* إحصاءات أعلى الصفحة عمودين */
+  .statsRow{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+
+/* تابلت عمودي */
+@media (max-width: 768px){
+  /* كروت الميزات: عمودين */
+  .featureGrid{
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    justify-content: center;
+  }
+
+  .hpCard, .featureCard{
+    max-width: 420px;
+    justify-self: center;
+  }
+
+  .panel{ padding: 16px; }
+  .statCard{ padding: 14px 16px; }
+  .heroText h1{ font-size: clamp(22px, 6vw, 30px); }
+}
+
+/* موبايل عام */
+@media (max-width: 600px){
+  /* الإحصاءات عمود واحد */
+  .statsRow{ grid-template-columns: 1fr; }
+
+  /* كروت الميزات عمود واحد */
+  .featureGrid{ grid-template-columns: 1fr; }
+
+  /* دوائر التقدّم عمودين */
+  .wp2Grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+
+  /* كرت الرفع يتحول عمودي بدون ما نغيّر ترتيب المحتوى */
+  .uploadBox{
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .uploadBox__text{
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .uploadBox__btn{ align-self: flex-start; }
+}
+
+/* موبايل صغير جدًا */
+@media (max-width: 420px){
+  .hp{ padding: 16px 12px; }
+  .statCard__value{ font-size: 22px; }
+  .featureTitle{ font-size: 18px; }
+  .featureDesc{ font-size: 14px; }
+  .wp2Card{ padding: 10px; }
+  .ring.sm{ width: 44px; height: 44px; }
+}
+
+/* شاشات أوسع من الديفولت */
+@media (min-width: 1400px){
+  .hp{ max-width: 1320px; }
+}
+
+/* ——— تمركز آخر كرت إذا كان عدد الكروت فردي ——— */
+.featureGrid > .featureCard{ justify-self: stretch; }
+.featureGrid > .featureCard:nth-last-child(1):nth-child(odd){
+  justify-self: center;
+  grid-column: 1 / -1;
+  max-width: 420px; /* نفس عرض كرت الدردشة */
+}
+/* للشاشات الكبيرة (ديسكتوب عادي) */
+@media (min-width: 1024px) {
+  .hpGrid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+  .statsRow {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+
+/* للتابلت (شاشات متوسطة) */
+@media (max-width: 1023px) and (min-width: 641px) {
+  .hpGrid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .statsRow {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* للموبايل (شاشات صغيرة) */
+@media (max-width: 640px) {
+  .hpGrid {
+    grid-template-columns: 1fr !important;
+  }
+  .statsRow {
+    grid-template-columns: 1fr !important;
+  }
+  .featureGrid {
+    grid-template-columns: 1fr !important;
+  }
+}
+/* ===================== Responsive Fixes ===================== */
+
+/* للشاشات الصغيرة (موبايل أقل من 600px) */
+@media (max-width: 600px) {
+
+  /* العنوان الرئيسي */
+  .heroText h1 {
+    font-size: clamp(20px, 6vw, 26px);
+    text-align: center;
+  }
+
+  .heroText p {
+    font-size: 13px;
+    text-align: center;
+  }
+
+  /* الكروت تصير عمود واحد */
+  .hpGrid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  /* إحصائيات */
+  .statsRow {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  /* الشبكات (Panels, Features) */
+  .gridWrap {
+    grid-template-columns: 1fr !important;
+    gap: 14px;
+  }
+
+  .featureGrid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* كرت الرفع (Upload Box) */
+  .uploadBox {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 10px;
+  }
+
+  .uploadBox__content {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .uploadBox__btn {
+    width: 100%;
+  }
+
+  /* كروت التقدم الأسبوعي */
+  .wp2Grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .wp2Card {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: center;
+  }
+}
+
+/* للشاشات المتوسطة (600px – 900px) */
+@media (max-width: 900px) {
+  .hpGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .statsRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .gridWrap {
+    grid-template-columns: 1fr;
+  }
+}
+/* شبكة التقدم الأسبوعي */
+.wp2Grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, 1fr); /* دايمًا عمودين */
+}
+
+/* للشاشات الكبيرة (ديسكتوب) */
+@media (min-width: 1024px) {
+  .wp2Grid {
+    grid-template-columns: repeat(3, 1fr); /* 3 أعمدة */
+  }
+}
+
+/* للشاشات الصغيرة جدًا (أقل من 420px) */
+@media (max-width: 420px) {
+  .wp2Grid {
+    grid-template-columns: 1fr; /* كرت واحد لو الشاشة مررة ضيقة */
+  }
+}
