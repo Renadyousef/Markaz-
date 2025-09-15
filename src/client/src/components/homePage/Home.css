@@ -139,33 +139,120 @@ html, body, #root{
 }
 
 /* ===================== Feature Access ===================== */
-.featureGrid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
-@media (max-width:980px){ .featureGrid{ grid-template-columns:1fr; } }
+/* ===================== Feature Access (Responsive + Equal Cards) ===================== */
+/* موبايل: عمود واحد */
+.featureGrid{
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr;
+}
 
+/* >= 600px: بطاقتان في الصف */
+@media (min-width: 600px){
+  .featureGrid{
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}
+
+/* لو تبينها تبقى 2 حتى بالديسكتوب اتركيها كذا.
+   لو تبين 3 على الديسكتوب غيّري 2 إلى 3 في الميديا التالية. */
+@media (min-width: 1024px){
+  .featureGrid{
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}
+
+/* البطاقة: ارتفاع ثابت/متساوي وتوزيع المحتوى */
 .featureCard{
-  background:var(--surface); border:1px solid var(--fx-card-ring); border-radius:16px; padding:18px;
-  box-shadow:var(--shadow); display:flex; flex-direction:column; gap:10px; text-align:center; align-items:center;
+  background: var(--surface);
+  border: 1px solid var(--fx-card-ring);
+  border-radius: 16px;
+  padding: clamp(14px, 2.4vw, 18px);
+  box-shadow: var(--shadow);
+
+  /* التوحيد */
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;  /* أيقونة | عنوان | وصف يتمدد | زر */
+  text-align: center;
+  align-items: start;
+  height: 100%;
+  gap: 10px;
+
   transition: transform .15s, box-shadow .15s, border-color .15s;
 }
-.featureCard:hover{ transform:translateY(-2px); box-shadow:0 16px 30px rgba(2,6,23,.12); border-color:#dfe5ee; }
+.featureCard:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px rgba(2,6,23,.12);
+  border-color: #dfe5ee;
+}
 
-.featureIcon{ width:56px; height:56px; border-radius:14px; display:grid; place-items:center; background:var(--fx-pill-bg); color:var(--fx-pill-fg); box-shadow:0 4px 16px rgba(15,23,42,.06); margin-inline:auto; }
-#feature-shortcuts svg, #feature-shortcuts .icon{ width:26px; height:26px; flex:0 0 auto; }
+/* الأيقونة متجاوبة */
+.featureIcon{
+  width: clamp(44px, 5.6vw, 56px);
+  height: clamp(44px, 5.6vw, 56px);
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: var(--fx-pill-bg);
+  color: var(--fx-pill-fg);
+  box-shadow: 0 4px 16px rgba(15,23,42,.06);
+  margin-inline: auto;
+}
+#feature-shortcuts svg,
+#feature-shortcuts .icon{
+  width: clamp(20px, 2.6vw, 26px);
+  height: clamp(20px, 2.6vw, 26px);
+}
 
-.featureTitle{ margin:10px 0 0; font-size:22px; font-weight:900; color:var(--text); }
-.featureDesc{ margin:0; color:#64748b; font-size:15px; line-height:1.7; }
+/* العنوان/الوصف متجاوبين */
+.featureTitle{
+  margin: 10px 0 0;
+  font-weight: 900;
+  color: var(--text);
+  font-size: clamp(18px, 2.4vw, 22px);
+}
+.featureDesc{
+  margin: 0;
+  color: #64748b;
+  line-height: 1.7;
+  font-size: clamp(13px, 1.9vw, 15px);
+}
 
-.featureCTA{ margin-top:12px; width:100%; display:inline-flex; align-items:center; justify-content:center; gap:10px;
-  border:1px solid var(--fx-card-ring); background:var(--surface); color:var(--text);
-  border-radius:12px; padding:10px 14px; font-weight:800; transition: background .15s, border-color .15s, transform .15s, box-shadow .15s; }
-.featureCTA .arrow{ order:-1; font-weight:900; }
-.featureCTA:hover{ background:var(--fx-cta-hover); border-color:#cbd5e1; }
-.featureCTA:active{ transform:translateY(0); box-shadow:inset 0 0 0 2px #eef2f7; }
+/* الزر يلصق تحت دائمًا لتوحيد الارتفاعات */
+.featureCTA{
+  margin-top: auto;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid var(--fx-card-ring);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 800;
+  transition: background .15s, border-color .15s, transform .15s, box-shadow .15s;
+}
+.featureCTA .arrow{ order: -1; font-weight: 900; }
+.featureCTA:hover{ background: var(--fx-cta-hover); border-color: #cbd5e1; }
+.featureCTA:active{ transform: translateY(0); box-shadow: inset 0 0 0 2px #eef2f7; }
 
+/* ألوان البطاقات */
 .isTasks .featureIcon{ background:#eef2f6; color:#1f2937; }
 .isPlan  .featureIcon{ background:#eef4f0; color:#1f2937; }
 .isQuiz  .featureIcon{ background:#f1effa; color:#1f2937; }
 .isCards .featureIcon{ background:#f7f3ee; color:#1f2937; }
+.isChat  .featureIcon{ background:#f7f3ee; color:#1f2937; }
+
+/* لو عدد البطاقات فردي: آخر بطاقة تتمركز */
+@media (min-width: 600px){
+  .featureGrid > .featureCard:nth-last-child(1):nth-child(odd){
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: min(360px, 100%);
+  }
+}
 
 /* ===================== Weekly Progress (دوائر) ===================== */
 .wp2Header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
@@ -458,12 +545,10 @@ body::before{
   stroke: #16a34a !important;   /* أخضر عند الاكتمال */
 }
 
-/* إذا عندك فئة wp2Soft وتبين نفس البرتقالي قبل الاكتمال */
+
 .wp2Soft .ringFg{ stroke:#f59e0b !important; }
 .wp2Soft .ringFg.isDone{ stroke:#16a34a !important; }
 
-/* ===================== Upload Box (العنوان + الوصف جنب الأيقونة) ===================== */
-/* الأيقونة – تبقى على اليسار (أو اليمين حسب RTL) */
 .uploadBox__ico{ flex: 0 0 auto; }
 
 /* صف: أيقونة + (عنوان + وصف) + زر */
@@ -513,124 +598,7 @@ body::before{
 }
 .uploadBox__btn:hover{ background:#fff8f0; }
 
-/* ========================================================= */
-/* ================== Responsive-only additions =============*/
-/* ========================================================= */
 
-/* شاشات كبيرة شوي */
-@media (max-width: 1200px){
-  .hp{ padding: 20px clamp(14px,3vw,24px); }
-  .gridWrap{ gap:16px; }
-}
-
-/* لابتوب/تابلت أفقي */
-@media (max-width: 1024px){
-  /* عمود واحد للكتل الرئيسية */
-  .gridWrap{ grid-template-columns: 1fr; }
-
-  /* 3 أعمدة لدوائر التقدّم */
-  .wp2Grid{ grid-template-columns: repeat(3, minmax(0,1fr)); }
-
-  /* إحصاءات أعلى الصفحة عمودين */
-  .statsRow{ grid-template-columns: repeat(2, minmax(0,1fr)); }
-}
-
-/* تابلت عمودي */
-@media (max-width: 768px){
-  /* كروت الميزات: عمودين */
-  .featureGrid{
-    grid-template-columns: repeat(2, minmax(0,1fr));
-    justify-content: center;
-  }
-
-  .hpCard, .featureCard{
-    max-width: 420px;
-    justify-self: center;
-  }
-
-  .panel{ padding: 16px; }
-  .statCard{ padding: 14px 16px; }
-  .heroText h1{ font-size: clamp(22px, 6vw, 30px); }
-}
-
-/* موبايل عام */
-@media (max-width: 600px){
-  /* الإحصاءات عمود واحد */
-  .statsRow{ grid-template-columns: 1fr; }
-
-  /* كروت الميزات عمود واحد */
-  .featureGrid{ grid-template-columns: 1fr; }
-
-  /* دوائر التقدّم عمودين */
-  .wp2Grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
-
-  /* كرت الرفع يتحول عمودي بدون ما نغيّر ترتيب المحتوى */
-  .uploadBox{
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-  .uploadBox__text{
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .uploadBox__btn{ align-self: flex-start; }
-}
-
-/* موبايل صغير جدًا */
-@media (max-width: 420px){
-  .hp{ padding: 16px 12px; }
-  .statCard__value{ font-size: 22px; }
-  .featureTitle{ font-size: 18px; }
-  .featureDesc{ font-size: 14px; }
-  .wp2Card{ padding: 10px; }
-  .ring.sm{ width: 44px; height: 44px; }
-}
-
-/* شاشات أوسع من الديفولت */
-@media (min-width: 1400px){
-  .hp{ max-width: 1320px; }
-}
-
-/* ——— تمركز آخر كرت إذا كان عدد الكروت فردي ——— */
-.featureGrid > .featureCard{ justify-self: stretch; }
-.featureGrid > .featureCard:nth-last-child(1):nth-child(odd){
-  justify-self: center;
-  grid-column: 1 / -1;
-  max-width: 420px; /* نفس عرض كرت الدردشة */
-}
-/* للشاشات الكبيرة (ديسكتوب عادي) */
-@media (min-width: 1024px) {
-  .hpGrid {
-    grid-template-columns: repeat(4, 1fr) !important;
-  }
-  .statsRow {
-    grid-template-columns: repeat(4, 1fr) !important;
-  }
-}
-
-/* للتابلت (شاشات متوسطة) */
-@media (max-width: 1023px) and (min-width: 641px) {
-  .hpGrid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-  .statsRow {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-}
-
-/* للموبايل (شاشات صغيرة) */
-@media (max-width: 640px) {
-  .hpGrid {
-    grid-template-columns: 1fr !important;
-  }
-  .statsRow {
-    grid-template-columns: 1fr !important;
-  }
-  .featureGrid {
-    grid-template-columns: 1fr !important;
-  }
-}
 /* ===================== Responsive Fixes ===================== */
 
 /* للشاشات الصغيرة (موبايل أقل من 600px) */
@@ -647,7 +615,7 @@ body::before{
     text-align: center;
   }
 
-  /* الكروت تصير عمود واحد */
+
   .hpGrid {
     grid-template-columns: 1fr !important;
     gap: 12px;
@@ -731,4 +699,47 @@ body::before{
   .wp2Grid {
     grid-template-columns: 1fr; /* كرت واحد لو الشاشة مررة ضيقة */
   }
+}
+
+
+/****** 8) Weekly progress – كبسولات نظيفة ******/
+.wp2Grid{
+  grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+  gap: 12px;
+}
+@media (max-width: 900px){
+  .wp2Grid{ grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+}
+@media (max-width: 520px){
+  .wp2Grid{ grid-template-columns: 1fr !important; }
+}
+.wp2Card{
+  border:1px solid var(--ring-soft) !important;
+  box-shadow: var(--shadow-sm) !important;
+  border-radius: 14px !important;
+  padding: 12px !important;
+}
+.ringBg{ stroke:#eef2f7 !important; }
+.ringFg{ stroke: #f59e0b !important; }
+.ringFg.isDone{ stroke: #16a34a !important; }
+
+/****** 9) ترتيب الأعمدة العام ******/
+.gridWrap{
+  gap: 20px !important;
+}
+@media (min-width: 1024px){
+  /* اليسار: التقدم الأسبوعي، اليمين: أدوات + لوحة الوصول */
+  .gridWrap{ grid-template-columns: 1.2fr .8fr !important; }
+}
+
+/****** 10) تفاصيل صغيرة ******/
+.featureCTA{ border-color:#e5e9f2; }
+.featureCTA:hover{ background:#f8fafc; border-color:#d7deea; }
+.featureCTA .arrow{ order:-1; }
+.isTasks .featureIcon,
+.isPlan .featureIcon,
+.isQuiz .featureIcon,
+.isCards .featureIcon,
+.isChat .featureIcon{
+  background:#f8fafc; color:#1f2937; border:1px solid #e9edf4;
 }

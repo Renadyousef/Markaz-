@@ -655,3 +655,23 @@ html[dir="rtl"] .menuDropdown {
 /* فوتر الحساب */
 .profileFooter{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-top:1px solid #f1f5f9; background:#fff; }
 .flexSpacer{ flex:1; }
+
+/* السايدبار افتراضيًا */
+.sidebar {
+  transform: translateX(100%);
+  transition: transform .28s ease;
+  width: 300px; /* العرض الأساسي */
+}
+
+/* مفتوح */
+.sidebarOpen {
+  transform: translateX(0);
+}
+
+/* على الموبايل: خليه 70% من العرض بدال 100% */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 70% !important;   /* أو 280px إذا تبغينه ثابت */
+    box-shadow: -4px 0 20px rgba(0,0,0,.15); /* يبين ظل */
+  }
+}

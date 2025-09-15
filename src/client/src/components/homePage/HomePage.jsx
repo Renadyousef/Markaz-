@@ -173,17 +173,18 @@ function FeatureAccessPanel({ navigate = (p) => {} }) {
         </article>
 
         {/* الدردشة مع الذكاء الاصطناعي */}
-        <article className="featureCard isChat">
-          <div className="featureIcon">
-            <Ico d="M21 15a4 4 0 01-4 4H8l-5 3 1.8-4.4A4 4 0 015 15V7a4 4 0 014-4h8a4 4 0 014 4v8z" />
-          </div>
-          <h4 className="featureTitle">الدردشة الذكية</h4>
-          <p className="featureDesc">تحدّثي مع المساعد لشرح الدروس وحل الأسئلة.</p>
-          <button className="featureCTA" onClick={() => (window.location.href = "/chat")}>
-            <span className="arrow">↗</span>
-            <span className="label">ابدأ الدردشة</span>
-          </button>
-        </article>
+       <article className="featureCard isChat">{/* isChat اختيارية الآن */}
+  <div className="featureIcon">
+    <Ico d="M21 15a4 4 0 01-4 4H8l-5 3 1.8-4.4A4 4 0 015 15V7a4 4 0 014-4h8a4 4 0 014 4v8z" />
+  </div>
+  <h4 className="featureTitle">الدردشة الذكية</h4>
+  <p className="featureDesc">تحدّثي مع المساعد لشرح الدروس وحل الأسئلة.</p>
+  <button className="featureCTA" onClick={() => (window.location.href = "/chat")}>
+    <span className="arrow">↗</span>
+    <span className="label">ابدأ الدردشة</span>
+  </button>
+</article>
+
       </div>
     </section>
   );
@@ -249,11 +250,13 @@ function DashboardBlocks() {
   return (
     <div className="gridWrap">
       <div className="col">
-        <QuizFlashcardsBox />
-        <WeeklyProgress />
+         <QuizFlashcardsBox />
+        <FeatureAccessPanel />
       </div>
       <div className="col">
-        <FeatureAccessPanel />
+     
+         
+        <WeeklyProgress />
       </div>
     </div>
   );
@@ -321,38 +324,7 @@ export default function HomePage() {
 
       {/* البلوكات */}
       <DashboardBlocks />
-
-      {/* كروت الميزات (اختياري مخفية) */}
-      <section className="hpGrid" style={{ display: "none" }}>
-        <Card
-          d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"
-          title="المهام"
-          desc="إدارة الواجبات والمهام اليومية بكفاءة."
-          cta="اذهب إلى المهام"
-          onClick={() => {}}
-        />
-        <Card
-          d="M4 6h16M4 12h12M4 18h8"
-          title="خطة الدراسة"
-          desc="تنظيم الجلسات الدراسية حسب جدولك."
-          cta="عرض الخطة"
-          onClick={() => {}}
-        />
-        <Card
-          d="M12 20a8 8 0 100-16 8 8 0 000 16zm-1-5h2v2h-2v-2zm0-8h2v6h-2V7z"
-          title="الاختبارات"
-          desc="اختبر معلوماتك باختبارات تفاعلية."
-          cta="ابدأ اختبار"
-          onClick={() => {}}
-        />
-        <Card
-          d="M4 19h16M7 9h10M7 13h10M7 5h10"
-          title="البطاقات التعليمية"
-          desc="راجِع المفاهيم الرئيسية ببطاقات رقمية."
-          cta="استعرض البطاقات"
-          onClick={() => {}}
-        />
-      </section>
+     
     </div>
   );
 }
