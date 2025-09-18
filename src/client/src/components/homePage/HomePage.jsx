@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import "./Home.css";
+import Upload from '../study/upload'
 
 /* ========== أيقونة SVG قابلة لإعادة الاستخدام ========== */
 function Ico({ d, className = "icon" }) {
@@ -89,26 +90,16 @@ function StatsRow() {
 
 
 /* ========== 2) مولّد الكويز والبطاقات + رفع ملف (بوكس + زر فقط) ========== */
-function QuizFlashcardsBox() {
+function QuizFlashcardsBox({ setShowUpload }) {
+  
+   const handleClick = () => {
+    setShowUpload(true); // now clicking the button switches the page
+  };
   return (
     <section className="panel">
       <h2 className="panel__title">مُولّد الاختبارات والبطاقات</h2>
 
-      <div className="uploadBox" aria-label="رفع ملف">
-        <div className="uploadBox__content">
-          <div className="uploadBox__ico" aria-hidden>
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M14 3H6a2 2 0 0 0-2 2v14l4-2 4 2 4-2 4 2V9z" />
-            </svg>
-          </div>
-          <div className="uploadBox__text">
-            <div className="uploadBox__title">إضافة ملف</div>
-            <div className="uploadBox__sub">الملف سيُستخدم لإنشاء اختبارات وبطاقات تعليمية</div>
-          </div>
-        </div>
-
-        <button type="button" className="uploadBox__btn">اختيار ملف</button>
-      </div>
+      <button  onClick={handleClick}  type="button" className="uploadBox__btn"> ابدأ الان</button>
     </section>
   );
 }
@@ -246,11 +237,11 @@ function WeeklyProgress() {
 
 
 /* ========== 6) تجميعة الأقسام (بدون المهام الحديثة) ========== */
-function DashboardBlocks() {
+function DashboardBlocks({ setShowUpload }) {
   return (
     <div className="gridWrap">
       <div className="col">
-         <QuizFlashcardsBox />
+         <QuizFlashcardsBox setShowUpload={setShowUpload} />
         <FeatureAccessPanel />
       </div>
       <div className="col">
@@ -268,6 +259,9 @@ export default function HomePage() {
   const [loadingName, setLoadingName] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
+  //showing upload pdf page
+  const [showUpload, setShowUpload] = useState(false);
+//Upload
   // RTL عام
   useEffect(() => {
     document.documentElement.setAttribute("dir", "rtl");
@@ -299,32 +293,32 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="hp">
-      {/* هيرو */}
-      <section className="heroBox">
-        <div className="heroRow">
-          <div className="heroText">
-            <h1>
-              {loadingName
-                ? "جاري التحميل…"
-                : errorMsg
-                  ? "مرحباً بعودتك!"
-                  : `مرحباً بعودتك ${firstName ? firstName : "صديقي"}!`}
-            </h1>
-            <p>جاهزة لمتابعة رحلتك الدراسية؟</p>
-            {errorMsg && (
-              <div className="heroError">{errorMsg}</div>
-            )}
-          </div>
+ <div className="hp">
+  {!showUpload && (
+    // هيرو
+    <section className="heroBox">
+      <div className="heroRow">
+        <div className="heroText">
+          <h1>
+            {loadingName
+              ? "جاري التحميل…"
+              : errorMsg
+                ? "مرحباً بعودتك!"
+                : `مرحباً بعودتك ${firstName ? firstName : "صديقي"}!`}
+          </h1>
+          <p>جاهزة لمتابعة رحلتك الدراسية؟</p>
+          {errorMsg && <div className="heroError">{errorMsg}</div>}
         </div>
-      </section>
+      </div>
+    </section>
+  )}
 
-      {/* صف الإحصائيات */}
-      <StatsRow />
+  {!showUpload && <StatsRow />}
 
-      {/* البلوكات */}
-      <DashboardBlocks />
-     
-    </div>
+  {!showUpload && <DashboardBlocks  setShowUpload={setShowUpload}  />}
+
+  {showUpload && <Upload />}
+</div>
+
   );
 }
