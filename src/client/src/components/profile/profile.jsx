@@ -275,7 +275,7 @@ export default function Profile() {
               <div className="col-12">
                 <label className="form-label">البريد الإلكتروني</label>
                 <input className="form-control" value={email} disabled readOnly />
-                <div className="form-text">لا يمكن تعديل البريد من هنا.</div>
+                <div className="form-text"></div>
               </div>
 
               <div className="col-12 d-flex flex-wrap gap-2 justify-content-end mt-2">
