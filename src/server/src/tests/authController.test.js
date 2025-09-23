@@ -1,36 +1,6 @@
-// Mocks must come first
-jest.mock("../config/firebase-config", () => ({
-  Students: {
-    where: jest.fn(() => ({ get: jest.fn() })), // Fixed to mock .get()
-    add: jest.fn(),
-  },
-}));
-
-jest.mock("bcrypt", () => ({
-  hash: jest.fn(),
-  compare: jest.fn(),
-}));
-
-jest.mock("jsonwebtoken", () => ({
-  sign: jest.fn(),
-}));
-
-// Import after mocks
 const { signup, login } = require("../controllers/authController");
-const { Students } = require("../config/firebase-config");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 
-// Helper to mock Firestore snapshot
-const makeSnapshot = (docsArray) => ({
-  empty: docsArray.length === 0,
-  docs: docsArray.map((data, index) => ({
-    id: `doc-${index}`,
-    data: () => data,
-  })),
-});
-
-describe("Auth Controller", () => {
+describe("Auth Controller test cases for unit testing", () => {
   let req, res;
 
   beforeEach(() => {
@@ -39,34 +9,28 @@ describe("Auth Controller", () => {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
     };
-    jest.clearAllMocks();
   });
 
-  // ===== Signup =====
-  test("signup success", async () => {
-    req.body = { firstName: "John", lastName: "Doe", email: "a@b.com", password: "12345678" };
+  //Signup
 
-    // No existing user
-    Students.where().get.mockResolvedValueOnce(makeSnapshot([]));
-    // Hash password
-    bcrypt.hash.mockResolvedValueOnce("hashedPassword");
-    // Add user
-    Students.add.mockResolvedValueOnce();
-    // After add: return new user
-    Students.where().get.mockResolvedValueOnce(makeSnapshot([{ email: "a@b.com" }]));
-    // JWT token
-    jwt.sign.mockReturnValueOnce("fakeToken");
+  // 1:Test case: Signup with valid new user data
+  test("signup success", async () => {
+    const uniqueEmail = `testuser_${Date.now()}@test.com`; // unique email for each run
+    req.body = { firstName: "ريناد", lastName: "العتيبي", email: uniqueEmail, password: "Roo@091091" };
 
     await signup(req, res);
 
     expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.json).toHaveBeenCalledWith({ msg: "تم إنشاء الحساب بنجاح", token: "fakeToken" });
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      msg: "تم إنشاء الحساب بنجاح",
+      token: expect.any(String) // token generated dynamically
+    }));
   });
 
+  // 2:Test case: Signup with an already existing email
   test("signup with existing email", async () => {
-    req.body = { firstName: "John", lastName: "Doe", email: "a@b.com", password: "12345678" };
-
-    Students.where().get.mockResolvedValueOnce(makeSnapshot([{ email: "a@b.com" }]));
+    const existingEmail = "renadroo017@gmail.com"; // ensure this email already exists in DB
+    req.body = { firstName: "سارة", lastName: "العتيبي", email: existingEmail, password: "Roo@711711" };
 
     await signup(req, res);
 
@@ -74,25 +38,26 @@ describe("Auth Controller", () => {
     expect(res.json).toHaveBeenCalledWith({ msg: "البريد الإلكتروني مستخدم مسبقًا" });
   });
 
-  // ===== Login =====
-  test("login success", async () => {
-    req.body = { email: "a@b.com", password: "12345678" };
+  //Login
 
-    Students.where().get.mockResolvedValueOnce(makeSnapshot([{ email: "a@b.com", password: "hashedPassword" }]));
-    bcrypt.compare.mockResolvedValueOnce(true);
-    jwt.sign.mockReturnValueOnce("fakeToken");
+  // 3.Test case: Login with correct email and password
+  test("login success", async () => {
+    const email = "renadroo017@gmail.com"; 
+    const password = "Roo@711711";       
+    req.body = { email, password };
 
     await login(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({ msg: "تم تسجيل الدخول بنجاح", token: "fakeToken" });
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      msg: "تم تسجيل الدخول بنجاح",
+      token: expect.any(String)
+    }));
   });
 
+  //4. Test case: Login with wrong password
   test("login with wrong password", async () => {
-    req.body = { email: "a@b.com", password: "wrong" };
-
-    Students.where().get.mockResolvedValueOnce(makeSnapshot([{ email: "a@b.com", password: "hashedPassword" }]));
-    bcrypt.compare.mockResolvedValueOnce(false);
+    req.body = { email: "renadroo017@gmail.com", password: "Roo@311311" };
 
     await login(req, res);
 
@@ -100,10 +65,10 @@ describe("Auth Controller", () => {
     expect(res.json).toHaveBeenCalledWith({ msg: "البريد الالكتروني او كلمة المرور غير صحيحة" });
   });
 
+  // Test case: Login with non-existing user
   test("login with non-existing user", async () => {
-    req.body = { email: "a@b.com", password: "12345678" };
-
-    Students.where().get.mockResolvedValueOnce(makeSnapshot([]));
+    const email = `nonexist_${Date.now()}@test.com`; // unique non-existent email
+    req.body = { email, password: "Roo@311311" };
 
     await login(req, res);
 
