@@ -35,5 +35,7 @@ module.exports = {
   Questions,
   FeedBack,
   QuizResult,
-  StudySession
+  StudySession,
+  pdf
+  
 };

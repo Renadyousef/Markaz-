@@ -12,6 +12,7 @@ const homeRoutes = require("./routes/homeRoutes");
 const sidebarRoutes = require("./routes/sidebarRoutes");
 const userRoutes = require("./routes/userRoutes");
 const profileRoutes = require("./routes/profileRoutes"); 
+const uploadRoutes = require("./routes/uploadRoutes");
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use("/home", homeRoutes);       // GET /home/me (يتطلب توكن)
 app.use("/sidebar", sidebarRoutes); // GET /sidebar/me (يتطلب توكن)
 app.use("/user", userRoutes);       // تجريب session أو جلب بيانات المستخدم
 app.use("/profile", profileRoutes);
+app.use("/home", uploadRoutes);
 // ========== 404 ==========
 app.use((req, res) => {
   res.status(404).json({
@@ -40,4 +42,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ msg: "خطأ في الخادم", error: err.message });
 });
 
+
+// هنا التركيب الصحيح:
+ 
 module.exports = app;
