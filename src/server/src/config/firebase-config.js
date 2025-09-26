@@ -25,7 +25,7 @@ const Questions = DB.collection('questions');
 const FeedBack = DB.collection('feed_back');
 const QuizResult = DB.collection('quiz_result');
 const StudySession = DB.collection('study_session');
-
+const pdf = DB.collection('pdf');
 module.exports = {
   Students,
   Task,
@@ -37,5 +37,4 @@ module.exports = {
   QuizResult,
   StudySession,
   pdf
-  
 };
