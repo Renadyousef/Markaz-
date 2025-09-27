@@ -1,0 +1,206 @@
+
+/* ألوان عامة + لون اللوقو */
+:root{
+  --bg:#f9fafb;
+  --text:#0f172a;        /* slate-900 */
+  --muted:#475569;       /* slate-600 */
+  --brand:#f59e0b;       /* amber-500 */
+  --brand-ink:#b45309;   /* أغمق شوي للهوفر */
+}
+
+/* خلفية عامة */
+html, body, #root{
+  min-height:100%;
+  background:
+    radial-gradient(900px 360px at 12% 0%, #fff7ed 0%, transparent 60%),
+    radial-gradient(1100px 420px at 88% 6%, #ffedd5 8%, transparent 55%),
+    radial-gradient(900px 360px at 50% 100%, rgba(15,23,42,.06) 0%, transparent 60%),
+    var(--bg);
+  background-repeat:no-repeat;
+}
+
+/* ====== المقطع ====== */
+.about-section{
+  position: relative;
+  padding: clamp(64px, 10vw, 120px) 24px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.about-wrapper{
+  margin: 0 auto;
+  max-width: 920px;
+  text-align: center;
+}
+
+/* ====== العنوان ====== */
+.about-title{
+  font-size: clamp(28px, 5vw, 44px);
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--brand);
+  letter-spacing: .5px;
+  text-shadow: 0 2px 12px rgba(245, 158, 11, .25);
+  position: relative;
+  display: inline-block;
+}
+.about-title::after{
+  content: "";
+  position: absolute;
+  inset-inline: 10%;
+  bottom: -10px;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg,
+    rgba(245,158,11,.0) 0%,
+    rgba(245,158,11,.7) 40%,
+    rgba(245,158,11,.0) 100%
+  );
+}
+
+/* ====== النصوص ====== */
+.about-text{
+  color: var(--muted);
+  font-size: clamp(15px, 2.1vw, 18px);
+  line-height: 2.1;
+  margin: 20px auto 0;
+  max-width: 68ch;
+  text-wrap: pretty;
+  text-shadow: 0 1px 0 rgba(255,255,255,.45);
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+/* ====== كلمة مركز ====== */
+.brand{
+  display: inline;
+  color: var(--brand);
+  font-weight: 800;
+  text-shadow: 0 1px 4px rgba(245, 158, 11, 0.25);
+  transition: color .3s ease, text-shadow .3s ease;
+}
+.brand:hover{
+  color: var(--brand-ink);
+  text-shadow: 0 2px 8px rgba(245, 158, 11, 0.45);
+}
+
+/* لمنع كسر "في مركز" */
+.nowrap{
+  white-space: nowrap;
+  display: inline;
+}
+
+/* ====== العناوين الفرعية ====== */
+.about-subtitle{
+  margin-top: clamp(28px, 4vw, 40px);
+  margin-bottom: 8px;
+  font-size: clamp(20px, 3.2vw, 28px);
+  font-weight: 800;
+  color: var(--text);
+  position: relative;
+  display: inline-block;
+  padding-inline-start: 14px;
+}
+.about-subtitle::before{
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: .6em;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--brand);
+  box-shadow: 0 0 12px rgba(245,158,11,.35);
+}
+
+/* ====== القوائم ====== */
+.about-list{
+  margin: 6px auto 14px;
+  max-width: 68ch;
+  padding-inline-start: 1.2rem;
+  line-height: 2.1;
+  color: var(--muted);
+  text-shadow: 0 1px 0 rgba(255,255,255,.45);
+}
+.about-list li{
+  margin: 4px 0;
+}
+.about-list li::marker{
+  color: var(--brand);
+}
+
+/* ====== الروابط ====== */
+.about-link{
+  color: var(--brand);
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 2px solid rgba(245,158,11,.35);
+  padding-bottom: 1px;
+  transition: border-color .2s ease, color .2s ease;
+}
+.about-link:hover{
+  color: var(--brand-ink);
+  border-color: rgba(245,158,11,.65);
+}
+
+/* ====== أوربز الخلفية ====== */
+.about-orb{
+  position: absolute;
+  filter: blur(32px);
+  opacity: .35;
+  pointer-events: none;
+  z-index: -1;
+  mix-blend-mode: multiply;
+  animation: float 16s ease-in-out infinite;
+}
+.orb-1{
+  width: 360px; height: 360px;
+  left: max(2%, 24px); top: -80px;
+  background: radial-gradient(closest-side, #ffd8a8, transparent 70%);
+  animation-delay: 0s;
+}
+.orb-2{
+  width: 420px; height: 420px;
+  right: 6%; top: 20px;
+  background: radial-gradient(closest-side, #ffedd5, transparent 70%);
+  animation-delay: 1.2s;
+}
+.orb-3{
+  width: 500px; height: 500px;
+  left: 50%; bottom: -140px; transform: translateX(-50%);
+  background: radial-gradient(closest-side, rgba(15,23,42,.08), transparent 70%);
+  animation-delay: .6s;
+}
+@keyframes float{
+  0%, 100% { transform: translateY(0) }
+  50%      { transform: translateY(-12px) }
+}
+
+/* ====== مؤثرات الظهور ====== */
+.reveal{
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fadeUp 1s ease-out forwards;
+}
+.delay-1{ animation-delay: .2s; }
+.delay-2{ animation-delay: .4s; }
+.delay-3{ animation-delay: .6s; }
+@keyframes fadeUp {
+  to{ opacity: 1; transform: translateY(0); }
+}
+
+/* ====== تنسيقات إضافية ====== */
+.text-center{ text-align:center !important; }
+.about-content{ text-align:right; margin-top:24px; }
+.about-content .about-text,
+.about-content .about-subtitle,
+.about-content .about-list{
+  text-align:right;
+  margin-inline:0;
+}
+
+/* ميديا للشاشات الصغيرة */
+@media (max-width: 640px){
+  .about-title::after{ bottom: -8px; height: 3px; }
+  .about-text{ line-height: 2; }
+}
+.nowrap{ white-space: nowrap; display:inline; }

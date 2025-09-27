@@ -23,17 +23,7 @@ function Ico({ d, className = "icon" }) {
   );
 }
 
-/* زر إجراء سريع داخل الهيرو */
-function QuickPill({ d, label, onClick }) {
-  return (
-    <button className="pillBtn" onClick={onClick}>
-      <span className="pillBtn__label">{label}</span>
-      <Ico d={d} className="icon xs" />
-    </button>
-  );
-}
-
-/* كارت ميزات */
+/* كارت ميزات (قابل للاستخدام لاحقاً) */
 function Card({ d, title, desc, cta, onClick }) {
   return (
     <article className="hpCard">
@@ -49,8 +39,8 @@ function Card({ d, title, desc, cta, onClick }) {
   );
 }
 
-/* ========== 1) صف البطاقات الإحصائية ========== */
-function StatCard({ label, value = 0, d, tone = "orange" }) {
+/* ========== 1) صف البطاقات الإحصائية (نفس ترتيب التصميم الثاني) ========== */
+function StatCard({ label, value = 0, d, tone = "green" }) {
   return (
     <div className={`statCard tone-${tone}`}>
       <div className="statCard__meta">
@@ -63,49 +53,46 @@ function StatCard({ label, value = 0, d, tone = "orange" }) {
     </div>
   );
 }
+
 function StatsRow() {
   return (
     <section className="statsRow">
-      <StatCard
-        label="جلسات مكتملة"
-        value={0}
-        tone="orange"
-        d="M21 13a8 8 0 11-3-6.3M12 8v4l3 2"
-      />
-      <StatCard
-        label="مهام مكتملة"
-        value={0}
-        tone="green"
-        d="M20 6l-11 11-5-5"
-      />
+      {/* الخطط الدراسية المكتملة أولاً */}
       <StatCard
         label="الخطط الدراسية المكتملة"
         value={0}
         tone="green"
         d="M4 6h16M4 12h12M4 18h8"
       />
+      {/* ثم الجلسات المكتملة */}
+      <StatCard
+        label="جلسات دراسية مكتملة"
+        value={0}
+        tone="green"
+        d="M21 13a8 8 0 11-3-6.3M12 8v4l3 2"
+      />
     </section>
   );
 }
 
-/* ========== 2) مولّد الكويز والبطاقات ========== */
+/* ========== 2) مولّد الكويز والبطاقات بنفس زر التصميم الثاني ========== */
 function QuizFlashcardsBox() {
   return (
     <section className="panel">
       <h2 className="panel__title">مُولّد الاختبارات والبطاقات</h2>
-      {/* 🔗 استبدلنا الزر بـ Link مع نفس الكلاس */}
       <Link to="upload" className="uploadBox__btn">
-        ابدأ الان
+        ابدأ الآن
       </Link>
     </section>
   );
 }
 
-/* ========== 3) لوحة الوصول ========== */
-function FeatureAccessPanel({ navigate = (p) => {} }) {
+/* ========== 3) لوحة الوصول (باستخدام Link) ========== */
+function FeatureAccessPanel() {
   return (
     <section className="panel" id="feature-shortcuts">
       <h2 className="panel__title">لوحة الوصول</h2>
+
       <div className="featureGrid">
         {/* الخطة الدراسية */}
         <article className="featureCard isPlan">
@@ -114,23 +101,10 @@ function FeatureAccessPanel({ navigate = (p) => {} }) {
           </div>
           <h4 className="featureTitle">الخطة الدراسية</h4>
           <p className="featureDesc">نظّم جلساتك وحدّد أولوياتك بسهولة.</p>
-          <button className="featureCTA" onClick={() => navigate("/plan")}>
+          <Link to="/plans" className="featureCTA">
             <span className="arrow">↗</span>
             <span className="label">عرض الخطة</span>
-          </button>
-        </article>
-
-        {/* المهام */}
-        <article className="featureCard isTasks">
-          <div className="featureIcon">
-            <Ico d="M3 4h18v16H3z M7 8h10M7 12h10M7 16h6" />
-          </div>
-          <h4 className="featureTitle">المهام</h4>
-          <p className="featureDesc">إدارة الواجبات ومتابعة التقدّم اليومي.</p>
-          <button className="featureCTA" onClick={() => navigate("/tasks")}>
-            <span className="arrow">↗</span>
-            <span className="label">عرض المهام</span>
-          </button>
+          </Link>
         </article>
 
         {/* البطاقات التعليمية */}
@@ -140,13 +114,10 @@ function FeatureAccessPanel({ navigate = (p) => {} }) {
           </div>
           <h4 className="featureTitle">البطاقات التعليمية</h4>
           <p className="featureDesc">راجِع المفاهيم ببطاقات ذكية.</p>
-          <button
-            className="featureCTA"
-            onClick={() => navigate("/flashcards")}
-          >
+          <Link to="/cards" className="featureCTA">
             <span className="arrow">↗</span>
             <span className="label">ابدأ المراجعة</span>
-          </button>
+          </Link>
         </article>
 
         {/* الاختبارات */}
@@ -156,33 +127,45 @@ function FeatureAccessPanel({ navigate = (p) => {} }) {
           </div>
           <h4 className="featureTitle">الاختبارات</h4>
           <p className="featureDesc">اختبر فهمك باختبارات تفاعلية.</p>
-          <button className="featureCTA" onClick={() => navigate("/quizzes")}>
+          <Link to="/quizzes" className="featureCTA">
             <span className="arrow">↗</span>
             <span className="label">ابدأ الاختبار</span>
-          </button>
+          </Link>
         </article>
+        
+{/* الجلسات الدراسية */}
+<article className="featureCard isSessions">
+  <div className="featureIcon">
+    <Ico d="M12 8v5l3 2 M21 13a8 8 0 1 1-6-7.8" />
+  </div>
+  <h4 className="featureTitle">الجلسات الدراسية</h4>
+  <p className="featureDesc">ابدأ جلسات مذاكرة وتتبع وقتك بسهولة.</p>
+  <Link to="/sessions" className="featureCTA">
+    <span className="arrow">↗</span>
+    <span className="label">ابدأ جلسة</span>
+  </Link>
+</article>
 
-        {/* الدردشة */}
+
+
+        {/* الدردشة الذكية */}
         <article className="featureCard isChat">
           <div className="featureIcon">
             <Ico d="M21 15a4 4 0 01-4 4H8l-5 3 1.8-4.4A4 4 0 015 15V7a4 4 0 014-4h8a4 4 0 014 4v8z" />
           </div>
           <h4 className="featureTitle">الدردشة الذكية</h4>
           <p className="featureDesc">تحدّثي مع المساعد لشرح الدروس وحل الأسئلة.</p>
-          <button
-            className="featureCTA"
-            onClick={() => (window.location.href = "/chat")}
-          >
+          <Link to="/chat" className="featureCTA">
             <span className="arrow">↗</span>
             <span className="label">ابدأ الدردشة</span>
-          </button>
+          </Link>
         </article>
       </div>
     </section>
   );
 }
 
-/* ========== 5) التقدم الأسبوعي ========== */
+/* ========== 5) التقدم الأسبوعي (نفس ستايل الحلقة) ========== */
 function WeeklyProgress() {
   const days = [
     { d: "الأحد", h: 4, max: 4.5 },
@@ -193,10 +176,10 @@ function WeeklyProgress() {
     { d: "الجمعة", h: 1, max: 2 },
     { d: "السبت", h: 0, max: 2 },
   ];
+
   const pct = (h, max) =>
     Math.max(0, Math.min(100, Math.round((h / max) * 100)));
-  const R = 20,
-    C = 2 * Math.PI * R;
+  const R = 20, C = 2 * Math.PI * R;
   const dash = (p) => C - (C * p) / 100;
 
   return (
@@ -208,19 +191,19 @@ function WeeklyProgress() {
         {days.map((x, i) => {
           const p = pct(x.h, x.max);
           return (
-            <div key={i} className="wp2Card">
+            <div
+              key={i}
+              className="wp2Card"
+              role="group"
+              aria-label={`${x.d}: ${x.h} من ${x.max} ساعة`}
+            >
               <div className="ring sm">
-                <svg viewBox="0 0 48 48" width="48" height="48">
+                <svg viewBox="0 0 48 48" width="48" height="48" className="ringSvg" aria-hidden>
                   <circle cx="24" cy="24" r={R} className="ringBg" />
                   <circle
-                    cx="24"
-                    cy="24"
-                    r={R}
+                    cx="24" cy="24" r={R}
                     className={`ringFg ${p >= 100 ? "isDone" : ""}`}
-                    style={{
-                      strokeDasharray: `${C}px`,
-                      strokeDashoffset: `${dash(p)}px`,
-                    }}
+                    style={{ strokeDasharray: `${C}px`, strokeDashoffset: `${dash(p)}px` }}
                   />
                 </svg>
                 <div className="ringLabel">{p}%</div>
@@ -254,7 +237,7 @@ function DashboardBlocks() {
   );
 }
 
-/* ========== الصفحة الرئيسية ========== */
+/* ========== الصفحة الرئيسية (نفس منطقك + نفس شكل الهيرو) ========== */
 export default function HomePage() {
   const [firstName, setFirstName] = useState("");
   const [loadingName, setLoadingName] = useState(true);
@@ -301,15 +284,15 @@ export default function HomePage() {
                         ? "جاري التحميل…"
                         : errorMsg
                         ? "مرحباً بعودتك!"
-                        : `مرحباً بعودتك ${
-                            firstName ? firstName : "صديقي"
-                          }!`}
+                        : `مرحباً بعودتك ${firstName ? firstName : "صديقي"}!`}
                     </h1>
                     <p>جاهزة لمتابعة رحلتك الدراسية؟</p>
                     {errorMsg && <div className="heroError">{errorMsg}</div>}
                   </div>
                 </div>
               </section>
+
+              {/* نفس ترتيب ودزاين الكود الثاني */}
               <StatsRow />
               <DashboardBlocks />
             </>

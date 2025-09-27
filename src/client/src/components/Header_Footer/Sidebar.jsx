@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { NavLink, useNavigate } from "react-router-dom";
 
 export default function Sidebar({
   open,
   onClose,
-  active,
-  onSelect,
-  onProfile,
+  active,     // اختياري: احتفظنا به كـ fallback لو ما كان فيه Router
+  onSelect,   // اختياري: fallback
+  onProfile,  // اختياري: fallback
   onLogout,
 }) {
   const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [lastName, setLastName]   = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const navigate = useNavigate();
 
   function getAuthHeaders() {
     let t =
@@ -33,10 +35,7 @@ export default function Sidebar({
         setFirstName((data?.firstName || "").toString());
         setLastName((data?.lastName || "").toString());
       } catch (err) {
-        console.error(
-          "تعذّر جلب بيانات السايدبار:",
-          err?.response?.data || err.message
-        );
+        console.error("تعذّر جلب بيانات السايدبار:", err?.response?.data || err.message);
       }
     })();
   }, []);
@@ -45,7 +44,7 @@ export default function Sidebar({
     localStorage.removeItem("token");
     sessionStorage.removeItem("token");
     onLogout?.();
-    window.location.href = "/";
+    navigate("/", { replace: true });
   };
 
   // امنع تمرير الخلفية عند الفتح + إغلاق بـ ESC
@@ -61,15 +60,15 @@ export default function Sidebar({
     };
   }, [open, onClose]);
 
+  // تعريف العناصر ومساراتها
   const items = [
-    { key: "home", label: "الشاشة الرئيسية", icon: DashboardIcon },
-    { key: "tasks", label: "المهام", icon: TaskIcon },
-    { key: "plans", label: "الخطط الدراسية", icon: PlanIcon },
-    { key: "quizzes", label: "الاختبارات", icon: QuizIcon },
-    { key: "cards", label: "البطاقات التعليمية", icon: CardsIcon },
-    { key: "sessions", label: "جلسات المذاكرة", icon: ClockIcon },
-    { key: "progress", label: "التقدم", icon: ChartIcon },
-    { key: "chat", label: "دردشة الذكاء الاصطناعي", icon: ChatIcon },
+    { key: "home",     label: "الشاشة الرئيسية",       icon: DashboardIcon, path: "/home" },
+    { key: "plans",    label: "الخطط الدراسية",        icon: PlanIcon,      path: "/plans" },
+    { key: "quizzes",  label: "الاختبارات",            icon: QuizIcon,      path: "/quizzes" },
+    { key: "cards",    label: "الطاقات التعليمية",     icon: CardsIcon,     path: "/cards" },
+    { key: "sessions", label: "جلسات المذاكرة",        icon: ClockIcon,     path: "/sessions" },
+    { key: "progress", label: "التقدم",                icon: ChartIcon,     path: "/progress" },
+    { key: "chat",     label: "دردشة الذكاء الاصطناعي", icon: ChatIcon,     path: "/chat" },
   ];
 
   const fullName =
@@ -102,20 +101,24 @@ export default function Sidebar({
 
         {/* القائمة */}
         <nav className="list" aria-label="القائمة">
-          {items.map(({ key, label, icon: Icon }) => (
-            <a
+          {items.map(({ key, label, icon: Icon, path }) => (
+            <NavLink
               key={key}
-              href="#"
-              className={`item ${active === key ? "active" : ""}`}
-              onClick={(e) => {
-                e.preventDefault();
-                onSelect?.(key);
+              to={path}
+              className={({ isActive }) =>
+                `item ${isActive || active === key ? "active" : ""}`
+              }
+              onClick={() => {
+                // إغلاق القائمة بعد التنقل
                 onClose?.();
+                // دعم fallback لو في مكان تستخدمين onSelect
+                onSelect?.(key);
               }}
+              end
             >
               <span className="icon"><Icon /></span>
               <span className="label">{label}</span>
-            </a>
+            </NavLink>
           ))}
         </nav>
 
@@ -124,13 +127,17 @@ export default function Sidebar({
           <div
             className="profileInfo"
             onClick={() => {
+              // التنقل للملف الشخصي
+              navigate("/profile");
               onProfile?.();
               onClose?.();
             }}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && navigate("/profile")}
           >
-            {/* صورة البروفايل */}
             <img
-              src="/profile.png"   /* ← غيّري المسار لصورتك */
+              src="/profile.png"
               alt="Profile Avatar"
               className="avatarImg"
             />
@@ -140,10 +147,8 @@ export default function Sidebar({
             </div>
           </div>
 
-          {/* يدفع زر الخروج لأقصى اليسار (أقصى يمين في RTL) */}
           <div className="flexSpacer" />
 
-          {/* زر خروج أيقونة فقط */}
           <button
             className="iconBtn logoutBtn"
             aria-label="تسجيل الخروج"
@@ -184,7 +189,6 @@ export default function Sidebar({
 
 /* ===== Icons ===== */
 function DashboardIcon(){return(<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 3h8v8H3zM13 3h8v5h-8zM13 10h8v11h-8zM3 13h8v8H3z"/></g></svg>);}
-function TaskIcon(){return(<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h6M7 12h10M7 16h8"/></g></svg>);}
 function PlanIcon(){return(<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h6"/><path d="M6 3v3M18 3v3"/></g></svg>);}
 function QuizIcon(){return(<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M9 7h6M9 11h6"/><path d="M7 5h10l2 14H5L7 5z"/></g></svg>);}
 function CardsIcon(){return(<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h9v11"/></g></svg>);}

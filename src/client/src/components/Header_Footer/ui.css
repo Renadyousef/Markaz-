@@ -674,3 +674,16 @@ html[dir="rtl"] .menuDropdown {
     box-shadow: -4px 0 20px rgba(0,0,0,.15); /* يبين ظل */
   }
 }
+
+.mkzMenu .item {
+  display: block;
+  padding: .75rem 1rem;
+  border-radius: .75rem;
+  color: inherit;
+  text-decoration: none;
+}
+.mkzMenu .item.active {
+  background: #eef2ff;
+  color: #1d4ed8;
+  font-weight: 600;
+}

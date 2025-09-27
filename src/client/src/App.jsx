@@ -1,14 +1,26 @@
 // src/App.jsx
 import { useEffect, useState, useCallback } from "react";
+import { Routes, Route } from "react-router-dom"; // ⬅️ إضافة الراوتر للصفحات العامة
 import "./App.css";
-
-
 
 /* الصفحات */
 import LandingPage from "./components/landingPage/LandingPage";
 import AuthPage from "./components/auth/AuthPage";
 import HomePage from "./components/homePage/HomePage";
 import ProfilePage from "./components/profile/Profile.jsx";
+
+
+/* صفحات الفوتر */
+import About from "./components/Header_Footer/About.jsx";
+import Contact from "./components/Header_Footer/Contact.jsx";
+import Privacy from "./components/Header_Footer/Privacy.jsx";
+
+/* ✅ صفحات تشغيل الميزات (إضافة فقط) */
+import StudyPlansPage   from "./components/Pages/StudyPlansPage.jsx";
+import QuizPage         from "./components/Pages/QuizPage.jsx";
+import FlashcardsPage   from "./components/Pages/FlashcardsPage.jsx";
+import ChatAI           from "./components/Pages/ChatAI.jsx";
+import SessionsPage from "./components/Pages/SessionsPage.jsx";
 
 /* الواجهة */
 import Header from "./components/Header_Footer/Header";
@@ -105,14 +117,13 @@ export default function App() {
 
         <div className="app-body">
           {/* السايدبار */}
-          <Sidebar
-            open={open}
-            onClose={() => setOpen(false)}
-            active={page}
-            onProfile={() => setPage("profile")}
-            onSelect={(key) => setPage(key)} // من السايدبار: home/tasks/... الخ
-            onLogout={handleLogout}
-          />
+  <Sidebar
+  open={open}
+  onClose={() => setOpen(false)}
+  onProfile={() => setPage("profile")}
+  onLogout={handleLogout}
+/>
+
 
           {/* المحتوى */}
           <main className="content-area">
@@ -130,7 +141,25 @@ export default function App() {
           </main>
         </div>
 
-        {/* الفوتر */}
+        {/* ✅ Routes لصفحات الفوتر — تعمل مع <Link> في Footer */}
+        <Routes>
+          <Route path="/about" element={<About />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/contact" element={<Contact />} />
+         <Route path="/sessions" element={<SessionsPage />} />
+        </Routes>
+
+        {/* ✅ Routes تشغيلية لإتاحة “ابدأ الآن” وتحديد السايدبار (إضافة فقط) */}
+        <Routes>
+          <Route path="/home/*" element={<HomePage token={token} />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/plans"   element={<StudyPlansPage />} />
+          <Route path="/quizzes" element={<QuizPage />} />
+          <Route path="/cards"   element={<FlashcardsPage />} />
+          <Route path="/chat"    element={<ChatAI />} />
+        </Routes>
+
+        {/* الفوتر (بدون onNav) */}
         <Footer />
       </div>
     );
@@ -148,6 +177,16 @@ export default function App() {
           goTo={goTo}
         />
       )}
+
+      {/* ✅ Routes لصفحات الفوتر قبل الدخول */}
+      <Routes>
+        <Route path="/about" element={<About />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/contact" element={<Contact />} />
+      </Routes>
+
+      {/* الفوتر (بدون onNav) */}
+      <Footer />
     </>
   );
 }
