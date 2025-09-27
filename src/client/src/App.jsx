@@ -2,6 +2,8 @@
 import { useEffect, useState, useCallback } from "react";
 import "./App.css";
 
+
+
 /* الصفحات */
 import LandingPage from "./components/landingPage/LandingPage";
 import AuthPage from "./components/auth/AuthPage";
@@ -18,7 +20,7 @@ const PAGE_KEY  = "app:page";
 const AUTH_TAB_KEY = "app:authTab";
 
 export default function App() {
-  // RTL عام
+  // RTL #
   useEffect(() => {
     document.documentElement.setAttribute("dir", "rtl");
     document.documentElement.setAttribute("lang", "ar");

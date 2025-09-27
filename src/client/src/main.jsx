@@ -1,11 +1,12 @@
-import './index.css'
-import App from './App.jsx'
-import {createRoot} from 'react-dom/client'
-import './config/firebase-config.js'
+import './index.css';
+import App from './App.jsx';
+import { createRoot } from 'react-dom/client';
+import './config/firebase-config.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
-
+import { BrowserRouter } from 'react-router-dom'; // ✅ import BrowserRouter
 
 createRoot(document.getElementById('root')).render(
-  <App />
-
-)
+  <BrowserRouter>  {/* ✅ wrap App in Router */}
+    <App />
+  </BrowserRouter>
+);

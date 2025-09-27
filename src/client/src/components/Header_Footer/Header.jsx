@@ -3,12 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import "./ui.css";
 
 export default function Header({ onMenuClick, sticky }) {
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);//navigation done with state
   const profileRef = useRef(null);
 
   useEffect(() => {
     const onDocClick = (e) => {
-      if (profileRef.current && !profileRef.current.contains(e.target)) {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {//navigation done ?
         setProfileOpen(false);
       }
     };

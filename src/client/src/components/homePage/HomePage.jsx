@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import "./Home.css";
-import Upload from '../study/upload'
+import Upload from "../study/upload";
+import { Routes, Route, Link } from "react-router-dom";
 
 /* ========== أيقونة SVG قابلة لإعادة الاستخدام ========== */
 function Ico({ d, className = "icon" }) {
@@ -22,7 +23,7 @@ function Ico({ d, className = "icon" }) {
   );
 }
 
-/* زر إجراء سريع داخل الهيرو (حبّة) — (احتياطي إن احتجتيه لاحقًا) */
+/* زر إجراء سريع داخل الهيرو */
 function QuickPill({ d, label, onClick }) {
   return (
     <button className="pillBtn" onClick={onClick}>
@@ -32,7 +33,7 @@ function QuickPill({ d, label, onClick }) {
   );
 }
 
-/* كارت ميزات (اختياري أسفل الصفحة) */
+/* كارت ميزات */
 function Card({ d, title, desc, cta, onClick }) {
   return (
     <article className="hpCard">
@@ -62,7 +63,6 @@ function StatCard({ label, value = 0, d, tone = "orange" }) {
     </div>
   );
 }
-/* ========== 1) صف البطاقات الإحصائية (معدّل) ========== */
 function StatsRow() {
   return (
     <section className="statsRow">
@@ -78,7 +78,7 @@ function StatsRow() {
         tone="green"
         d="M20 6l-11 11-5-5"
       />
-            <StatCard
+      <StatCard
         label="الخطط الدراسية المكتملة"
         value={0}
         tone="green"
@@ -88,28 +88,24 @@ function StatsRow() {
   );
 }
 
-
-/* ========== 2) مولّد الكويز والبطاقات + رفع ملف (بوكس + زر فقط) ========== */
-function QuizFlashcardsBox({ setShowUpload }) {
-  
-   const handleClick = () => {
-    setShowUpload(true); // now clicking the button switches the page
-  };
+/* ========== 2) مولّد الكويز والبطاقات ========== */
+function QuizFlashcardsBox() {
   return (
     <section className="panel">
       <h2 className="panel__title">مُولّد الاختبارات والبطاقات</h2>
-
-      <button  onClick={handleClick}  type="button" className="uploadBox__btn"> ابدأ الان</button>
+      {/* 🔗 استبدلنا الزر بـ Link مع نفس الكلاس */}
+      <Link to="upload" className="uploadBox__btn">
+        ابدأ الان
+      </Link>
     </section>
   );
 }
 
-/* ========== 3) لوحة الوصول (الأيقونات بالنص + زر السهم) ========== */
+/* ========== 3) لوحة الوصول ========== */
 function FeatureAccessPanel({ navigate = (p) => {} }) {
   return (
     <section className="panel" id="feature-shortcuts">
       <h2 className="panel__title">لوحة الوصول</h2>
-
       <div className="featureGrid">
         {/* الخطة الدراسية */}
         <article className="featureCard isPlan">
@@ -144,7 +140,10 @@ function FeatureAccessPanel({ navigate = (p) => {} }) {
           </div>
           <h4 className="featureTitle">البطاقات التعليمية</h4>
           <p className="featureDesc">راجِع المفاهيم ببطاقات ذكية.</p>
-          <button className="featureCTA" onClick={() => navigate("/flashcards")}>
+          <button
+            className="featureCTA"
+            onClick={() => navigate("/flashcards")}
+          >
             <span className="arrow">↗</span>
             <span className="label">ابدأ المراجعة</span>
           </button>
@@ -163,39 +162,41 @@ function FeatureAccessPanel({ navigate = (p) => {} }) {
           </button>
         </article>
 
-        {/* الدردشة مع الذكاء الاصطناعي */}
-       <article className="featureCard isChat">{/* isChat اختيارية الآن */}
-  <div className="featureIcon">
-    <Ico d="M21 15a4 4 0 01-4 4H8l-5 3 1.8-4.4A4 4 0 015 15V7a4 4 0 014-4h8a4 4 0 014 4v8z" />
-  </div>
-  <h4 className="featureTitle">الدردشة الذكية</h4>
-  <p className="featureDesc">تحدّثي مع المساعد لشرح الدروس وحل الأسئلة.</p>
-  <button className="featureCTA" onClick={() => (window.location.href = "/chat")}>
-    <span className="arrow">↗</span>
-    <span className="label">ابدأ الدردشة</span>
-  </button>
-</article>
-
+        {/* الدردشة */}
+        <article className="featureCard isChat">
+          <div className="featureIcon">
+            <Ico d="M21 15a4 4 0 01-4 4H8l-5 3 1.8-4.4A4 4 0 015 15V7a4 4 0 014-4h8a4 4 0 014 4v8z" />
+          </div>
+          <h4 className="featureTitle">الدردشة الذكية</h4>
+          <p className="featureDesc">تحدّثي مع المساعد لشرح الدروس وحل الأسئلة.</p>
+          <button
+            className="featureCTA"
+            onClick={() => (window.location.href = "/chat")}
+          >
+            <span className="arrow">↗</span>
+            <span className="label">ابدأ الدردشة</span>
+          </button>
+        </article>
       </div>
     </section>
   );
 }
 
-/* ========== 5) التقدم الأسبوعي — الإحصائيات + الأيام المتتالية ========== */
+/* ========== 5) التقدم الأسبوعي ========== */
 function WeeklyProgress() {
   const days = [
-    { d: "الأحد",     h: 4,   max: 4.5 },
-    { d: "الإثنين",   h: 3,   max: 4   },
-    { d: "الثلاثاء",  h: 5,   max: 5   },
-    { d: "الأربعاء",  h: 2,   max: 3   },
-    { d: "الخميس",    h: 4.5, max: 4.5 },
-    { d: "الجمعة",    h: 1,   max: 2   },
-    { d: "السبت",     h: 0,   max: 2   },
+    { d: "الأحد", h: 4, max: 4.5 },
+    { d: "الإثنين", h: 3, max: 4 },
+    { d: "الثلاثاء", h: 5, max: 5 },
+    { d: "الأربعاء", h: 2, max: 3 },
+    { d: "الخميس", h: 4.5, max: 4.5 },
+    { d: "الجمعة", h: 1, max: 2 },
+    { d: "السبت", h: 0, max: 2 },
   ];
-
-  const pct = (h, max) => Math.max(0, Math.min(100, Math.round((h / max) * 100)));
-
-  const R = 20, C = 2 * Math.PI * R;
+  const pct = (h, max) =>
+    Math.max(0, Math.min(100, Math.round((h / max) * 100)));
+  const R = 20,
+    C = 2 * Math.PI * R;
   const dash = (p) => C - (C * p) / 100;
 
   return (
@@ -203,29 +204,32 @@ function WeeklyProgress() {
       <div className="wp2Header">
         <h2 className="panel__title">التقدم الأسبوعي</h2>
       </div>
-
       <div className="wp2Grid">
         {days.map((x, i) => {
           const p = pct(x.h, x.max);
           return (
-            <div key={i} className="wp2Card" role="group" aria-label={`${x.d}: ${x.h} من ${x.max} ساعة`}>
-              {/* الدائرة فقط */}
+            <div key={i} className="wp2Card">
               <div className="ring sm">
-                <svg viewBox="0 0 48 48" width="48" height="48" className="ringSvg" aria-hidden>
+                <svg viewBox="0 0 48 48" width="48" height="48">
                   <circle cx="24" cy="24" r={R} className="ringBg" />
                   <circle
-                    cx="24" cy="24" r={R}
+                    cx="24"
+                    cy="24"
+                    r={R}
                     className={`ringFg ${p >= 100 ? "isDone" : ""}`}
-                    style={{ strokeDasharray: `${C}px`, strokeDashoffset: `${dash(p)}px` }}
+                    style={{
+                      strokeDasharray: `${C}px`,
+                      strokeDashoffset: `${dash(p)}px`,
+                    }}
                   />
                 </svg>
                 <div className="ringLabel">{p}%</div>
               </div>
-
-              {/* معلومات اليوم والساعات فقط */}
               <div className="wp2Info">
                 <div className="wp2Day">{x.d}</div>
-                <div className="wp2Hours">{x.h}س من {x.max}س</div>
+                <div className="wp2Hours">
+                  {x.h}س من {x.max}س
+                </div>
               </div>
             </div>
           );
@@ -235,18 +239,15 @@ function WeeklyProgress() {
   );
 }
 
-
-/* ========== 6) تجميعة الأقسام (بدون المهام الحديثة) ========== */
-function DashboardBlocks({ setShowUpload }) {
+/* ========== 6) تجميعة الأقسام ========== */
+function DashboardBlocks() {
   return (
     <div className="gridWrap">
       <div className="col">
-         <QuizFlashcardsBox setShowUpload={setShowUpload} />
+        <QuizFlashcardsBox />
         <FeatureAccessPanel />
       </div>
       <div className="col">
-     
-         
         <WeeklyProgress />
       </div>
     </div>
@@ -259,30 +260,23 @@ export default function HomePage() {
   const [loadingName, setLoadingName] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
-  //showing upload pdf page
-  const [showUpload, setShowUpload] = useState(false);
-//Upload
-  // RTL عام
   useEffect(() => {
     document.documentElement.setAttribute("dir", "rtl");
     document.documentElement.setAttribute("lang", "ar");
   }, []);
 
-  // جلب الاسم من الباك (بدون api.js — axios مباشر)
   useEffect(() => {
     (async () => {
       try {
-        const token = localStorage.getItem("token"); // خزّنيه خام
+        const token = localStorage.getItem("token");
         if (!token) {
           setErrorMsg("لم يتم تسجيل الدخول.");
           setLoadingName(false);
           return;
         }
-
         const { data } = await axios.get("http://localhost:5000/home/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         setFirstName((data?.firstName || "").toString());
       } catch (e) {
         setErrorMsg(e?.response?.data?.msg || "تعذّر جلب الاسم.");
@@ -293,32 +287,36 @@ export default function HomePage() {
   }, []);
 
   return (
- <div className="hp">
-  {!showUpload && (
-    // هيرو
-    <section className="heroBox">
-      <div className="heroRow">
-        <div className="heroText">
-          <h1>
-            {loadingName
-              ? "جاري التحميل…"
-              : errorMsg
-                ? "مرحباً بعودتك!"
-                : `مرحباً بعودتك ${firstName ? firstName : "صديقي"}!`}
-          </h1>
-          <p>جاهزة لمتابعة رحلتك الدراسية؟</p>
-          {errorMsg && <div className="heroError">{errorMsg}</div>}
-        </div>
-      </div>
-    </section>
-  )}
-
-  {!showUpload && <StatsRow />}
-
-  {!showUpload && <DashboardBlocks  setShowUpload={setShowUpload}  />}
-
-  {showUpload && <Upload />}
-</div>
-
+    <div className="hp">
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <>
+              <section className="heroBox">
+                <div className="heroRow">
+                  <div className="heroText">
+                    <h1>
+                      {loadingName
+                        ? "جاري التحميل…"
+                        : errorMsg
+                        ? "مرحباً بعودتك!"
+                        : `مرحباً بعودتك ${
+                            firstName ? firstName : "صديقي"
+                          }!`}
+                    </h1>
+                    <p>جاهزة لمتابعة رحلتك الدراسية؟</p>
+                    {errorMsg && <div className="heroError">{errorMsg}</div>}
+                  </div>
+                </div>
+              </section>
+              <StatsRow />
+              <DashboardBlocks />
+            </>
+          }
+        />
+        <Route path="upload" element={<Upload />} />
+      </Routes>
+    </div>
   );
 }

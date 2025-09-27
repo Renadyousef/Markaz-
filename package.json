@@ -4,7 +4,8 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "multer": "^2.0.2",
-    "pdf-parse": "^1.1.1"
+    "pdf-parse": "^1.1.1",
+    "react-router-dom": "^7.9.3"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.8.0",
