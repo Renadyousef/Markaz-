@@ -139,30 +139,14 @@ const styles = `
   .upRow{ width: 100%; }
 }
 `;
+
+
+
 /* دالة تضمن نظهر رسالة مفهومة */
-function extractErr(e) {
-  try {
-    if (e?.response) {
-      const { status, data } = e.response;
-      if (data && typeof data === "object") {
-        return data.msg || data.error || `HTTP ${status}`;
-      }
-      if (typeof data === "string") {
-        try { const j = JSON.parse(data); return j?.msg || j?.error || data; }
-        catch { return data; }
-      }
-      return `HTTP ${status}`;
-    }
-    return e?.message || "تعذّر الرفع.";
-  } catch {
-    return "تعذّر الرفع.";
-  }
-}
+function extractErr(e) { /* ... existing function ... */ }
 
 export default function Upload({ maxMB = 20 }) {
-   const navigate = useNavigate();
-  // ❗️يفضّل عبر بروكسي Vite:
-  // const endpointUpload = "/api/home/upload-pdf";
+  const navigate = useNavigate();
   const endpointUpload = "http://localhost:5000/home/upload-pdf";
 
   const inputRef = useRef(null);
@@ -175,121 +159,80 @@ export default function Upload({ maxMB = 20 }) {
   const [status, setStatus] = useState("idle");   // idle | uploading | done | error
   const [message, setMessage] = useState("");
 
+  const [pdfId, setPdfId] = useState(null); // *****ADDED: store PDF ID to genrate quiz or flashcards
+
   const isUploading = status === "uploading";
   const isDone = status === "done";
   const isError = status === "error";
 
   const selectClick = () => inputRef.current?.click();
-
-  const fmtSize = (n) => {
-    if (n == null) return "";
-    const kb = n / 1024;
-    return kb < 1024 ? `${kb.toFixed(0)} KB` : `${(kb / 1024).toFixed(2)} MB`;
+  const fmtSize = (n) => { /* ... existing function ... */ };
+  const validate = (f) => { /* ... existing function ... */ };
+  const reset = () => { 
+    setStatus("idle"); 
+    setFile(null); 
+    setProgress(0); 
+    setBytes({ loaded: 0, total: 0 }); 
+    setMessage(""); 
+    setPdfId(null); // <-- ADDED: reset PDF ID on retry
   };
-
-  const validate = (f) => {
-    if (!f) return "لم يتم اختيار ملف.";
-    if (f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf"))
-      return "يُقبل فقط ملف PDF.";
-    if (f.size > maxMB * 1024 * 1024)
-      return `الحجم الأقصى ${maxMB}MB.`;
-    return "";
-  };
-
-  const reset = () => {
-    setStatus("idle");
-    setFile(null);
-    setProgress(0);
-    setBytes({ loaded: 0, total: 0 });
-    setMessage("");
-  };
-
-  const cancelUpload = () => {
-    cancelRef.current?.cancel?.();
-    reset();
-    setMessage("تم إلغاء الرفع.");
-  };
+  const cancelUpload = () => { cancelRef.current?.cancel?.(); reset(); setMessage("تم إلغاء الرفع."); };
 
   const startUpload = async (f) => {
     const err = validate(f);
-    if (err) {
-      setStatus("error");
-      setMessage(err);
-      setFile(null);
-      setProgress(0);
-      setBytes({ loaded: 0, total: 0 });
-      return;
-    }
+    if (err) { setStatus("error"); setMessage(err); setFile(null); setProgress(0); setBytes({ loaded: 0, total: 0 }); return; }
 
-    setFile(f);
-    setStatus("uploading");
-    setMessage("");
+    setFile(f); setStatus("uploading"); setMessage("");
 
     try {
       const form = new FormData();
-      form.append("pdf", f); // اسم الحقل لازم 'pdf'
+      form.append("pdf", f);
 
       const token = localStorage.getItem("token") || "";
       const source = axios.CancelToken.source();
       cancelRef.current = source;
 
-      // خلي Axios يرجع الرد حتى لو 4xx/5xx عشان نقرأ msg
       const res = await axios.post(endpointUpload, form, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         onUploadProgress: (e) => {
           const total = e.total || f.size;
           const pct = total ? Math.round((e.loaded * 100) / total) : 0;
-          setProgress(pct);
-          setBytes({ loaded: e.loaded, total });
+          setProgress(pct); setBytes({ loaded: e.loaded, total });
         },
         cancelToken: source.token,
-        validateStatus: () => true, // <-- مهم لعرض رسائل الخطأ
+        validateStatus: () => true,
       });
 
       if (res.data?.ok) {
-        // نجاح كامل (ClamAV + GS + استخراج +/− مودل)
         const parts = [];
         if (res.data.textChars) parts.push(`أحرف مستخرجة: ${res.data.textChars}`);
-        if (res.data.savedId) parts.push(`تم الحفظ (ID: ${res.data.savedId})`);
+        if (res.data.savedId) {
+          parts.push(`تم الحفظ (ID: ${res.data.savedId})`); // <-- existing line
+          setPdfId(res.data.savedId); // <-- ADDED: save PDF ID
+        }
         if (!parts.length) parts.push("تم التحميل والمعالجة بنجاح.");
-        setStatus("done");
-        setMessage(parts.join(" — "));
+        setStatus("done"); setMessage(parts.join(" — "));
       } else {
-        // خطأ من السيرفر مع رسالة
         setStatus("error");
         const msg = res.data?.msg || res.data?.error || `HTTP ${res.status}`;
         setMessage(msg);
       }
     } catch (e) {
       setStatus("error");
-      setMessage(extractErr(e)); // نعرض النص الحقيقي
-      // للمساعدة في التشخيص:
-      console.error("UPLOAD ERROR =>", {
-        message: e?.message,
-        status: e?.response?.status,
-        data: e?.response?.data,
-      });
+      setMessage(extractErr(e));
+      console.error("UPLOAD ERROR =>", { message: e?.message, status: e?.response?.status, data: e?.response?.data });
     }
   };
 
-  const onInputChange = (e) => {
-    const f = e.target.files?.[0];
-    if (f) startUpload(f);
-    e.target.value = "";
-  };
-
-  // Drag & Drop
+  const onInputChange = (e) => { const f = e.target.files?.[0]; if (f) startUpload(f); e.target.value = ""; };
   const onDragOver = (e) => { e.preventDefault(); setDragOver(true); };
   const onDragLeave = (e) => { e.preventDefault(); setDragOver(false); };
-  const onDrop = (e) => {
-    e.preventDefault();
-    setDragOver(false);
-    const f = e.dataTransfer.files?.[0];
-    if (f) startUpload(f);
-  };
-//navigate to quiz page logic should be pdf is passed by id? then we ask user in quiz
-  function handelQuiz(){
-    navigate("/get-quiz");
+  const onDrop = (e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) startUpload(f); };
+
+  //  pass PDF ID when navigating to quiz
+  function handelQuiz() {
+    if (!pdfId) return; // safety check
+    navigate("/get-quiz", { state: { pdfId } });
   }
 
   return (
@@ -300,13 +243,8 @@ export default function Upload({ maxMB = 20 }) {
         <div className="uploadWrap">
           <div
             className={`uploadBox ${dragOver ? "isDrag" : ""} ${isUploading ? "isUploading" : ""}`}
-            onDragOver={onDragOver}
-            onDragEnter={onDragOver}
-            onDragLeave={onDragLeave}
-            onDrop={onDrop}
-            role="button"
-            aria-label="رفع ملف PDF"
-            tabIndex={0}
+            onDragOver={onDragOver} onDragEnter={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}
+            role="button" aria-label="رفع ملف PDF" tabIndex={0}
             onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && inputRef.current?.click()}
             onClick={() => inputRef.current?.click()}
           >
@@ -320,16 +258,8 @@ export default function Upload({ maxMB = 20 }) {
               <div className="uploadBox__title">إضافة ملف</div>
               <div className="uploadBox__sub">اسحبي وأفلتي هنا أو اختاري ملف — فقط PDF (حد {maxMB}MB)</div>
             </div>
-            <button type="button" className="uploadBox__btn" disabled={isUploading}>
-              اختيار ملف
-            </button>
-            <input
-              ref={inputRef}
-              type="file"
-              accept="application/pdf,.pdf"
-              onChange={onInputChange}
-              style={{ display: "none" }}
-            />
+            <button type="button" className="uploadBox__btn" disabled={isUploading}>اختيار ملف</button>
+            <input ref={inputRef} type="file" accept="application/pdf,.pdf" onChange={onInputChange} style={{ display: "none" }} />
           </div>
 
           {(isUploading || file || isDone || isError) && (
@@ -349,32 +279,15 @@ export default function Upload({ maxMB = 20 }) {
               )}
 
               <div className="upActions">
-  {isUploading && (
-    <button className="upBtn ghost" onClick={cancelUpload}>إلغاء</button>
-  )}
-
-  {(isDone || isError) && (
-    <button className="upBtn ghost" onClick={reset}>إعادة المحاولة</button>
-  )}
-
-  {isDone && (
-    <>
-      <button onClick={handelQuiz}
-        className="upBtn"
-      
-      >
-        توليد اختبار
-      </button>
-      <button
-        className="upBtn"
-       
-      >
-        توليد بطاقات
-      </button>
-    </>
-  )}
-</div>
-
+                {isUploading && <button className="upBtn ghost" onClick={cancelUpload}>إلغاء</button>}
+                {(isDone || isError) && <button className="upBtn ghost" onClick={reset}>إعادة المحاولة</button>}
+                {isDone && (
+                  <>
+                    <button onClick={handelQuiz} className="upBtn">توليد اختبار</button>
+                    <button className="upBtn">توليد بطاقات</button>
+                  </>
+                )}
+              </div>
 
               {message && !isUploading && (
                 <div style={{ marginTop: 6, fontWeight: 700, color: isError ? "#b91c1c" : "#0f172a" }}>
