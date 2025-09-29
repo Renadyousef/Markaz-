@@ -13,6 +13,7 @@ const sidebarRoutes = require("./routes/sidebarRoutes");
 const userRoutes = require("./routes/userRoutes");
 const profileRoutes = require("./routes/profileRoutes"); 
 const uploadRoutes = require("./routes/uploadRoutes");
+const QuizRoutes=require("./routes/quizRoutes")
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/sidebar", sidebarRoutes); // GET /sidebar/me (يتطلب توكن)
 app.use("/user", userRoutes);       // تجريب session أو جلب بيانات المستخدم
 app.use("/profile", profileRoutes);
 app.use("/home", uploadRoutes);
+app.use("/Quizess",QuizRoutes)
 // ========== 404 ==========
 app.use((req, res) => {
   res.status(404).json({

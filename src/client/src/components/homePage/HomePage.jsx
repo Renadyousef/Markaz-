@@ -3,6 +3,7 @@ import axios from "axios";
 import "./Home.css";
 import Upload from "../study/upload";
 import { Routes, Route, Link } from "react-router-dom";
+import GetQuiz from "../GenrateQuiz/GetQuiz";
 
 /* ========== أيقونة SVG قابلة لإعادة الاستخدام ========== */
 function Ico({ d, className = "icon" }) {
@@ -299,6 +300,7 @@ export default function HomePage() {
           }
         />
         <Route path="upload" element={<Upload />} />
+        <Route path="get-quiz" element={<GetQuiz />} />
       </Routes>
     </div>
   );

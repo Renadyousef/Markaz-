@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
 import axios from "axios";
+import GetQuiz from "../GenrateQuiz/GetQuiz";
+import { useNavigate } from "react-router-dom";
 
 const styles = `
 :root{
@@ -158,6 +160,7 @@ function extractErr(e) {
 }
 
 export default function Upload({ maxMB = 20 }) {
+   const navigate = useNavigate();
   // ❗️يفضّل عبر بروكسي Vite:
   // const endpointUpload = "/api/home/upload-pdf";
   const endpointUpload = "http://localhost:5000/home/upload-pdf";
@@ -284,6 +287,10 @@ export default function Upload({ maxMB = 20 }) {
     const f = e.dataTransfer.files?.[0];
     if (f) startUpload(f);
   };
+//navigate to quiz page logic should be pdf is passed by id? then we ask user in quiz
+  function handelQuiz(){
+    navigate("/get-quiz");
+  }
 
   return (
     <>
@@ -342,9 +349,32 @@ export default function Upload({ maxMB = 20 }) {
               )}
 
               <div className="upActions">
-                {isUploading && <button className="upBtn ghost" onClick={cancelUpload}>إلغاء</button>}
-                {(isDone || isError) && <button className="upBtn ghost" onClick={reset}>إعادة المحاولة</button>}
-              </div>
+  {isUploading && (
+    <button className="upBtn ghost" onClick={cancelUpload}>إلغاء</button>
+  )}
+
+  {(isDone || isError) && (
+    <button className="upBtn ghost" onClick={reset}>إعادة المحاولة</button>
+  )}
+
+  {isDone && (
+    <>
+      <button onClick={handelQuiz}
+        className="upBtn"
+      
+      >
+        توليد اختبار
+      </button>
+      <button
+        className="upBtn"
+       
+      >
+        توليد بطاقات
+      </button>
+    </>
+  )}
+</div>
+
 
               {message && !isUploading && (
                 <div style={{ marginTop: 6, fontWeight: 700, color: isError ? "#b91c1c" : "#0f172a" }}>
