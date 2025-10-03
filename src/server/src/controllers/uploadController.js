@@ -6,7 +6,7 @@ const os = require("os");
 const { execFile, spawn } = require("child_process");
 const axios = require("axios");
 const pdfParse = require("pdf-parse");
-const admin = require("firebase-admin");       // 🔸 نفترض أنه مُهيّأ في مكان آخر
+const admin = require("firebase-admin");       // نفترض أنه مُهيأ مسبقًا
 const db = admin.firestore();
 
 const MODEL_API = process.env.MODEL_API || "http://localhost:6001/generate-from-text";
@@ -15,7 +15,7 @@ const GS_TIMEOUT = 120000; // 120s
 const AV_TIMEOUT = 120000;
 const MODEL_TIMEOUT = 120000;
 
-/* ========== أدوات مشتركة ========== */
+/* ===== أدوات مساعدة بسيطة ===== */
 function execFileP(cmd, args, opts = {}) {
   return new Promise((resolve, reject) => {
     execFile(cmd, args, opts, (err, stdout, stderr) => {
@@ -33,7 +33,7 @@ async function findBin(candidates) {
       const { stdout } = await execFileP(locator, [name]);
       const full = stdout.split(/\r?\n/).find(Boolean);
       if (full) return full.trim();
-    } catch (_) { /* جرّب التالي */ }
+    } catch (_) {}
   }
   return null;
 }
@@ -76,6 +76,11 @@ async function assertFileExists(filePath) {
     throw new Error(`المسار غير موجود أو غير صالح: ${filePath}`);
   }
 }
+
+/* اسم الملف العربي قد يأتي latin1 من Multer */
+const decodeNameLatin1 = (s = "") => {
+  try { return Buffer.from(s, "latin1").toString("utf8"); } catch { return s; }
+};
 
 /* ========== فحص الفيروسات (ClamAV) — مُحسّن ========== */
 async function clamScanStrict(filePath) {
@@ -189,13 +194,16 @@ exports.uploadThenGenerate = async (req, res) => {
     if (!tmp) throw new Error("لم يُحدَّد مسار الملف المؤقت.");
     await assertFileExists(tmp);
 
+    // اسم الملف بصيغة UTF-8 (لأسماء عربية)
+    const originalNameUtf8 = decodeNameLatin1(req.file.originalname || "file.pdf");
+
     stage = "size/type";
     if (req.file.size > MAX_SIZE_MB * 1024 * 1024) {
       throw new Error(`حجم الملف يتجاوز ${MAX_SIZE_MB}MB.`);
     }
     const isPdf =
       req.file.mimetype === "application/pdf" ||
-      (req.file.originalname || "").toLowerCase().endsWith(".pdf");
+      originalNameUtf8.toLowerCase().endsWith(".pdf");
     if (!isPdf) throw new Error("يُقبل فقط ملف PDF.");
 
     stage = "magic";
@@ -215,10 +223,10 @@ exports.uploadThenGenerate = async (req, res) => {
     if (!text) throw new Error("تعذّر استخراج نص من الملف.");
 
     stage = "save";
-    // 🔸 الحفظ في Firestore — كولكشن pdf يُنشأ تلقائيًا
+    // الحفظ في Firestore — كولكشن pdf (سيتكوّن تلقائيًا)
     const docRef = await db.collection("pdf").add({
-      userId: req.user?.id || req.user?._id || null,   // لو عندك verifyToken
-      originalName: req.file.originalname,
+      userId: req.user?.id || req.user?._id || null,   // يعتمد على verifyToken
+      originalName: originalNameUtf8,                  // ← هنا الفرق
       size: req.file.size,
       text,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -237,17 +245,16 @@ exports.uploadThenGenerate = async (req, res) => {
     } catch (e) {
       modelError = e?.message || "تعذر الاتصال بالمودل.";
       console.error("MODEL_API error:", modelError);
-      // 👈 لا نرمى الخطأ عشان الرفع ينجح حتى لو المودل طافي
+      // لا نرمِي الخطأ لكي ينجح الرفع حتى لو المودل متوقف
     }
 
-    // نجاح
     return res.json({
       ok: true,
       stage: "done",
       savedId: docRef.id,
       textChars: text.length,
       model: modelResp,
-      modelError,       // null لو المودل اشتغل
+      modelError, // يكون null إذا نجح الاتصال بالمودل
     });
   } catch (err) {
     console.error("UPLOAD ERROR @", stage, err?.message || err);

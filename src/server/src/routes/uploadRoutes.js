@@ -16,20 +16,28 @@ fs.mkdirSync(TMP_DIR, { recursive: true });
 
 const MAX_MB = 20;
 
+/* أدوات مساعدة للاسم العربي */
+const decodeName = (s = "file.pdf") => {
+  try { return Buffer.from(s, "latin1").toString("utf8"); } catch { return s; }
+};
+const sanitize = (s) =>
+  s.replace(/[/\\?%*:|"<>]/g, "_").replace(/\s+/g, "_");
+
 /* ========= Multer ========= */
 const upload = multer({
   storage: multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, TMP_DIR),
     filename: (_req, file, cb) => {
-      const safe = (file.originalname || "file.pdf").replace(/\s+/g, "_");
-      cb(null, `${Date.now()}_${safe}`);
+      const decoded = decodeName(file.originalname || "file.pdf");
+      cb(null, `${Date.now()}_${sanitize(decoded)}`);
     }
   }),
   limits: { fileSize: MAX_MB * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
+    const decoded = decodeName(file.originalname || "");
     const ok =
       file.mimetype === "application/pdf" ||
-      (file.originalname || "").toLowerCase().endsWith(".pdf");
+      decoded.toLowerCase().endsWith(".pdf");
     if (!ok) return cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE", "PDF only"));
     cb(null, true);
   }
