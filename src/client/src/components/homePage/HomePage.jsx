@@ -4,6 +4,8 @@ import "./Home.css";
 import Upload from "../study/upload";
 import { Routes, Route, Link } from "react-router-dom";
 import GetQuiz from "../GenrateQuiz/GetQuiz";
+import FlashCards from "./FlashCards/FlashCards.jsx";
+import FlashCardsView from "./component/FlashCards/FlashCardsView.jsx";
 
 /* ========== أيقونة SVG قابلة لإعادة الاستخدام ========== */
 function Ico({ d, className = "icon" }) {
@@ -301,6 +303,8 @@ export default function HomePage() {
         />
         <Route path="upload" element={<Upload />} />
         <Route path="get-quiz" element={<GetQuiz />} />
+        //<Route path="cards" element={<FlashCards />} />
+
       </Routes>
     </div>
   );
