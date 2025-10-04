@@ -3,6 +3,7 @@ const { QuizResult } = require("../../config/firebase-config");
 // Save result in QuizResult
 const save_quiz_result = async (req, res) => {
   try {
+      const userId = req.user.id;
     const { pdfId, level, score } = req.body;
 
     if (!pdfId || !level || score === undefined) {
@@ -15,6 +16,7 @@ const save_quiz_result = async (req, res) => {
       level,
       score,
       createdAt: new Date(),
+      user_id:userId
     });
 
     return res.status(200).json({ ok: true, msg: "Result saved successfully" });
