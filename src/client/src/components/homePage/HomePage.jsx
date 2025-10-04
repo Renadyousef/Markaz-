@@ -305,8 +305,8 @@ export default function HomePage() {
         <Route path="upload" element={<Upload />} />
         <Route path="get-quiz" element={<GetQuiz />} />
         //<Route path="cards" element={<FlashCards />} />
-        {/**ViewQuizzes */}
-        <Route path="quizzes" element={<ViewQuizzes/>} />
+       
+       
 
       </Routes>
     </div>

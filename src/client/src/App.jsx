@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Routes, Route } from "react-router-dom"; // ⬅️ إضافة الراوتر للصفحات العامة
 import "./App.css";
+import ViewQuizzes from "./components/ViewQuizzesPage.jsx";
 
 /* الصفحات */
 import LandingPage from "./components/landingPage/LandingPage";
@@ -154,7 +155,7 @@ export default function App() {
           <Route path="/home/*" element={<HomePage token={token} />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/plans"   element={<StudyPlansPage />} />
-          <Route path="/quizzes" element={<QuizPage />} />
+          <Route path="/quizzes" element={<ViewQuizzes/>} />
           <Route path="/cards"   element={<FlashcardsPage />} />
           <Route path="/chat"    element={<ChatAI />} />
         </Routes>
