@@ -12,8 +12,8 @@ export default function ViewQuizzes() {
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        const token = localStorage.getItem("token") || "";
-        const res = await axios.get("/quiz-results", {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("/Quizess/view_results", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setQuizzes(res.data.quizzes || []);

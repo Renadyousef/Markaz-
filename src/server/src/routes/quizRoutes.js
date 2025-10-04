@@ -12,6 +12,6 @@ router.post("/GetQuiz",verifyToken,generateQuiz);
 //save quiz route
 router.post('/result',verifyToken,save_quiz_result)
 //view quizzes results page
-router.get('/view_results',verifyToken,save_quiz_result)
+router.get('/view_results',verifyToken,get_quiz_results)
 
 module.exports = router;
