@@ -33,7 +33,7 @@ module.exports = {
   FlashCards,
   Quizzes,
   Questions,
-  FeedBack,
+  FeedBack,//initiallt i dont think we can do this rn
   QuizResult,
   StudySession,
   pdf

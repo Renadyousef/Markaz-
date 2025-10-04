@@ -2,11 +2,13 @@
 const express = require("express");
 const {generateQuiz} =require("../controllers/quizControllers/genrateQuiz")
 const {verifyToken}=require("../middleware/authMiddleware")
-
+const {save_quiz_result}=require('../controllers/quizControllers/saveQuizResults')
 const router = express.Router();
 
 //get the req by this url
 router.post("/GetQuiz",verifyToken,generateQuiz); 
+//save quiz route
+router.post('/result',save_quiz_result)
 
 
 
