@@ -6,6 +6,7 @@ import { Routes, Route, Link } from "react-router-dom";
 import GetQuiz from "../GenrateQuiz/GetQuiz";
 import FlashCards from "../FlashCards/FlashCards.jsx";
 import FlashCardsView from '../FlashCards/FlashCardView.jsx'
+import ViewQuizzes from "../ViewQuizzesPage.jsx";
 
 /* ========== أيقونة SVG قابلة لإعادة الاستخدام ========== */
 function Ico({ d, className = "icon" }) {
@@ -130,7 +131,7 @@ function FeatureAccessPanel() {
           </div>
           <h4 className="featureTitle">الاختبارات</h4>
           <p className="featureDesc">اختبر فهمك باختبارات تفاعلية.</p>
-          <Link to="/quizzes" className="featureCTA">
+          <Link to="/quizzes" className="featureCTA">{/**where does this go */}
             <span className="arrow">↗</span>
             <span className="label">ابدأ الاختبار</span>
           </Link>
@@ -304,6 +305,8 @@ export default function HomePage() {
         <Route path="upload" element={<Upload />} />
         <Route path="get-quiz" element={<GetQuiz />} />
         //<Route path="cards" element={<FlashCards />} />
+        {/**ViewQuizzes */}
+        <Route path="quizzes" element={<ViewQuizzes/>} />
 
       </Routes>
     </div>
