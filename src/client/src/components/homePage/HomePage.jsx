@@ -304,7 +304,10 @@ export default function HomePage() {
         />
         <Route path="upload" element={<Upload />} />
         <Route path="get-quiz" element={<GetQuiz />} />
-        //<Route path="cards" element={<FlashCards />} />
+        <Route path="/cards" element={<FlashCards />} />
+<Route path="/cards/browse" element={<FlashCardsView />} />
+<Route path="/cards/view/:deckId" element={<FlashCardsView />} />
+
        
        
 

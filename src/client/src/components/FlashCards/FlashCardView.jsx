@@ -104,7 +104,7 @@ export default function FlashCardView(){
           <button className="navBtn" onClick={()=>go("next")} disabled={i===cards.length-1}>التالي</button>
         </div>
 
-        <p className="help">التمرير: استخدمي أسهم الكيبورد ← → أو الأزرار. لاحقًا نضيف السحب باللمس + المنطق.</p>
+        <p className="help">التمرير: استخدمي أسهم الكيبورد ← →  اليمين "لعرفت"  واليسار "لم اعرف" .</p>
       </section>
     </div>
   );
