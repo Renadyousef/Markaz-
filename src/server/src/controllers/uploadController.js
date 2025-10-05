@@ -217,16 +217,109 @@ exports.uploadThenGenerate = async (req, res) => {
     await assertFileExists(safePath);
 
     stage = "extract";
-    const buffer = await fsp.readFile(safePath);
-    const parsed = await pdfParse(buffer); // سيرمي لو الملف مشفّر بكلمة مرور
-    const text = cleanText(parsed.text);
-    if (!text) throw new Error("تعذّر استخراج نص من الملف.");
+
+    // ===== Arabic-safe (Poppler + pdf-parse + OCR) =====
+    function normalizeArabicText(input = "") {
+      let s = String(input);
+      try { s = s.normalize("NFKC"); } catch {}
+      s = s.replace(/[\u200E\u200F\u202A-\u202E\u2066-\u2069]/g, "");
+      s = s.replace(/[\u00AD\u00A0\u202F\u2000-\u200B]/g, " ").replace(/[ \t]+/g, " ");
+      s = s.replace(/\u0640/g, "");
+      const lamAlefMap = {
+        "\uFEF5":"لأ","\uFEF6":"لأ","\uFEF7":"لإ","\uFEF8":"لإ",
+        "\uFEF9":"لآ","\uFEFA":"لآ","\uFEFB":"لا","\uFEFC":"لا"
+      };
+      s = s.replace(/[\uFEF5-\uFEFC]/g, ch => lamAlefMap[ch] || ch);
+      s = s.replace(/(?<=\p{Script=Arabic})[A-Za-z](?=\p{Script=Arabic})/gu, "");
+      s = s.replace(/(?<=\p{Script=Arabic})[A-Za-z](?=\s|[^\p{L}\p{N}])/gu, "");
+      s = s.replace(/(?:(?<=\s|[^\p{L}\p{N}]))[A-Za-z](?=\p{Script=Arabic})/gu, "");
+      return cleanText(s);
+    }
+
+    function looksBrokenArabic(s = "") {
+      const hasAr = /[\u0600-\u06FF]/.test(s);
+      const bad = (s.match(/\uFFFD|�/g) || []).length;
+      const asciiSingles = (s.match(/(?<=\p{Script=Arabic})[A-Za-z](?=\p{Script=Arabic})/gu) || []).length;
+      const score = (bad + asciiSingles) / Math.max(1, s.length);
+      return !hasAr || score > 0.03;
+    }
+
+    async function tryPdfParse(filePath) {
+      const buf = await fsp.readFile(filePath);
+      const parsed = await pdfParse(buf);
+      return normalizeArabicText(parsed.text || "");
+    }
+
+    async function tryPdftotextWithMode(filePath, mode /* "layout" | "raw" */) {
+      const bin = await findBin("pdftotext");
+      if (!bin) return null;
+      const outTxt = path.join(os.tmpdir(), `pt_${Date.now()}.txt`);
+      const args = ["-enc", "UTF-8", mode === "raw" ? "-raw" : "-layout", "-nopgbrk", filePath, outTxt];
+      await execFileP(bin, args);
+      const txt = await fsp.readFile(outTxt, "utf8").catch(() => "");
+      try { await fsp.unlink(outTxt); } catch {}
+      return normalizeArabicText(txt);
+    }
+
+    async function tryPdftotextBest(filePath) {
+      const a = await tryPdftotextWithMode(filePath, "layout");
+      const b = await tryPdftotextWithMode(filePath, "raw");
+      const cand = [a, b].filter(Boolean);
+      if (cand.length === 0) return null;
+      cand.sort((x, y) => {
+        const bx = looksBrokenArabic(x) ? 1 : 0;
+        const by = looksBrokenArabic(y) ? 1 : 0;
+        if (bx !== by) return bx - by;
+        return (y.length || 0) - (x.length || 0);
+      });
+      return cand[0];
+    }
+
+    // ===== NEW: OCR fallback with Tesseract (ara+eng) =====
+    async function tryOcrAra(filePath) {
+      const bin = await findBin(process.platform === "win32" ? "tesseract.exe" : "tesseract");
+      if (!bin) return null;
+      const base = path.join(os.tmpdir(), `ocr_${Date.now()}`);
+      // يخرج نصاً مباشراً (.txt)
+      await execFileP(bin, [filePath, base, "-l", "ara+eng", "--oem", "1", "--psm", "6"]);
+      const txt = await fsp.readFile(`${base}.txt`, "utf8").catch(() => "");
+      try { await fsp.unlink(`${base}.txt`); } catch {}
+      return normalizeArabicText(txt);
+    }
+
+    // ===== Try chain: Poppler → pdf-parse → OCR =====
+    let methodUsed = "pdftotext(orig)";
+    let text = await tryPdftotextBest(tmp);
+
+    if (!text || looksBrokenArabic(text)) {
+      const t2 = await tryPdftotextBest(safePath);
+      if (t2 && !looksBrokenArabic(t2)) { text = t2; methodUsed = "pdftotext(safe)"; }
+    }
+
+    if (!text || looksBrokenArabic(text)) {
+      const t3 = await tryPdfParse(safePath);
+      if (t3 && !looksBrokenArabic(t3)) { text = t3; methodUsed = "pdf-parse(safe)"; }
+    }
+
+    if (!text || looksBrokenArabic(text)) {
+      const t4 = await tryPdfParse(tmp);
+      if (t4 && !looksBrokenArabic(t4)) { text = t4; methodUsed = "pdf-parse(orig)"; }
+    }
+
+    // NEW: OCR as last resort
+    if (!text || looksBrokenArabic(text)) {
+      const t5 = await tryOcrAra(safePath) || await tryOcrAra(tmp);
+      if (t5 && t5.length > 30) { text = t5; methodUsed = "tesseract(ara+eng)"; }
+    }
+
+    if (!text) throw new Error("تعذّر استخراج نص عربي قابل للقراءة من الملف.");
+    console.log("[extract] chosen method:", methodUsed, "len=", text.length);
 
     stage = "save";
     // الحفظ في Firestore — كولكشن pdf (سيتكوّن تلقائيًا)
     const docRef = await db.collection("pdf").add({
       userId: req.user?.id || req.user?._id || null,   // يعتمد على verifyToken
-      originalName: originalNameUtf8,                  // ← هنا الفرق
+      originalName: originalNameUtf8,
       size: req.file.size,
       text,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
