@@ -10,7 +10,6 @@ import AuthPage from "./components/auth/AuthPage";
 import HomePage from "./components/homePage/HomePage";
 import ProfilePage from "./components/profile/Profile.jsx";
 
-
 /* صفحات الفوتر */
 import About from "./components/Header_Footer/About.jsx";
 import Contact from "./components/Header_Footer/Contact.jsx";
@@ -22,6 +21,7 @@ import QuizPage         from "./components/Pages/QuizPage.jsx";
 import FlashcardsPage   from "./components/Pages/FlashcardsPage.jsx";
 import ChatAI           from "./components/Pages/ChatAI.jsx";
 import SessionsPage from "./components/Pages/SessionsPage.jsx";
+import QuizWithTTS from "./components/Pages/QuizWithTTS.jsx";
 
 /* الواجهة */
 import Header from "./components/Header_Footer/Header";
@@ -157,7 +157,7 @@ export default function App() {
           <Route path="/plans"   element={<StudyPlansPage />} />
           <Route path="/quizzes" element={<ViewQuizzes/>} />
           <Route path="/cards"   element={<FlashcardsPage />} />
-          <Route path="/chat"    element={<ChatAI />} />
+          <Route path="/chat"    element={<QuizWithTTS />} />
         </Routes>
 
         {/* الفوتر (بدون onNav) */}
