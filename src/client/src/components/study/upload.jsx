@@ -235,6 +235,13 @@ export default function Upload({ maxMB = 20 }) {
     navigate("/get-quiz", { state: { pdfId } });
   }
 
+  function handleFlashcards() {
+  if (!pdfId) return;            // احتياط
+  navigate("/flashcards", {      // مسار صفحة العرض
+    state: { pdfId }             // نمرّر pdfId
+  });
+}
+
   return (
     <>
       <style>{styles}</style>
@@ -256,7 +263,7 @@ export default function Upload({ maxMB = 20 }) {
             </div>
             <div className="uploadBox__text">
               <div className="uploadBox__title">إضافة ملف</div>
-              <div className="uploadBox__sub">اسحبي وأفلتي هنا أو اختاري ملف — فقط PDF (حد {maxMB}MB)</div>
+              <div className="uploadBox__sub">اسحب وأفلت  الملف هنا  — فقط PDF (حد 20 صفحة)</div>
             </div>
             <button type="button" className="uploadBox__btn" disabled={isUploading}>اختيار ملف</button>
             <input ref={inputRef} type="file" accept="application/pdf,.pdf" onChange={onInputChange} style={{ display: "none" }} />
@@ -284,7 +291,7 @@ export default function Upload({ maxMB = 20 }) {
                 {isDone && (
                   <>
                     <button onClick={handelQuiz} className="upBtn">توليد اختبار</button>
-                    <button className="upBtn">توليد بطاقات</button>
+                    <button className="upBtn" onClick={handleFlashcards}>توليد بطاقات</button>
                   </>
                 )}
               </div>
