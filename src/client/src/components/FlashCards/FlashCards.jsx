@@ -47,7 +47,7 @@ export default function FlashCards(){
       <section className="heroBox heroRow2">
         <div className="heroText heroText2">
           <h1>البطاقات التعليمية</h1>
-          <p>ادخلي مباشرة على الكارد، ثم شوفي كل بطاقاتك أو المفضّلة. تحت بنعرض آخر ٣ مجموعات اشتغلتي عليها.</p>
+          <p></p>
         </div>
       </section>
 
