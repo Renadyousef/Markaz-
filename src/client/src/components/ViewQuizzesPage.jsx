@@ -13,7 +13,7 @@ export default function ViewQuizzes() {
     const fetchResults = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("/Quizess/view_results", {
+        const res = await axios.get("http://localhost:5000/Quizess/view_results", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setQuizzes(res.data.quizzes || []);
@@ -54,7 +54,7 @@ export default function ViewQuizzes() {
           </div>
         ))}
         {!loading && quizzes.length === 0 && (
-          <p>لا توجد اختبارات محفوظة بعد.</p>
+          <p>لا توجد اختبارات محفوظة بعد.</p>/**this is still showing */
         )}
       </div>
     </div>

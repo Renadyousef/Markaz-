@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-
+//if use say end we go to /quizzes
 export default function GetQuiz() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -155,8 +155,8 @@ export default function GetQuiz() {
     setShowAnswer(false);
   };
 
-  const exitQuiz = () => {
-    navigate("/dashboard");
+  const exitQuiz = () => {//go to view quizzess reults page
+    navigate("/quizzes");
   };
 
   // Level selection screen
