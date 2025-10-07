@@ -14,6 +14,9 @@ function deckDocToJson(doc) {
     count: d.count || 0,
     knownCount: d.knownCount || 0,
     unknownCount: d.unknownCount || 0,
+    // Expose saved classification so client can color cards
+    knownIds: Array.isArray(d.knownIds) ? d.knownIds : [],
+    unknownIds: Array.isArray(d.unknownIds) ? d.unknownIds : [],
     createdAt: d.createdAt ? d.createdAt.toMillis?.() || d.createdAt : null,
   };
 }

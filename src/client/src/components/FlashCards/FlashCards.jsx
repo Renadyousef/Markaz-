@@ -1,9 +1,9 @@
-// client/src/components/Pages/FlashCardsPage.jsx
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const LIMIT = 10; // آخر 10
 
 const local = `
 .fcSimple{ display:grid; gap:16px; }
@@ -41,10 +41,10 @@ export default function FlashCards(){
 
   useEffect(() => {
     let ignore = false;
-    async function run() {
+    (async () => {
       setLoading(true); setErr("");
       try {
-        const { data } = await axios.get(`${API}/retrive/decks?limit=3`);
+        const { data } = await axios.get(`${API}/retrive/decks?limit=${LIMIT}`);
         if (!ignore) {
           if (data?.ok) setDecks(data.items || []);
           else setErr(data?.error || "فشل الجلب");
@@ -54,8 +54,7 @@ export default function FlashCards(){
       } finally {
         if (!ignore) setLoading(false);
       }
-    }
-    run();
+    })();
     return () => { ignore = true; };
   }, []);
 
@@ -75,7 +74,7 @@ export default function FlashCards(){
         </div>
 
         <div className="lastRow">
-          <h3 className="panel__title">آخر ٣ مجموعات</h3>
+          <h3 className="panel__title">آخر {LIMIT.toLocaleString("ar-EG")} مجموعات</h3>
 
           {loading && <div className="alert">... جارٍ الجلب</div>}
           {err && <div className="alert">خطأ: {err}</div>}

@@ -22,10 +22,15 @@ const local = `
   position:absolute; inset:0; padding:20px;
   display:flex; flex-direction:column; gap:14px;
   transition: transform .25s ease, opacity .25s ease;
+  border-radius:16px; border:2px solid transparent;
 }
 .center{ transform:translateX(0); opacity:1; }
 .left{   transform:translateX(-100%); opacity:0; }
 .right{  transform:translateX(100%);  opacity:0; }
+
+/* Color by status */
+.slide.known{ border-color:#86efac; box-shadow:0 0 0 4px rgba(134,239,172,.25) inset; }
+.slide.unknown{ border-color:#fca5a5; box-shadow:0 0 0 4px rgba(252,165,165,.25) inset; }
 
 .block{ border:1px solid #e5e7eb; border-radius:12px; padding:12px 14px; background:#fff; }
 .block h4{ margin:0 0 8px; font-size:16px; font-weight:900; color:#0f172a; }
@@ -42,6 +47,8 @@ const local = `
 .dots{ display:flex; gap:6px; justify-content:center; align-items:center; }
 .dot{ width:10px; height:10px; border-radius:999px; background:#e5e7eb; transition:.15s; }
 .dot.isActive{ background:#f59e0b; }
+.dot.known{ background:#22c55e; }
+.dot.unknown{ background:#ef4444; }
 
 .badges{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 .badge{
@@ -328,7 +335,7 @@ export default function FlashCardView() {
             {cards.map((c, idx) => {
               const pos = idx === i ? "center" : idx < i ? "left" : "right";
               return (
-                <article key={c.id} className={`slide ${pos}`}>
+                <article key={c.id} className={`slide ${pos} ${known.has(c.id) ? 'known' : (unknown.has(c.id) ? 'unknown' : '')}`}>
                   <section className="block def">
                     <h4>التعريف</h4>
                     <p>{c.a}</p>
@@ -350,7 +357,10 @@ export default function FlashCardView() {
                 <>
                   <button className="navBtn" onClick={()=>mark("left")} disabled={i>=cards.length}>ما فهمتها (←)</button>
                   <div className="dots">
-                    {cards.map((_, idx)=><span key={idx} className={`dot ${idx===i? "isActive":""}`} />)}
+                    {cards.map((c2, idx)=>{
+                      const cls = known.has(c2.id) ? 'known' : (unknown.has(c2.id) ? 'unknown' : '');
+                      return <span key={idx} className={`dot ${cls} ${idx===i? "isActive":""}`} />
+                    })}
                   </div>
                   <button className="navBtn" onClick={()=>mark("right")} disabled={i>=cards.length}>عرفتها (→)</button>
                   <button className="navBtn" onClick={loadFromPdf} disabled={loading || saving}>إعادة التوليد</button>
@@ -359,7 +369,10 @@ export default function FlashCardView() {
                 <>
                   <button className="navBtn" onClick={()=>setI(v=>Math.max(v-1,0))}>السابق</button>
                   <div className="dots">
-                    {cards.map((_, idx)=><span key={idx} className={`dot ${idx===i? "isActive":""}`} />)}
+                    {cards.map((c2, idx)=>{
+                      const cls = known.has(c2.id) ? 'known' : (unknown.has(c2.id) ? 'unknown' : '');
+                      return <span key={idx} className={`dot ${cls} ${idx===i? "isActive":""}`} />
+                    })}
                   </div>
                   <button className="navBtn" onClick={()=>setI(v=>Math.min(v+1, cards.length-1))}>التالي</button>
                 </>
