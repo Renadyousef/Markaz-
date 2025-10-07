@@ -1,8 +1,8 @@
-//GetQuiz.jsx
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-//if use say end we go to /quizzes
+import TTSControls from "./TTSControls"; // ✅ Added import
+
 export default function GetQuiz() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -11,14 +11,14 @@ export default function GetQuiz() {
   const [level, setLevel] = useState(""); // user-selected level
   const [quiz, setQuiz] = useState(null); // questions from backend
   const [currentIndex, setCurrentIndex] = useState(0); // current question index
-  const [selected, setSelected] = useState(null); // selected option (string)
+  const [selected, setSelected] = useState(null); // selected option
   const [answers, setAnswers] = useState([]); // store user answers
   const [score, setScore] = useState(null); // final score
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [showAnswer, setShowAnswer] = useState(false); // new state for showing correct answer
+  const [showAnswer, setShowAnswer] = useState(false); // show correct answer
 
-  // Fetch quiz from backend
+  // Fetch quiz
   const fetchQuiz = async () => {
     if (!pdfId || !level) return;
     setLoading(true);
@@ -52,15 +52,14 @@ export default function GetQuiz() {
     fetchQuiz();
   }, [pdfId, level]);
 
-  // Normalize/split options robustly
+  // Normalize options
   const getOptions = (q) => {
     if (!q) return [];
     if (q.type !== "MCQ") return [];
-
     const raw = q.options || [];
     const splitRegex = /[,\u060C;\/\\|•\n\r]+/;
-
     const flattened = [];
+
     if (Array.isArray(raw)) {
       raw.forEach((item) => {
         if (typeof item === "string") {
@@ -92,11 +91,11 @@ export default function GetQuiz() {
   // Move to next question or finish
   const nextQuestion = () => {
     if (!quiz) return;
-    const currentQText = quiz[currentIndex].question || quiz[currentIndex].statement || "";
+    const currentQText =
+      quiz[currentIndex].question || quiz[currentIndex].statement || "";
     const answerObj = { question: currentQText, selected };
 
     if (showAnswer && selected === null) {
-      // lock null if user never selected but clicked show answer
       answerObj.selected = null;
     }
 
@@ -125,20 +124,16 @@ export default function GetQuiz() {
 
     const finalScore = Math.round((correct / quiz.length) * 100);
     setScore(finalScore);
-    saveResult(finalScore, finalAnswers);
+    saveResult(finalScore);
   };
 
   // Save result
-  const saveResult = async (finalScore, answersToSave) => {
+  const saveResult = async (finalScore) => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
         "http://localhost:5000/Quizess/result",
-        {
-          pdfId,
-          level,
-          score: finalScore
-        },
+        { pdfId, level, score: finalScore },
         { headers: { Authorization: token ? `Bearer ${token}` : "" } }
       );
     } catch (err) {
@@ -156,7 +151,7 @@ export default function GetQuiz() {
     setShowAnswer(false);
   };
 
-  const exitQuiz = () => {//go to view quizzess reults page
+  const exitQuiz = () => {
     navigate("/quizzes");
   };
 
@@ -175,8 +170,17 @@ export default function GetQuiz() {
             textAlign: "center",
           }}
         >
-          <h2 style={{ fontWeight: 800, marginBottom: 20 }}>اختر مستوى الاختبار</h2>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 20 }}>
+          <h2 style={{ fontWeight: 800, marginBottom: 20 }}>
+            اختر مستوى الاختبار
+          </h2>
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              justifyContent: "center",
+              marginBottom: 20,
+            }}
+          >
             {["سهل", "متوسط", "صعب"].map((lvl) => (
               <button
                 key={lvl}
@@ -184,7 +188,10 @@ export default function GetQuiz() {
                 style={{
                   padding: "10px 16px",
                   borderRadius: 12,
-                  border: level === lvl ? "2px solid #f59e0b" : "1px solid #d1d5db",
+                  border:
+                    level === lvl
+                      ? "2px solid #f59e0b"
+                      : "1px solid #d1d5db",
                   background: level === lvl ? "#fff7ed" : "#fff",
                   cursor: "pointer",
                   fontWeight: 600,
@@ -217,7 +224,9 @@ export default function GetQuiz() {
             textAlign: "center",
           }}
         >
-          <h2 style={{ fontWeight: 800, marginBottom: 20 }}>لقد أكملت الاختبار!</h2>
+          <h2 style={{ fontWeight: 800, marginBottom: 20 }}>
+            لقد أكملت الاختبار!
+          </h2>
           <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 20 }}>
             نتيجتك: {score}%
           </p>
@@ -254,7 +263,7 @@ export default function GetQuiz() {
     );
   }
 
-  // Current question rendering
+  // Current question
   const question = quiz[currentIndex];
   const isMCQ = question?.type === "MCQ";
   const isTF = question?.type === "TF";
@@ -274,7 +283,14 @@ export default function GetQuiz() {
         }}
       >
         {/* Progress */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 18,
+          }}
+        >
           <div style={{ flex: 1 }}>
             <div
               style={{
@@ -294,25 +310,38 @@ export default function GetQuiz() {
               />
             </div>
           </div>
-          <div style={{ minWidth: 70, textAlign: "right", fontWeight: 600 }}>
+          <div
+            style={{ minWidth: 70, textAlign: "right", fontWeight: 600 }}
+          >
             {currentIndex + 1}/{quiz.length}
           </div>
         </div>
 
-        {/* Question */}
-        <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 20 }}>
-          {question?.question || question?.statement}
-        </p>
+        {/* Question + 🔊 TTS */}
+        <div style={{ marginBottom: 12 }}>
+          <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 10 }}>
+            {question?.question || question?.statement}
+          </p>
+          <TTSControls
+            key={currentIndex}
+            text={question?.question || question?.statement || ""}
+          />
+        </div>
 
         {/* Options */}
         <div style={{ display: "grid", gap: 12, marginBottom: 20 }}>
           {isMCQ &&
             options.map((opt, idx) => {
-              let borderColor = selected === opt ? "#f59e0b" : "#d1d5db";
+              let borderColor =
+                selected === opt ? "#f59e0b" : "#d1d5db";
               if (showAnswer) {
                 const correctAnswer = quiz[currentIndex]?.answer;
                 if (opt === correctAnswer) borderColor = "green";
-                else if (opt === selected && selected !== correctAnswer) borderColor = "red";
+                else if (
+                  opt === selected &&
+                  selected !== correctAnswer
+                )
+                  borderColor = "red";
               }
               return (
                 <button
@@ -322,7 +351,8 @@ export default function GetQuiz() {
                     padding: "10px 16px",
                     borderRadius: 12,
                     border: `2px solid ${borderColor}`,
-                    background: selected === opt ? "#fff7ed" : "#fff",
+                    background:
+                      selected === opt ? "#fff7ed" : "#fff",
                     cursor: showAnswer ? "not-allowed" : "pointer",
                     fontWeight: 600,
                     transition: "0.2s",
@@ -336,11 +366,16 @@ export default function GetQuiz() {
 
           {isTF &&
             ["صح", "خطأ"].map((opt) => {
-              let borderColor = selected === opt ? "#f59e0b" : "#d1d5db";
+              let borderColor =
+                selected === opt ? "#f59e0b" : "#d1d5db";
               if (showAnswer) {
                 const correctAnswer = quiz[currentIndex]?.answer;
                 if (opt === correctAnswer) borderColor = "green";
-                else if (opt === selected && selected !== correctAnswer) borderColor = "red";
+                else if (
+                  opt === selected &&
+                  selected !== correctAnswer
+                )
+                  borderColor = "red";
               }
               return (
                 <button
@@ -350,7 +385,8 @@ export default function GetQuiz() {
                     padding: "10px 16px",
                     borderRadius: 12,
                     border: `2px solid ${borderColor}`,
-                    background: selected === opt ? "#fff7ed" : "#fff",
+                    background:
+                      selected === opt ? "#fff7ed" : "#fff",
                     cursor: showAnswer ? "not-allowed" : "pointer",
                     fontWeight: 600,
                     transition: "0.2s",
@@ -362,8 +398,14 @@ export default function GetQuiz() {
             })}
         </div>
 
-        {/* Buttons: Show Answer + Next */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        {/* Controls */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <button
             onClick={() => setShowAnswer(true)}
             disabled={showAnswer}
@@ -389,7 +431,10 @@ export default function GetQuiz() {
               border: "1px solid #f59e0b",
               background: "#fff7ed",
               fontWeight: 600,
-              cursor: selected === null && !showAnswer ? "not-allowed" : "pointer",
+              cursor:
+                selected === null && !showAnswer
+                  ? "not-allowed"
+                  : "pointer",
               transition: "0.2s",
             }}
           >

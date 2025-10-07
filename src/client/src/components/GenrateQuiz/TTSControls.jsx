@@ -1,4 +1,3 @@
-// TTSControls.jsx
 import React, { useState, useRef, useEffect } from "react";
 
 export default function TTSControls({ text, defaultVoice = "Zayd" }) {
@@ -79,16 +78,43 @@ export default function TTSControls({ text, defaultVoice = "Zayd" }) {
   }
 
   return (
-    <div className="tts-controls" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+    <div
+      className="tts-controls"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        flexWrap: "wrap",
+      }}
+    >
+      {/* 🔊 Styled Dropdown */}
       <select
         className="nice-select"
         value={voiceId}
         onChange={(e) => setVoiceId(e.target.value)}
+        style={{
+          padding: "8px 14px",
+          borderRadius: "12px",
+          border: "2px solid #f59e0b",
+          background: "#fff7ed",
+          color: "#92400e",
+          fontWeight: 600,
+          cursor: "pointer",
+          outline: "none",
+          transition: "all 0.2s ease",
+          boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
+        }}
+        onMouseOver={(e) => (e.target.style.background = "#fffbeb")}
+        onMouseOut={(e) => (e.target.style.background = "#fff7ed")}
       >
         {VOICES.map((v) => (
-          <option key={v.id} value={v.id}>{v.label}</option>
+          <option key={v.id} value={v.id}>
+            {v.label}
+          </option>
         ))}
       </select>
+
+      {/* ▶️ Play Button */}
       <button
         style={{
           padding: "8px 16px",
@@ -98,13 +124,21 @@ export default function TTSControls({ text, defaultVoice = "Zayd" }) {
           borderRadius: "12px",
           cursor: "pointer",
           fontWeight: 800,
+          boxShadow: "0 2px 6px rgba(245, 158, 11, 0.3)",
+          transition: "background 0.2s ease",
         }}
+        onMouseOver={(e) => (e.target.style.background = "#d97706")}
+        onMouseOut={(e) => (e.target.style.background = "#f59e0b")}
         onClick={handlePlayPause}
         disabled={loading}
       >
         {loading ? "جاري التحميل..." : isPlaying ? "إيقاف" : "تشغيل"}
       </button>
-      {error && <span style={{ color: "red", fontWeight: 600 }}>{error}</span>}
+
+      {error && (
+        <span style={{ color: "red", fontWeight: 600 }}>{error}</span>
+      )}
+
       <audio ref={audioRef} />
     </div>
   );
