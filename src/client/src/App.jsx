@@ -22,7 +22,7 @@ import FlashcardsPage   from "./components/Pages/FlashcardsPage.jsx";
 import ChatAI           from "./components/Pages/ChatAI.jsx";
 import SessionsPage from "./components/Pages/SessionsPage.jsx";
 import QuizWithTTS from "./components/Pages/QuizWithTTS.jsx";
-
+import FlashCardView from "./components/FlashCards/FlashCardView.jsx";
 /* الواجهة */
 import Header from "./components/Header_Footer/Header";
 import Sidebar from "./components/Header_Footer/Sidebar";
@@ -158,6 +158,8 @@ export default function App() {
           <Route path="/quizzes" element={<ViewQuizzes/>} />
           <Route path="/cards"   element={<FlashcardsPage />} />
           <Route path="/chat"    element={<QuizWithTTS />} />
+          <Route path="/flashcards" element={<FlashCardView />} />
+
         </Routes>
 
         {/* الفوتر (بدون onNav) */}

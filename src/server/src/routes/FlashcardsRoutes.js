@@ -1,10 +1,19 @@
-// server/src/routes/flashcardsRoutes.js  ← خلي الاسم كله small لراحة البال
+// server/src/routes/flashcardsRoutes.js
 const express = require("express");
-const { generateFromText } = require("../controllers/FlashcardsController.js");
+const FC = require("../controllers/FlashcardsController");
 
 const router = express.Router();
 
 // POST /api/flashcards/from-text
-router.post("/from-text", generateFromText);
+router.post("/from-text", FC.generateFromText);
 
-module.exports = router;            // ← مهم جداً: نُصدّر الـ router نفسه
+// POST /api/flashcards/from-pdf/:pdfId
+router.post("/from-pdf/:pdfId", FC.generateFromPdfId);
+
+// POST /api/flashcards/save-deck
+router.post("/save-deck", FC.saveDeck);
+
+// GET /api/flashcards/deck/:deckId
+router.get("/deck/:deckId", FC.getDeckCards);
+
+module.exports = router;

@@ -27,6 +27,8 @@ const QuizResult = DB.collection('quiz_result');//results should be in same quiz
 const StudySession = DB.collection('study_session');
 const pdf = DB.collection('pdf');
 module.exports = {
+  
+  DB,                  
   Students,
   Task,
   StudyPlans,
