@@ -23,6 +23,8 @@ import ChatAI           from "./components/Pages/ChatAI.jsx";
 import SessionsPage from "./components/Pages/SessionsPage.jsx";
 import QuizWithTTS from "./components/Pages/QuizWithTTS.jsx";
 import FlashCardView from "./components/FlashCards/FlashCardView.jsx";
+import DeckView from "./components/FlashCards/DeckView";
+
 /* الواجهة */
 import Header from "./components/Header_Footer/Header";
 import Sidebar from "./components/Header_Footer/Sidebar";
@@ -159,6 +161,8 @@ export default function App() {
           <Route path="/cards"   element={<FlashcardsPage />} />
           <Route path="/chat"    element={<QuizWithTTS />} />
           <Route path="/flashcards" element={<FlashCardView />} />
+          <Route path="/cards/deck/:deckId" element={<DeckView />} />
+
 
         </Routes>
 

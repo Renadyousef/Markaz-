@@ -15,24 +15,26 @@ const profileRoutes = require("./routes/profileRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const QuizRoutes=require("./routes/quizRoutes")
 const FlashcardsRoutes = require("./routes/FlashcardsRoutes");
+const flashcardsRetriveRoutes = require("./routes/flashcardsRetriveRoutes");
+
 
 const OpenAI = require("openai");
 const app = express();
 
-app.get("/api/diag/openai", async (req, res) => {
-  try {
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    const out = await client.models.list();
-    res.json({ ok: true, firstModel: out.data?.[0]?.id || null });
-  } catch (err) {
-    res.status(err?.status || 500).json({
-      ok: false,
-      status: err?.status || null,
-      error: err?.message || String(err),
-      // لو 429: فوترة/حدود
-    });
-  }
-});
+// app.get("/api/diag/openai", async (req, res) => {
+//   try {
+//     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+//     const out = await client.models.list();
+//     res.json({ ok: true, firstModel: out.data?.[0]?.id || null });
+//   } catch (err) {
+//     res.status(err?.status || 500).json({
+//       ok: false,
+//       status: err?.status || null,
+//       error: err?.message || String(err),
+//       // لو 429: فوترة/حدود
+//     });
+//   }
+// });
 // ========== Middlewares عامة ==========
 app.use(cors());            // يسمح بالطلبات بين React و Express
 app.use(express.json());    // يحلل JSON القادم من الـ request
@@ -46,7 +48,8 @@ app.use("/user", userRoutes);       // تجريب session أو جلب بيانا
 app.use("/profile", profileRoutes);
 app.use("/home", uploadRoutes);
 app.use("/Quizess",QuizRoutes)
-app.use("/api/flashcards", FlashcardsRoutes);  // ✅ new, isolated
+app.use("/api/flashcards", FlashcardsRoutes);  
+app.use("/retrive", flashcardsRetriveRoutes); 
 
 
 // ====== Polly ثابت ======

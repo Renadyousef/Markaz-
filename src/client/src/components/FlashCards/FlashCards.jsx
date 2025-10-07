@@ -1,22 +1,20 @@
+// client/src/components/Pages/FlashCardsPage.jsx
 import { Link } from "react-router-dom";
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
-/* ستايل خفيف خاص بالصفحة */
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 const local = `
 .fcSimple{ display:grid; gap:16px; }
-.oneCard{
-  display:flex; align-items:center; justify-content:space-between; gap:12px;
-  border:1px solid var(--fx-card-ring); background:#fff; border-radius:16px; padding:16px;
+.actionsRow{ display:flex; justify-content:flex-start; gap:10px; margin-bottom:6px; }
+.createBtn{
+  display:inline-flex; align-items:center; gap:8px;
+  border:1px solid #f59e0b; background:#f59e0b; color:#fff;
+  padding:10px 14px; border-radius:12px; font-weight:900; cursor:pointer; transition:.15s;
   box-shadow: var(--shadow);
 }
-.oneCard__info{ display:grid; gap:6px; }
-.oneCard__title{ margin:0; font-weight:900; color:var(--text); font-size:18px; }
-.oneCard__desc{ margin:0; color:#64748b; font-size:14px; }
-.oneCard__cta{
-  border:1px solid var(--fx-card-ring); background:#fff; color:var(--text);
-  padding:10px 14px; border-radius:12px; font-weight:800; cursor:pointer; transition:.15s;
-}
-.oneCard__cta:hover{ background:var(--fx-cta-hover); border-color:#cbd5e1; }
+.createBtn:hover{ background:#d97706; border-color:#d97706; }
 
 .lastRow{ display:grid; gap:10px; }
 .lastList{ display:grid; gap:10px; }
@@ -30,15 +28,36 @@ const local = `
 .deckCTA{
   border:1px solid var(--fx-card-ring); background:#fff; padding:8px 12px; border-radius:10px; font-weight:800;
 }
+.alert{
+  margin-top:10px; padding:10px 12px; border-radius:10px; font-weight:800;
+  border:1px solid #fcd5d5; background:#fff5f5; color:#b00020;
+}
 `;
 
 export default function FlashCards(){
-  // Mock: آخر ٣ مجموعات (هنا لاحقًا يصير ريتريف من فيرفيس)
-  const last3 = useMemo(()=>[
-    { id:"algos-101",  name:"النواه والذره", count:18 },
-    { id:"net-basics", name:"أساسيات الشبكات", count:12 },
-    { id:"react-core", name:" البرمائيات ",   count:22 },
-  ],[]);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const [decks, setDecks] = useState([]);
+
+  useEffect(() => {
+    let ignore = false;
+    async function run() {
+      setLoading(true); setErr("");
+      try {
+        const { data } = await axios.get(`${API}/retrive/decks?limit=3`);
+        if (!ignore) {
+          if (data?.ok) setDecks(data.items || []);
+          else setErr(data?.error || "فشل الجلب");
+        }
+      } catch (e) {
+        if (!ignore) setErr(e?.response?.data?.error || e.message);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+    run();
+    return () => { ignore = true; };
+  }, []);
 
   return (
     <div className="hp">
@@ -47,33 +66,34 @@ export default function FlashCards(){
       <section className="heroBox heroRow2">
         <div className="heroText heroText2">
           <h1>البطاقات التعليمية</h1>
-          <p></p>
         </div>
       </section>
 
       <section className="panel fcSimple">
-        {/* كرت واحد فقط: دخول إلى المتصفح العام للبطاقات */}
-        <article className="oneCard">
-          <div className="oneCard__info">
-            <h3 className="oneCard__title">البطاقات التعليمية</h3>
-            <p className="oneCard__desc">ادارة ومراجعة كل بطاقاتك (الكل / المفضلة).</p>
-          </div>
-          <Link to="/cards/browse" className="oneCard__cta">دخول</Link>
-        </article>
+        <div className="actionsRow">
+          <Link to="/upload" className="createBtn">+ إنشاء بطاقات جديدة</Link>
+        </div>
 
-        {/* آخر ٣ مجموعات */}
         <div className="lastRow">
           <h3 className="panel__title">آخر ٣ مجموعات</h3>
+
+          {loading && <div className="alert">... جارٍ الجلب</div>}
+          {err && <div className="alert">خطأ: {err}</div>}
+
           <div className="lastList">
-            {last3.map(d=>(
+            {decks.map((d)=>(
               <article key={d.id} className="deckItem">
                 <div className="deckMeta">
-                  <h4 className="deckTitle">{d.name}</h4>
-                  <p className="deckSub">{d.count} بطاقة</p>
+                  <h4 className="deckTitle">{d.name || d.id}</h4>
+                  <p className="deckSub">{d.count || 0} بطاقة</p>
                 </div>
-                <Link to={`/cards/view/${encodeURIComponent(d.id)}`} className="deckCTA">فتح</Link>
+                <Link className="deckCTA" to={`/cards/view/${encodeURIComponent(d.id)}`}>فتح</Link>
               </article>
             ))}
+
+            {!loading && !err && decks.length === 0 && (
+              <div className="alert">لا توجد مجموعات بعد.</div>
+            )}
           </div>
         </div>
       </section>
