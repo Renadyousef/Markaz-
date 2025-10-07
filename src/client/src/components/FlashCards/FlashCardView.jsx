@@ -3,10 +3,82 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import axios from "axios";
 
+/* ===== API ===== */
 const API_ROOT  = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const API_FLASH = `${API_ROOT}/api/flashcards`;
 const API_RETR  = `${API_ROOT}/retrive`;
 
+/* ===== TTS Config ===== */
+const API_BASE_ROOT = import.meta.env.VITE_API_BASE || ""; // اتركها "" لو نفس دومين الفرونت
+const TTS_URL       = API_BASE_ROOT ? `${API_BASE_ROOT}/tts` : "/tts";
+
+/* ===== أصوات متاحة ===== */
+const VOICES = [
+  { id: "Hala", label: "الصوت الأول" },
+  { id: "Zayd", label: "الصوت الثاني" },
+];
+
+/* ===== هوك TTS (تشغيل/إيقاف + كاش محلّي) ===== */
+function useTTS(initialVoice = "Hala") {
+  const audioRef = useRef(null);
+  const cacheRef = useRef(new Map());
+  const [voice, setVoice] = useState(initialVoice);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      stop();
+      for (const url of cacheRef.current.values()) URL.revokeObjectURL(url);
+      cacheRef.current.clear();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function keyFor(text, v) { return `${v}::${text}`; }
+
+  async function ensureAudioUrl(text, v) {
+    const key = keyFor(text, v);
+    if (cacheRef.current.has(key)) return cacheRef.current.get(key);
+
+    const res = await axios.post(
+      TTS_URL,
+      { text, voiceId: v },
+      { responseType: "arraybuffer" }
+    );
+    const blob = new Blob([res.data], { type: "audio/mpeg" });
+    const url = URL.createObjectURL(blob);
+    cacheRef.current.set(key, url);
+    return url;
+  }
+
+  async function speak(text) {
+    if (!text || !text.trim()) return;
+    if (isPlaying) stop();
+
+    const url = await ensureAudioUrl(text, voice);
+
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+      audioRef.current.addEventListener("ended", () => setIsPlaying(false));
+      audioRef.current.addEventListener("pause", () => setIsPlaying(false));
+    }
+    audioRef.current.src = url;
+    await audioRef.current.play();
+    setIsPlaying(true);
+  }
+
+  function stop() {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setIsPlaying(false);
+  }
+
+  return { voice, setVoice, isPlaying, speak, stop };
+}
+
+/* ===== Styles ===== */
 const local = `
 .fcView{ display:grid; gap:14px; }
 .fcTop{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
@@ -56,8 +128,6 @@ const local = `
   border:1px solid #111827; background:#fff; color:#111827;
   text-shadow: 0 0 0.8px rgba(0,0,0,.55);
 }
-.badge.ok{ }
-.badge.no{ }
 
 .helperBox{ border:1px dashed #e5e7eb; border-radius:12px; padding:12px; background:#fff; }
 .helperBox .row{ display:flex; gap:10px; margin-top:10px; align-items:center; flex-wrap:wrap; }
@@ -65,6 +135,12 @@ const local = `
 .alert{ margin-top:10px; padding:10px 12px; border-radius:10px; font-weight:800; border:1px solid #e5e7eb; background:#fff; }
 .alert.ok{ border-color:#c7f0d2; background:#f0fff4; }
 .alert.err{ border-color:#fcd5d5; background:#fff5f5; color:#b00020; }
+
+/* ===== شريط الصوت ===== */
+.voiceBar{ display:flex; gap:10px; align-items:center; justify-content:flex-end; flex-wrap:wrap; }
+.select{ border:1px solid #e5e7eb; border-radius:10px; padding:8px 10px; background:#fff; font-weight:700; }
+.ttsBtn{ border:1px solid var(--fx-card-ring); background:#fff; padding:10px 14px; border-radius:12px; font-weight:900; cursor:pointer; }
+.ttsBtn.playing{ background:#fee2e2; border-color:#fecaca; }
 `;
 
 export default function FlashCardView() {
@@ -99,6 +175,9 @@ export default function FlashCardView() {
   const activeSlideRef = useRef(null);
   const SWIPE_THRESHOLD = 60;
 
+  // ====== TTS ======
+  const { voice, setVoice, isPlaying, speak, stop } = useTTS("Hala");
+
   // ====== تحميل من PDF (وضع التوليد) ======
   async function loadFromPdf() {
     if (!pdfId) { setErr("لا يوجد pdfId"); return; }
@@ -117,6 +196,13 @@ export default function FlashCardView() {
         setKnown(new Set());
         setUnknown(new Set());
         setMeta(null);
+
+        // ✅ اقرأ أول بطاقة تلقائيًا بعد التوليد
+        const first = mapped[0];
+        if (first) {
+          const text = `${first.a}\n\n${first.q}`;
+          setTimeout(() => speak(text), 80);
+        }
       } else {
         setErr(res.data?.error || "حدث خطأ غير معروف");
       }
@@ -150,9 +236,10 @@ export default function FlashCardView() {
         knownCount: deck.knownCount ?? (deck.knownIds?.length||0),
         unknownCount: deck.unknownCount ?? (deck.unknownIds?.length||0),
       });
-      // لتظهر الشارات بقيم فعلية
+      // لإظهار الشارات/الألوان
       setKnown(new Set(deck.knownIds || []));
       setUnknown(new Set(deck.unknownIds || []));
+      // (لا نشغّل الصوت تلقائيًا في عرض الدك حتى ما يزعج المستخدم)
     }catch(e){
       setErr(e?.response?.data?.error || e.message);
     }finally{
@@ -164,7 +251,7 @@ export default function FlashCardView() {
   useEffect(()=>{
     if (mode === "viewDeck") loadDeckById(deckIdParam);
     if (mode === "generate")  loadFromPdf();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deckIdParam, pdfId]);
 
   // ====== سحب ======
@@ -212,7 +299,7 @@ export default function FlashCardView() {
     startXRef.current = null; dxRef.current = 0; activeSlideRef.current = null;
   }
 
-  // تصنيف (للتوليد فقط)
+  // تصنيف (للتوليد فقط) + قراءة البطاقة التالية
   function mark(direction) {
     if (mode !== "generate") return;
     const cur = cards[i];
@@ -227,10 +314,21 @@ export default function FlashCardView() {
       const k = new Set(known); k.delete(cur.id);
       setUnknown(u); setKnown(k);
     }
-    setI(prev => Math.min(cards.length - 1, prev + 1));
+
+    setI(prev => {
+      const next = Math.min(cards.length - 1, prev + 1);
+      // أوقفي أي تشغيل قبل البدء
+      if (isPlaying) stop();
+      const nxtCard = cards[next];
+      if (nxtCard) {
+        const txt = `${nxtCard.a}\n\n${nxtCard.q}`;
+        setTimeout(() => speak(txt), 40);
+      }
+      return next;
+    });
   }
 
-  // كيبورد
+  // كيبورد: أسهم للتنقّل/التصنيف + مسافة لتشغيل/إيقاف الصوت
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "ArrowRight") {
@@ -241,10 +339,18 @@ export default function FlashCardView() {
         if (mode === "generate") mark("left");
         else setI(prev=>Math.max(prev-1, 0));
       }
+      if (e.key === " ") {
+        e.preventDefault();
+        const cur = cards[i];
+        if (!cur) return;
+        const text = `${cur.a}\n\n${cur.q}`;
+        if (isPlaying) stop(); else speak(text);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [i, cards, known, unknown, mode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [i, cards, known, unknown, mode, isPlaying]);
 
   const doneAll = cards.length > 0 && (known.size + unknown.size) === cards.length;
 
@@ -287,7 +393,12 @@ export default function FlashCardView() {
     if (mode === "generate") setDeckId(null);
     setSaveOk(null);
     setSaveMsg("تم تجاهل هذه المجموعة.");
+    if (isPlaying) stop();
   }
+
+  // نص البطاقة الحالية (الترتيب: التعريف ثم المصطلح)
+  const current = cards[i];
+  const currentText = current ? `${current.a}\n\n${current.q}` : "";
 
   return (
     <div className="hp">
@@ -308,6 +419,30 @@ export default function FlashCardView() {
           </div>
         </div>
 
+        {/* شريط الصوت */}
+        {!loading && !err && cards.length > 0 && (
+          <div className="voiceBar">
+            <label style={{fontWeight:900}}>الصوت:</label>
+            <select
+              className="select"
+              value={voice}
+              onChange={(e)=>{ if (isPlaying) stop(); setVoice(e.target.value); }}
+            >
+              {VOICES.map(v => <option key={v.id} value={v.id}>{v.label}</option>)}
+            </select>
+            <button
+              className={`ttsBtn ${isPlaying ? "playing" : ""}`}
+              onClick={()=>{
+                if (!currentText) return;
+                if (isPlaying) stop();
+                else speak(currentText);
+              }}
+            >
+              {isPlaying ? "إيقاف" : "استمع"}
+            </button>
+          </div>
+        )}
+
         {loading && <div className="viewer">... جاري التحميل</div>}
 
         {!loading && err && (
@@ -315,7 +450,14 @@ export default function FlashCardView() {
             <div className="alert err">خطأ: {err}</div>
             <div className="row">
               {mode === "viewDeck" && <button className="navBtn" onClick={()=>loadDeckById(deckId)}>إعادة المحاولة</button>}
-              {mode === "generate" && <button className="navBtn" onClick={loadFromPdf}>إعادة التوليد</button>}
+              {mode === "generate" && (
+                <button
+                  className="navBtn"
+                  onClick={()=>{ if (isPlaying) stop(); loadFromPdf(); }}
+                >
+                  إعادة التوليد
+                </button>
+              )}
               <Link to="/" className="navBtn">رجوع للرئيسية</Link>
             </div>
           </div>
@@ -363,18 +505,24 @@ export default function FlashCardView() {
                     })}
                   </div>
                   <button className="navBtn" onClick={()=>mark("right")} disabled={i>=cards.length}>عرفتها (→)</button>
-                  <button className="navBtn" onClick={loadFromPdf} disabled={loading || saving}>إعادة التوليد</button>
+                  <button
+                    className="navBtn"
+                    onClick={()=>{ if (isPlaying) stop(); loadFromPdf(); }}
+                    disabled={loading || saving}
+                  >
+                    إعادة التوليد
+                  </button>
                 </>
               ) : (
                 <>
-                  <button className="navBtn" onClick={()=>setI(v=>Math.max(v-1,0))}>السابق</button>
+                  <button className="navBtn" onClick={()=>{ if (isPlaying) stop(); setI(v=>Math.max(v-1,0)); }}>السابق</button>
                   <div className="dots">
                     {cards.map((c2, idx)=>{
                       const cls = known.has(c2.id) ? 'known' : (unknown.has(c2.id) ? 'unknown' : '');
                       return <span key={idx} className={`dot ${cls} ${idx===i? "isActive":""}`} />
                     })}
                   </div>
-                  <button className="navBtn" onClick={()=>setI(v=>Math.min(v+1, cards.length-1))}>التالي</button>
+                  <button className="navBtn" onClick={()=>{ if (isPlaying) stop(); setI(v=>Math.min(v+1, cards.length-1)); }}>التالي</button>
                 </>
               )}
             </div>
