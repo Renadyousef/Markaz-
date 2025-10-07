@@ -1,24 +1,40 @@
+// GetQuiz.jsx
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import TTSControls from "./TTSControls"; // ✅ Added import
+import TTSControls from "./TTSControls";
+import FontSettings from "./FontSettings";
+
+const A11Y_KEY = "quiz_a11y_settings";
+const DEFAULT_A11Y = { baseSize: 18, lineHeight: 1.6, letterSpacing: 0.0 };
 
 export default function GetQuiz() {
   const location = useLocation();
   const navigate = useNavigate();
   const { pdfId } = location.state || {}; // PDF ID from Upload page
 
-  const [level, setLevel] = useState(""); // user-selected level
-  const [quiz, setQuiz] = useState(null); // questions from backend
-  const [currentIndex, setCurrentIndex] = useState(0); // current question index
-  const [selected, setSelected] = useState(null); // selected option
-  const [answers, setAnswers] = useState([]); // store user answers
-  const [score, setScore] = useState(null); // final score
+  const [level, setLevel] = useState("");
+  const [quiz, setQuiz] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [answers, setAnswers] = useState([]);
+  const [score, setScore] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [showAnswer, setShowAnswer] = useState(false); // show correct answer
+  const [showAnswer, setShowAnswer] = useState(false);
 
-  // Fetch quiz
+  // Font popup + a11y state
+  const [showFontPopup, setShowFontPopup] = useState(true);
+  const [a11y, setA11y] = useState(() => {
+    try {
+      const raw = localStorage.getItem(A11Y_KEY);
+      return raw ? { ...DEFAULT_A11Y, ...JSON.parse(raw) } : DEFAULT_A11Y;
+    } catch {
+      return DEFAULT_A11Y;
+    }
+  });
+
+  // Load quiz from backend
   const fetchQuiz = async () => {
     if (!pdfId || !level) return;
     setLoading(true);
@@ -50,9 +66,17 @@ export default function GetQuiz() {
 
   useEffect(() => {
     fetchQuiz();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pdfId, level]);
 
-  // Normalize options
+  // Keep showAnswer/reset in sync when moving between questions
+  useEffect(() => {
+    // whenever question index changes, clear selection and hide answer
+    setSelected(null);
+    setShowAnswer(false);
+  }, [currentIndex]);
+
+  // Helper to load options robustly
   const getOptions = (q) => {
     if (!q) return [];
     if (q.type !== "MCQ") return [];
@@ -88,7 +112,7 @@ export default function GetQuiz() {
     return Array.from(new Set(flattened));
   };
 
-  // Move to next question or finish
+  // Navigate to next question or finish
   const nextQuestion = () => {
     if (!quiz) return;
     const currentQText =
@@ -96,6 +120,7 @@ export default function GetQuiz() {
     const answerObj = { question: currentQText, selected };
 
     if (showAnswer && selected === null) {
+      // user asked to show answer without selecting
       answerObj.selected = null;
     }
 
@@ -111,7 +136,7 @@ export default function GetQuiz() {
     }
   };
 
-  // Calculate score
+  // Score calculation + save
   const calculateScore = (finalAnswersParam) => {
     if (!quiz) return;
     const finalAnswers = finalAnswersParam || answers;
@@ -127,7 +152,6 @@ export default function GetQuiz() {
     saveResult(finalScore);
   };
 
-  // Save result
   const saveResult = async (finalScore) => {
     try {
       const token = localStorage.getItem("token");
@@ -149,13 +173,73 @@ export default function GetQuiz() {
     setCurrentIndex(0);
     setSelected(null);
     setShowAnswer(false);
+    setShowFontPopup(true); // optionally show font popup again
   };
 
   const exitQuiz = () => {
     navigate("/quizzes");
   };
 
-  // Level selection screen
+  // When user saves font settings, FontSettings calls onSave(draft).
+  // Accept the draft if provided, otherwise reload from localStorage (safe).
+  function handleFontSave(draft) {
+    try {
+      if (draft && typeof draft === "object") {
+        setA11y({ ...DEFAULT_A11Y, ...draft });
+      } else {
+        const raw = localStorage.getItem(A11Y_KEY);
+        if (raw) setA11y({ ...DEFAULT_A11Y, ...JSON.parse(raw) });
+      }
+    } catch {
+      setA11y(DEFAULT_A11Y);
+    } finally {
+      setShowFontPopup(false);
+    }
+  }
+
+  // --- Render flow ---------------------------------------------------------
+
+  // Show font modal before level selection
+  if (showFontPopup) {
+    return (
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 999,
+          padding: 20,
+        }}
+      >
+        <div style={{ maxHeight: "90vh", overflowY: "auto", width: "min(520px, 96%)" }}>
+          <FontSettings onSave={handleFontSave} />
+          {/* optional: quick skip button in case user doesn't want to save */}
+          <div style={{ textAlign: "center", marginTop: 8 }}>
+            <button
+              onClick={() => {
+                // keep current a11y (already loaded) and close popup
+                setShowFontPopup(false);
+              }}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "#6b7280",
+                cursor: "pointer",
+                fontWeight: 700,
+              }}
+            >
+              تخطي
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Level selection (apply a11y to header)
   if (!quiz) {
     return (
       <div style={{ display: "grid", placeItems: "center", padding: 24 }}>
@@ -170,7 +254,14 @@ export default function GetQuiz() {
             textAlign: "center",
           }}
         >
-          <h2 style={{ fontWeight: 800, marginBottom: 20 }}>
+          <h2
+            style={{
+              fontWeight: 800,
+              marginBottom: 20,
+              fontSize: `${a11y.baseSize}px`,
+              lineHeight: a11y.lineHeight,
+            }}
+          >
             اختر مستوى الاختبار
           </h2>
           <div
@@ -188,14 +279,12 @@ export default function GetQuiz() {
                 style={{
                   padding: "10px 16px",
                   borderRadius: 12,
-                  border:
-                    level === lvl
-                      ? "2px solid #f59e0b"
-                      : "1px solid #d1d5db",
+                  border: level === lvl ? "2px solid #f59e0b" : "1px solid #d1d5db",
                   background: level === lvl ? "#fff7ed" : "#fff",
                   cursor: "pointer",
                   fontWeight: 600,
                   transition: "0.2s",
+                  fontSize: `${Math.max(14, a11y.baseSize - 2)}px`,
                 }}
               >
                 {lvl}
@@ -209,7 +298,7 @@ export default function GetQuiz() {
     );
   }
 
-  // Final score screen
+  // Final score screen (use a11y for text)
   if (score !== null) {
     return (
       <div style={{ display: "grid", placeItems: "center", padding: 24 }}>
@@ -224,10 +313,10 @@ export default function GetQuiz() {
             textAlign: "center",
           }}
         >
-          <h2 style={{ fontWeight: 800, marginBottom: 20 }}>
+          <h2 style={{ fontWeight: 800, marginBottom: 20, fontSize: `${a11y.baseSize}px`, lineHeight: a11y.lineHeight }}>
             لقد أكملت الاختبار!
           </h2>
-          <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 20 }}>
+          <p style={{ fontSize: `${a11y.baseSize}px`, fontWeight: 600, marginBottom: 20 }}>
             نتيجتك: {score}%
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
@@ -240,6 +329,7 @@ export default function GetQuiz() {
                 background: "#fff7ed",
                 cursor: "pointer",
                 fontWeight: 600,
+                fontSize: `${Math.max(14, a11y.baseSize - 2)}px`,
               }}
             >
               إعادة الاختبار
@@ -253,6 +343,7 @@ export default function GetQuiz() {
                 background: "#fff",
                 cursor: "pointer",
                 fontWeight: 600,
+                fontSize: `${Math.max(14, a11y.baseSize - 2)}px`,
               }}
             >
               إنهاء
@@ -270,6 +361,17 @@ export default function GetQuiz() {
   const isLastQuestion = currentIndex === quiz.length - 1;
   const options = isMCQ ? getOptions(question) : [];
 
+  // styles derived from a11y
+  const questionStyle = {
+    fontSize: `${a11y.baseSize}px`,
+    lineHeight: a11y.lineHeight,
+    letterSpacing: `${a11y.letterSpacing}px`,
+    fontWeight: 600,
+    marginBottom: 10,
+  };
+
+  const optionFontSize = Math.max(14, a11y.baseSize - 1);
+
   return (
     <div style={{ display: "grid", placeItems: "center", padding: 24 }}>
       <div
@@ -283,23 +385,9 @@ export default function GetQuiz() {
         }}
       >
         {/* Progress */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            marginBottom: 18,
-          }}
-        >
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
           <div style={{ flex: 1 }}>
-            <div
-              style={{
-                height: 8,
-                borderRadius: 999,
-                background: "#f1f5f9",
-                overflow: "hidden",
-              }}
-            >
+            <div style={{ height: 8, borderRadius: 999, background: "#f1f5f9", overflow: "hidden" }}>
               <div
                 style={{
                   width: `${((currentIndex + 1) / quiz.length) * 100}%`,
@@ -310,102 +398,55 @@ export default function GetQuiz() {
               />
             </div>
           </div>
-          <div
-            style={{ minWidth: 70, textAlign: "right", fontWeight: 600 }}
-          >
+          <div style={{ minWidth: 70, textAlign: "right", fontWeight: 600 }}>
             {currentIndex + 1}/{quiz.length}
           </div>
         </div>
 
-        {/* Question + 🔊 TTS */}
+        {/* Question + TTS */}
         <div style={{ marginBottom: 12 }}>
-          <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 10 }}>
+          <p style={questionStyle}>
             {question?.question || question?.statement}
           </p>
-          <TTSControls
-            key={currentIndex}
-            text={question?.question || question?.statement || ""}
-          />
+
+          <TTSControls key={currentIndex} text={question?.question || question?.statement || ""} />
         </div>
 
         {/* Options */}
         <div style={{ display: "grid", gap: 12, marginBottom: 20 }}>
-          {isMCQ &&
-            options.map((opt, idx) => {
-              let borderColor =
-                selected === opt ? "#f59e0b" : "#d1d5db";
-              if (showAnswer) {
-                const correctAnswer = quiz[currentIndex]?.answer;
-                if (opt === correctAnswer) borderColor = "green";
-                else if (
-                  opt === selected &&
-                  selected !== correctAnswer
-                )
-                  borderColor = "red";
-              }
-              return (
-                <button
-                  key={idx}
-                  onClick={() => !showAnswer && setSelected(opt)}
-                  style={{
-                    padding: "10px 16px",
-                    borderRadius: 12,
-                    border: `2px solid ${borderColor}`,
-                    background:
-                      selected === opt ? "#fff7ed" : "#fff",
-                    cursor: showAnswer ? "not-allowed" : "pointer",
-                    fontWeight: 600,
-                    transition: "0.2s",
-                    textAlign: "center",
-                  }}
-                >
-                  {opt}
-                </button>
-              );
-            })}
-
-          {isTF &&
-            ["صح", "خطأ"].map((opt) => {
-              let borderColor =
-                selected === opt ? "#f59e0b" : "#d1d5db";
-              if (showAnswer) {
-                const correctAnswer = quiz[currentIndex]?.answer;
-                if (opt === correctAnswer) borderColor = "green";
-                else if (
-                  opt === selected &&
-                  selected !== correctAnswer
-                )
-                  borderColor = "red";
-              }
-              return (
-                <button
-                  key={opt}
-                  onClick={() => !showAnswer && setSelected(opt)}
-                  style={{
-                    padding: "10px 16px",
-                    borderRadius: 12,
-                    border: `2px solid ${borderColor}`,
-                    background:
-                      selected === opt ? "#fff7ed" : "#fff",
-                    cursor: showAnswer ? "not-allowed" : "pointer",
-                    fontWeight: 600,
-                    transition: "0.2s",
-                  }}
-                >
-                  {opt}
-                </button>
-              );
-            })}
+          {(isMCQ ? options : ["صح", "خطأ"]).map((opt, idx) => {
+            let borderColor = selected === opt ? "#f59e0b" : "#d1d5db";
+            if (showAnswer) {
+              const correctAnswer = quiz[currentIndex]?.answer;
+              if (opt === correctAnswer) borderColor = "green";
+              else if (opt === selected && selected !== correctAnswer) borderColor = "red";
+            }
+            return (
+              <button
+                key={idx}
+                onClick={() => !showAnswer && setSelected(opt)}
+                style={{
+                  padding: "10px 16px",
+                  borderRadius: 12,
+                  border: `2px solid ${borderColor}`,
+                  background: selected === opt ? "#fff7ed" : "#fff",
+                  cursor: showAnswer ? "not-allowed" : "pointer",
+                  fontWeight: 600,
+                  transition: "0.2s",
+                  textAlign: "center",
+                  fontSize: `${optionFontSize}px`,
+                  lineHeight: a11y.lineHeight,
+                  letterSpacing: `${a11y.letterSpacing}px`,
+                }}
+              >
+                {opt}
+              </button>
+            );
+          })}
         </div>
 
         {/* Controls */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <button
             onClick={() => setShowAnswer(true)}
             disabled={showAnswer}
@@ -431,10 +472,7 @@ export default function GetQuiz() {
               border: "1px solid #f59e0b",
               background: "#fff7ed",
               fontWeight: 600,
-              cursor:
-                selected === null && !showAnswer
-                  ? "not-allowed"
-                  : "pointer",
+              cursor: selected === null && !showAnswer ? "not-allowed" : "pointer",
               transition: "0.2s",
             }}
           >
