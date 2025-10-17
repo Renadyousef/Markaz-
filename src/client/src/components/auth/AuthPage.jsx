@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import SignUp from "./SignUp";
 import SignIn from "./SignIn";
 import Footer from '../Header_Footer/Footer'
 
-export default function AuthPage({ setToken, initialTab = "signin" }) {
+export default function AuthPage({ setToken, initialTab = "signin" , goTo}) {
   const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
@@ -28,13 +27,14 @@ export default function AuthPage({ setToken, initialTab = "signin" }) {
         </button>
       </div>
 
-      <div className="auth-form">
-        {activeTab === "signin" ? <SignIn setToken={setToken} /> : <SignUp setToken={setToken} />}
-       
-      </div>
-      
+     <div className="auth-form">
+  {activeTab === "signin"
+    ? <SignIn setToken={setToken} goTo={goTo} />
+    : <SignUp setToken={setToken} goTo={goTo} />}
+</div>
+
     </div>
-    <Footer/></div>
+    </div>
    
   );
 }

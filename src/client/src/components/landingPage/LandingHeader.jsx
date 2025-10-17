@@ -1,37 +1,39 @@
-export default function LandingHeader() {
+// src/client/src/components/landingPage/LandingHeader.jsx
+import { Navbar, Container, Button } from "react-bootstrap";
+import "./landing.css";
+
+export default function LandingHeader({ goTo }) {
   return (
-    <nav className="navbar navbar-expand-lg shadow-sm ">
-      <div className="container-fluid">
+    <Navbar
+      fixed="top"
+      expand={false}
+      className="shadow-sm custom-navbar"
+      style={{
+        background: "#fff3e69f",
+        backgroundSize: "cover",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      <Container fluid className="d-flex justify-content-between align-items-center">
         {/* Logo */}
-        <a className="navbar-brand" href="#">
-          <img src="/logo.png" alt="Logo" className="img-fluid" style={{ maxHeight: '70px' }} />
-        </a>
+        <Navbar.Brand href="#">
+          <img
+            src="/logo3.svg"
+            alt="شعار مركز"
+            style={{ height: "60px", width: "auto" }}
+          />
+        </Navbar.Brand>
 
-        {/* Hamburger menu for mobile */}
-        <button
-          className="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarButtons"
-          aria-controls="navbarButtons"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
+        {/* Start button */}
+        <Button
+          variant="warning"
+          className="fw-bold px-4"
+          style={{ backgroundColor: "#ff914d", border: "none", color: "#ffffff" }}
+          onClick={() => goTo?.("auth", "signin")} // ✅ use your App's goTo
         >
-          <span className="navbar-toggler-icon"></span>
-        </button>
-
-        {/* Buttons */}
-        <div className="collapse navbar-collapse justify-content-end" id="navbarButtons">
-          <div className="d-flex">
-            <a className="btn custom-signin ms-2" href="/signin">
-              تسجيل الدخول
-            </a>
-            <a className="btn custom-signup" href="/signup">
-              إنشاء حساب
-            </a>
-          </div>
-        </div>
-      </div>
-    </nav>
+          ابدا الان
+        </Button>
+      </Container>
+    </Navbar>
   );
 }

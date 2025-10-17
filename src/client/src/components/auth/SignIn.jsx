@@ -2,7 +2,7 @@ import { validateEmail } from "./validation";
 import { useState } from "react";
 import axios from "axios";
 
-export default function SignIn({ setToken }) {
+export default function SignIn({ setToken , goTo }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -68,6 +68,24 @@ export default function SignIn({ setToken }) {
       </div>
 
       {errorMessage && <div style={{ color: "red", fontWeight: "bold" }}>{errorMessage}</div>}
+<button
+  type="button"
+  onClick={() => goTo("forgot")}
+  style={{
+    background: "none",
+    border: "none",
+    padding: 0,
+    textAlign: "right",
+    marginTop: "8px",
+    marginBottom: "12px",
+    fontWeight: "bold",
+    fontSize: "0.9rem",
+    color: "gray",
+    cursor: "pointer"
+  }}
+>
+  هل نسيت كلمة المرور؟
+</button>
 
       <input type="submit" value="تسجيل الدخول" />
     </form>

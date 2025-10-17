@@ -9,6 +9,10 @@ import LandingPage from "./components/landingPage/LandingPage";
 import AuthPage from "./components/auth/AuthPage";
 import HomePage from "./components/homePage/HomePage";
 import ProfilePage from "./components/profile/Profile.jsx";
+import ResetPassword from "./components/resetPassword/resetPassword.jsx";
+import ForgotPassword from "./components/resetPassword/ForgotPassword.jsx";
+import StudySessionSetup from "./components/studySession/StudySessionSetup.jsx";
+import StudySessionTimer from "./components/studySession/StudySessionTimer.jsx";
 
 /* صفحات الفوتر */
 import About from "./components/Header_Footer/About.jsx";
@@ -162,6 +166,8 @@ export default function App() {
           <Route path="/chat"    element={<QuizWithTTS />} />
           <Route path="/flashcards" element={<FlashCardView />} />
           <Route path="/cards/deck/:deckId" element={<DeckView />} />
+           <Route path="/session-setup" element={<StudySessionSetup />} />
+             <Route path="/session-timer" element={<StudySessionTimer />} />
 
 
         </Routes>
@@ -184,6 +190,8 @@ export default function App() {
           goTo={goTo}
         />
       )}
+             {page === "forgot" && <ForgotPassword goTo={goTo} />}
+             {page === "reset" && <ResetPassword goTo={goTo} />}
 
       {/* ✅ Routes لصفحات الفوتر قبل الدخول */}
       <Routes>

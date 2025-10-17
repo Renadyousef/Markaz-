@@ -1,0 +1,407 @@
+/* ===== Background (shared for both pages, matches HomePage) ===== */
+.session-screen {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  text-align: center;
+  font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+  background:
+    radial-gradient(1000px 420px at 10% -5%, #fff7ed 0%, transparent 60%),
+    radial-gradient(1200px 520px at 90% -8%, #ffedd5 10%, transparent 58%),
+    radial-gradient(900px 360px at 50% 100%, rgba(15,23,42,.06) 0%, transparent 60%),
+    #f9fafb;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: #1f2937;
+}
+
+/* ===== Setup Page Card ===== */
+.setup-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 360px;
+  display: grid;
+  gap: 20px;
+  text-align: right;
+}
+
+.setup-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #7a7777;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+/* Field */
+.setup-field {
+  display: grid;
+  gap: 6px;
+}
+.setup-field label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Line input (minimal underline style) */
+.line-input {
+  border: none;
+  border-bottom: 1.5px solid #d1d5db;
+  background: transparent;
+  padding: 6px 4px;
+  font-size: 1rem;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.line-input:focus {
+  border-color: #ff914d;
+}
+/* ===== Timer Page (Redesigned) ===== */
+.timer-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+background:
+    radial-gradient(1000px 420px at 10% -5%, #fff7ed 0%, transparent 60%),
+    radial-gradient(1200px 520px at 90% -8%, #ffedd5 10%, transparent 58%),
+    radial-gradient(900px 360px at 50% 100%, rgba(15,23,42,.06) 0%, transparent 60%),
+  ;
+  color: #f59e0b;
+  text-align: center;
+  font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+}
+
+.timer-header {
+  margin-bottom: 12px;
+}
+.timer-title {
+  font-size: 2.6rem;
+  font-weight: 600;
+}
+.timer-mode {
+  font-size: 1rem;
+  color: #8987829f; /* grey */
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.timer-ring {
+  position: relative;
+  width: 360px;
+  height: 360px;
+  margin: 70px 0;
+}
+.timer-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.ring-bg {
+  fill: none;
+  stroke: #e5e7eb;
+  stroke-width: 9;
+}
+.ring-fg {
+  fill: none;
+  stroke: #ff914d;
+  stroke-width: 9;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+.ring-time {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 3rem;
+  font-weight: 400;
+}
+
+.timer-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn {
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 12px 20px;
+  font-size: 1rem;
+  transition: 0.2s ease;
+}
+.btn.ghost {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  color: #1f2937;
+}
+.btn.danger {
+  background: #ef4444;
+  color: #fff;
+}
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 500px) {
+  .timer-title { font-size: 1.3rem; }
+  .ring-time { font-size: 2.2rem; }
+  .timer-ring { width: 200px; height: 200px; }
+}
+
+/* ===== Buttons ===== */
+.btn {
+  border: 0;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 12px 20px;
+  font-size: 1rem;
+  transition: 0.2s ease;
+}
+
+.btn--primary {
+  background: linear-gradient(135deg, #ff914d, #ffb468);
+  color: #fff;
+  width: 100%;
+}
+.btn--primary:hover {
+  box-shadow: 0 8px 20px rgba(255,145,77,0.25);
+}
+
+.btn--ghost {
+  background: #fff;
+  border: 1px solid #ddd;
+  color: #1f2937;
+}
+.btn--danger {
+  background: #ef4444;
+  color: #fff;
+}
+
+.btn-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 10px;
+}
+/* Optional: hides site header/nav/footer while focus mode is active */
+
+body.focus-mode footer {
+  display: none !important;
+}
+/* ===== Setup Screen ===== */
+.setup-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+background:
+    radial-gradient(1000px 420px at 10% -5%, #fff7ed 0%, transparent 60%),
+    radial-gradient(1200px 520px at 90% -8%, #ffedd5 10%, transparent 58%),
+    radial-gradient(900px 360px at 50% 100%, rgba(15,23,42,.06) 0%, transparent 60%),
+   ;
+  font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+}
+
+/* ===== Wizard Card ===== */
+.wizard-card {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  padding: 32px 40px;
+  width: 100%;
+  max-width: 550px;
+  text-align: center;
+  display: grid;
+  gap: 24px;
+}
+.wizard-card.wide {
+  max-width: 600px;
+}
+
+.wizard-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 70px; /* ✅ space between title and input/slider */
+}
+
+.line-input.big {
+  font-size: 1.1rem;
+  padding: 11px;
+  border: none;
+  border-bottom: 2px solid #d1d5db;
+  background: transparent;
+  outline: none;
+  text-align: center;
+  transition: border-color 0.2s ease;
+}
+.line-input.big:focus {
+  border-color: #ff914d; /* orange */
+}
+
+/* Progress bar */
+.wizard-progress {
+  background: #e5e7eb;
+  border-radius: 6px;
+  height: 6px;
+  overflow: hidden;
+}
+.wizard-progress .bar {
+  height: 6px;
+  background: #ff914d; /* orange progress */
+  transition: width 0.3s ease;
+}
+
+/* Slider: blue fill up to current value */
+.range.blue {
+appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+   background: linear-gradient(
+    to right,
+    #ff914d 0%,
+    #ff914d var(--val, 0%),
+    #e5e7eb var(--val, 0%),
+    #e5e7eb 100%
+  );
+  outline: none;
+}
+.range.blue {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(
+    to right,
+    #ff914d 0%,
+    #ff914d var(--val, 0%),
+    #e5e7eb var(--val, 0%),
+    #e5e7eb 100%
+  );
+  outline: none;
+  accent-color: transparent; /* ✅ stops the native blue */
+}
+
+.range.blue::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid #ff914d;
+  cursor: pointer;
+}
+
+.range.green::-moz-range-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid #ff914d;
+  cursor: pointer;
+}
+
+.slider-value {
+  font-weight: 700;
+  color: #ff914d; /* orange value text */
+  margin-top: 4px;
+}
+
+.quick-preset {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.quick-preset button {
+  background: #f3f4f6;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+.quick-preset button:hover {
+  background: #ffe0cc; /* light orange hover */
+}
+
+/* Navigation buttons */
+.wizard-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.wizard-nav.center {
+  justify-content: center;
+}
+.btn.ghost {
+  background: #fff;
+  border: 1px solid #ddd;
+  color: #1f2937;
+}
+.btn.btn--primary {
+  background: linear-gradient(135deg, #ff914d, #ffb468);
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  padding: 14px 26px;
+  font-size: 1.1rem;
+  transition: 0.2s ease;
+}
+.btn.btn--primary:hover {
+  box-shadow: 0 8px 20px rgba(255, 145, 77, 0.25);
+  transform: translateY(-1px);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .wizard-card {
+    max-width: 90%;
+    padding: 24px 20px;
+  }
+  .wizard-title {
+    font-size: 1.3rem;
+    margin-bottom: 12px;
+  }
+  .btn.btn--primary {
+    width: 100%;
+  }
+}
+/* ---- Place this at the very bottom of Session.css ---- */
+.setup-screen,
+.timer-screen {
+  min-height: calc(90vh - 80px); /* remove header height */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* center vertically */
+  align-items: center;     /* center horizontally */
+  padding-top: 0;          /* remove extra top padding */
+}
+/* Session.css */
+body.focus-mode .headerWrap,
+body.focus-mode footer,
+body.focus-mode .app-body > aside {
+  display: none !important;
+}

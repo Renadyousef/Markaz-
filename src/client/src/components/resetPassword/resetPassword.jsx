@@ -1,114 +1,105 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "../../config/firebase-config";
-import "./ResetPassword.css";
+// src/client/src/components/resetPassword/ResetPassword.jsx
+import { useState } from "react";
+import axios from "axios";
+import "./resetPassword.css";
+import { validatePassword, validateEmail } from "../auth/validation";
+import LandingHeader from "../landingPage/LandingHeader";  // ✅ reuse header
+import Footer from "../Header_Footer/Footer";
 
-const LOGIN_PATH = "/login"; 
-
-
-export default function ResetPassword() {
+export default function ResetPassword({ goTo }) {
   const [email, setEmail] = useState("");
-  const [sentTo, setSentTo] = useState("");
-  const [err, setErr] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
-  const navigate = useNavigate();
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [fieldMessage, setFieldMessage] = useState({
+    email: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+  const [showPassword, setShowPassword] = useState(false);
 
-  
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      document.querySelector(".will-reveal")?.classList.add("reveal");
-    }, 20);
-    return () => clearTimeout(t);
-  }, []);
-
-  const onSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setErr("");
-    if (!email.trim()) { setErr("من فضلك أدخل بريدك الإلكتروني."); return; }
+    setMessage("");
+
+    if (!validateEmail(email)) {
+      setMessage("❌ الرجاء إدخال بريد إلكتروني صالح.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setMessage("❌ كلمتا المرور غير متطابقتين");
+      return;
+    }
+    if (!validatePassword(newPassword)) {
+      setMessage("❌ كلمة المرور يجب أن تحتوي على 8 أحرف على الأقل، بما في ذلك حرف كبير، رقم، ورمز خاص (!@#$%^&*).");
+      return;
+    }
 
     try {
-      setLoading(true);
-      await sendPasswordResetEmail(auth, email);
-      setSentTo(email);
-      setShowPopup(true); 
-      setEmail("");
-    } catch (e) {
-      console.error(e);
-      setErr("تعذّر الإرسال. تحقّق من البريد وحاول مجددًا.");
-    } finally {
-      setLoading(false);
+      const res = await axios.post("http://localhost:5000/ResetRoutes/reset-password", {
+        email,
+        newPassword,
+      });
+      if (res.status === 200) {
+        setMessage("✅ تم تحديث كلمة المرور بنجاح، الرجاء تسجيل الدخول");
+        goTo("auth", "signin");
+      }
+    } catch (err) {
+      setMessage(err.response?.data?.msg || "❌ فشل تحديث كلمة المرور");
     }
   };
 
   return (
-    
-    <main dir="rtl" className="auth-full auth-bg">
+    <div className="page-wrapper landing-header-space">
+      {/* ✅ header */}
+      <LandingHeader onStart={() => goTo("auth", "signin")} />
 
-  <section className="landing-bg">
-  <img src="/logo.svg" alt="شعار مركز" className="site-logo" />
-
-  <div className="hero-header">
-    <a href="/signin" className="chip chip--primary">تسجيل الدخول</a>
-    <a href="/signup" className="chip chip--light">إنشاء حساب</a>
-  </div>
-</section>
-      <form onSubmit={onSubmit} className="reset-stack will-reveal" aria-labelledby="fp-title">
-        <img src="/resetPassword.svg" alt="" className="reset-hero" />
-        <h1 id="fp-title" className="reset-title">هل نسيت كلمة المرور؟</h1>
-        <p className="reset-sub">
-          من فضلك أدخل بريدك الإلكتروني المسجَّل لدينا لإرسال رابط إعادة تعيين كلمة المرور.
-        </p>
-
-        <label htmlFor="email" className="reset-label">البريد الإلكتروني</label>
+      <form className="sign-up-container" onSubmit={handleSubmit}>
+        <label htmlFor="email" className="required">البريد الإلكتروني</label>
         <input
-          id="email"
           type="email"
-          className="reset-input"
+          id="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="example@gmail.com"
-          autoComplete="email"
-          inputMode="email"
           required
         />
+        {fieldMessage.email && <div className="hint">{fieldMessage.email}</div>}
 
-        {err && <div className="auth-alert auth-alert--err" role="alert">{err}</div>}
+        <label htmlFor="newPassword" className="required">كلمة المرور الجديدة</label>
+        <div className="password-wrapper">
+          <input
+            type={showPassword ? "text" : "password"}
+            id="newPassword"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="toggle-btn"
+          >
+            <i className={showPassword ? "fa-solid fa-eye" : "fa-solid fa-eye-slash"}></i>
+          </button>
+        </div>
+        {fieldMessage.newPassword && <div className="hint">{fieldMessage.newPassword}</div>}
 
-        <button type="submit" className="reset-btn" disabled={loading}>
-          {loading ? "جارٍ الإرسال…" : "إرسال"}
-        </button>
+        <label htmlFor="confirmPassword" className="required">تأكيد كلمة المرور</label>
+        <input
+          type="password"
+          id="confirmPassword"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+        />
+        {fieldMessage.confirmPassword && <div className="hint">{fieldMessage.confirmPassword}</div>}
 
-        <button
-          type="button"
-          className="reset-link"
-          onClick={() => navigate(LOGIN_PATH)}
-        >
-          العودة إلى تسجيل الدخول
-        </button>
+        {message && <div className="reset-message">{message}</div>}
+
+        <input type="submit" value="إعادة التعيين" />
       </form>
 
-  
-      {showPopup && (
-        <div className="auth-overlay" role="dialog" aria-modal="true" aria-labelledby="sent-title">
-          <div className="peach-toast">
-            <img src="/resetPawword.svg" alt="" className="reset-hero small" />
-            <div>
-              <h3 id="sent-title" className="toast-title">تم الإرسال!</h3>
-              <p className="toast-text">
-                أرسلنا رابط إعادة التعيين إلى <strong>{sentTo}</strong>. تحقّق من بريدك
-                
-              </p>
-            </div>
-            <div className="toast-actions">
-              <button className="reset-btn sm" onClick={() => navigate(LOGIN_PATH)}>العودة إلى تسجيل الدخول</button>
-              <button className="reset-link sm" onClick={() => setShowPopup(false)}>إغلاق</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </main>
+      <Footer />
+    </div>
   );
 }

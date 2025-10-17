@@ -1,6 +1,6 @@
-
 // src/components/landingPage/LandingPage.jsx
 import "./landing.css";
+import { Navbar, Container, Button } from "react-bootstrap";
 
 const features = [
   {
@@ -45,19 +45,41 @@ export default function LandingPage({ goTo }) {
 
   return (
     <main dir="rtl">
-      {/* === HERO === */}
-      <section className="landing-bg">
-        <div className="hero-header">
-          <button
-            type="button"
-            className="chip chip--primary"
-            onClick={() => goTo("auth", "signin")}
+      {/* === HEADER === */}
+      <Navbar
+        fixed="top"
+        expand={false}
+        className="shadow-sm custom-navbar"
+        style={{
+          background: "#fdddcdf1",
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        <Container fluid className="d-flex justify-content-between align-items-center">
+          {/* Logo */}
+          <Navbar.Brand href="#">
+            <img
+              src="/logo3.svg"
+              alt="شعار مركز"
+              style={{ height: "50px", width: "50px" }}
+            />
+          </Navbar.Brand>
+
+          {/* Start button */}
+          <Button
+            variant="warning"
+            className="fw-bold px-4"
+            style={{ backgroundColor: "#ff914d", border: "none", color: "#ffffff" }}
+            onClick={() => goTo("auth", "signin")} // ✅ use the goTo prop
           >
             ابدا الان
-          </button>
-          <img src="/logo.svg" alt="شعار مركز" className="site-logo" />
-        </div>
+          </Button>
+        </Container>
+      </Navbar>
 
+      {/* === HERO === */}
+      <section className="landing-bg">
         <div className="hero-content">
           <div className="hero-text">
             <h1 className="hero-title">
@@ -68,13 +90,14 @@ export default function LandingPage({ goTo }) {
               تساعدك على الإبداع والتطوّر، وابدأ رحلتك نحو النجاح بثقة وسلاسة.
             </p>
 
-            <button
+            <Button
               type="button"
               className="cta-explore"
+              style={{ backgroundColor: "#ff914d", color: "#fff", border: "none" }}
               onClick={goToFeatures}
             >
               تعرّف أكثر
-            </button>
+            </Button>
           </div>
 
           <div className="book-group">
