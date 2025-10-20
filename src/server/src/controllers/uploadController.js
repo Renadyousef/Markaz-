@@ -63,7 +63,6 @@ function cleanText(txt) {
   return (txt || "")
     .replace(/\u0000/g, "")
     .replace(/\r/g, "\n")
-    .replace(/[ \t]+/g, " ")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
@@ -136,7 +135,7 @@ async function clamScanStrict(filePath) {
   throw new Error(`فشل فحص ClamAV. ${lastErr ? "تفاصيل: " + lastErr : "لم يتم العثور على clamscan/clamdscan في النظام."}`);
 }
 
-/* ========== تعقيم Ghostscript — إجباري ========== */
+/* ========== تعقيم Ghostscript — مُحسّن ========== */
 async function gsSanitizeStrict(filePath) {
   const candidates = process.platform === "win32" ? ["gswin64c", "gswin32c"] : ["gs"];
   let bin = await findBin(candidates);
@@ -161,6 +160,8 @@ async function gsSanitizeStrict(filePath) {
       "-sDEVICE=pdfwrite",
       "-dNOPAUSE",
       "-dBATCH",
+      "-dEmbedAllFonts=true",
+      "-dSubsetFonts=true",
       filePath,
     ];
     const p = spawn(bin, args, { stdio: ["ignore", "ignore", "pipe"] });
@@ -178,6 +179,133 @@ async function gsSanitizeStrict(filePath) {
       reject(new Error(`فشل تعقيم Ghostscript.${err ? " stderr: " + err.trim() : ""}`));
     });
   });
+}
+
+/* ===== Arabic-safe extraction toolset (Poppler + MuPDF + pdf-parse + OCR) ===== */
+// تطبيع خفيف ومحايد + إنقاذ لام-ألف (بدون "تصحيح" للكلمات)
+function normalizeArabicText(input = "") {
+  let s = String(input);
+  try { s = s.normalize("NFKC"); } catch {}
+
+  // طبع لام-ألف أشكال العرض إلى حروف قياسية (ﻻ/ﻷ/ﻹ/ﻵ → لا/لأ/لإ/لآ)
+  const lamAlefMap = {
+    "\uFEF5":"لأ", "\uFEF6":"لأ",
+    "\uFEF7":"لإ", "\uFEF8":"لإ",
+    "\uFEF9":"لآ", "\uFEFA":"لآ",
+    "\uFEFB":"لا", "\uFEFC":"لا"
+  };
+  s = s.replace(/[\uFEF5-\uFEFC]/g, ch => lamAlefMap[ch] || ch);
+
+  // تنظيف طفيف فقط (لا نزيل كشيدة أو علامات اتجاه حتى لا نغيّر الشكل)
+  s = s.replace(/\u0000/g, "")
+       .replace(/\r/g, "\n")
+       .replace(/\n{3,}/g, "\n\n")
+       .trim();
+
+  return s;
+}
+
+// قياس جودة العربي (يشمل Arabic Presentation Forms)
+function scoreArabicQuality(s = "") {
+  if (!s) return 0;
+  const len = s.length;
+
+  // Arabic + Supplement + Extended-A + Presentation A/B
+  const ARABIC_RANGES = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g;
+
+  const arabicChars = (s.match(ARABIC_RANGES) || []).length;
+  const replacement = (s.match(/\uFFFD|�/g) || []).length;
+  const nonPrintableSingles = (s.match(/\b[A-Za-z]\b/g) || []).length;
+  const avgLine = (() => {
+    const lines = s.split(/\n+/).filter(Boolean);
+    if (!lines.length) return 0;
+    return lines.reduce((a, b) => a + b.length, 0) / lines.length;
+  })();
+
+  const arRatio = arabicChars / Math.max(1, len);
+  const badRatio = replacement / Math.max(1, len);
+  const singlesRatio = nonPrintableSingles / Math.max(1, len);
+
+  let score = 0;
+  score += arRatio * 60;
+  score += Math.min(avgLine / 120, 1) * 10;
+  score -= badRatio * 100;
+  score -= singlesRatio * 40;
+  score += Math.min(Math.log10(Math.max(10, len)) / 4, 8);
+
+  return score;
+}
+
+async function tryPdfParse(filePath) {
+  const buf = await fsp.readFile(filePath);
+  const parsed = await pdfParse(buf);
+  return normalizeArabicText(parsed.text || "");
+}
+
+async function tryPdftotextWithMode(filePath, mode /* "layout" | "raw" */) {
+  const bin = await findBin("pdftotext");
+  if (!bin) return null;
+  const outTxt = path.join(os.tmpdir(), `pt_${Date.now()}.txt`);
+  const args = ["-enc", "UTF-8", mode === "raw" ? "-raw" : "-layout", "-nopgbrk", filePath, outTxt];
+  await execFileP(bin, args);
+  const txt = await fsp.readFile(outTxt, "utf8").catch(() => "");
+  try { await fsp.unlink(outTxt); } catch {}
+  return normalizeArabicText(txt);
+}
+
+async function tryPdftotextBest(filePath) {
+  const a = await tryPdftotextWithMode(filePath, "layout");
+  const b = await tryPdftotextWithMode(filePath, "raw");
+  return [a, b].filter(Boolean);
+}
+
+// MuPDF mutool
+async function tryMuPdfText(filePath) {
+  const bin = await findBin("mutool");
+  if (!bin) return null;
+  try {
+    const { stdout } = await execFileP(
+      bin,
+      ["draw", "-F", "text", "-o", "-", filePath],
+      { maxBuffer: 1024 * 1024 * 200 }
+    );
+    return normalizeArabicText(stdout || "");
+  } catch {
+    return null;
+  }
+}
+
+// pdftohtml -xml
+async function tryPdftohtmlXml(filePath) {
+  const bin = await findBin("pdftohtml");
+  if (!bin) return null;
+  const outBase = path.join(os.tmpdir(), `px_${Date.now()}`);
+  try {
+    await execFileP(bin, ["-xml", "-enc", "UTF-8", "-nodrm", filePath, outBase + ".xml"]);
+    const xml = await fsp.readFile(outBase + ".xml", "utf8");
+    const text = xml.replace(/<[^>]+>/g, " ").replace(/[ \t]+/g, " ");
+    try { await fsp.unlink(outBase + ".xml"); } catch {}
+    return normalizeArabicText(text);
+  } catch {
+    try { await fsp.unlink(outBase + ".xml"); } catch {}
+    return null;
+  }
+}
+
+// OCR
+async function tryOcrAra(filePath) {
+  const bin = await findBin(process.platform === "win32" ? "tesseract.exe" : "tesseract");
+  if (!bin) return null;
+  const base = path.join(os.tmpdir(), `ocr_${Date.now()}`);
+  try {
+    await execFileP(bin, [filePath, base, "-l", "ara+eng", "--oem", "1", "--psm", "6"], { timeout: 10 * 60 * 1000 });
+    const txt = await fsp.readFile(`${base}.txt`, "utf8").catch(() => "");
+    try { await fsp.unlink(`${base}.txt`); } catch {}
+    return normalizeArabicText(txt);
+  } catch {
+    try { await fsp.unlink(`${base}.txt`); } catch {}
+    return null;
+  }
 }
 
 /* ========== البايبلاين: أمان → تعقيم → استخراج → حفظ → مودل ========== */
@@ -218,102 +346,53 @@ exports.uploadThenGenerate = async (req, res) => {
 
     stage = "extract";
 
-    // ===== Arabic-safe (Poppler + pdf-parse + OCR) =====
-    function normalizeArabicText(input = "") {
-      let s = String(input);
-      try { s = s.normalize("NFKC"); } catch {}
-      s = s.replace(/[\u200E\u200F\u202A-\u202E\u2066-\u2069]/g, "");
-      s = s.replace(/[\u00AD\u00A0\u202F\u2000-\u200B]/g, " ").replace(/[ \t]+/g, " ");
-      s = s.replace(/\u0640/g, "");
-      const lamAlefMap = {
-        "\uFEF5":"لأ","\uFEF6":"لأ","\uFEF7":"لإ","\uFEF8":"لإ",
-        "\uFEF9":"لآ","\uFEFA":"لآ","\uFEFB":"لا","\uFEFC":"لا"
-      };
-      s = s.replace(/[\uFEF5-\uFEFC]/g, ch => lamAlefMap[ch] || ch);
-      s = s.replace(/(?<=\p{Script=Arabic})[A-Za-z](?=\p{Script=Arabic})/gu, "");
-      s = s.replace(/(?<=\p{Script=Arabic})[A-Za-z](?=\s|[^\p{L}\p{N}])/gu, "");
-      s = s.replace(/(?:(?<=\s|[^\p{L}\p{N}]))[A-Za-z](?=\p{Script=Arabic})/gu, "");
-      return cleanText(s);
+    // شغّلي كل طرق الاستخراج على الأصل والنسخة المعقمة، وخذي الأفضل
+    const candidates = [];
+
+    // Poppler (orig & safe, raw/layout)
+    for (const fp of [tmp, safePath]) {
+      const tag = (fp === tmp) ? "orig" : "safe";
+      const pts = await tryPdftotextBest(fp);
+      for (const t of pts) if (t) candidates.push({ name: `pdftotext(${tag})`, text: t });
     }
 
-    function looksBrokenArabic(s = "") {
-      const hasAr = /[\u0600-\u06FF]/.test(s);
-      const bad = (s.match(/\uFFFD|�/g) || []).length;
-      const asciiSingles = (s.match(/(?<=\p{Script=Arabic})[A-Za-z](?=\p{Script=Arabic})/gu) || []).length;
-      const score = (bad + asciiSingles) / Math.max(1, s.length);
-      return !hasAr || score > 0.03;
+    // pdf-parse (orig & safe)
+    for (const fp of [safePath, tmp]) {
+      try {
+        const t = await tryPdfParse(fp);
+        if (t) candidates.push({ name: `pdf-parse(${fp === tmp ? "orig" : "safe"})`, text: t });
+      } catch {}
     }
 
-    async function tryPdfParse(filePath) {
-      const buf = await fsp.readFile(filePath);
-      const parsed = await pdfParse(buf);
-      return normalizeArabicText(parsed.text || "");
+    // MuPDF mutool (orig & safe)
+    for (const fp of [safePath, tmp]) {
+      const t = await tryMuPdfText(fp);
+      if (t) candidates.push({ name: `mutool(${fp === tmp ? "orig" : "safe"})`, text: t });
     }
 
-    async function tryPdftotextWithMode(filePath, mode /* "layout" | "raw" */) {
-      const bin = await findBin("pdftotext");
-      if (!bin) return null;
-      const outTxt = path.join(os.tmpdir(), `pt_${Date.now()}.txt`);
-      const args = ["-enc", "UTF-8", mode === "raw" ? "-raw" : "-layout", "-nopgbrk", filePath, outTxt];
-      await execFileP(bin, args);
-      const txt = await fsp.readFile(outTxt, "utf8").catch(() => "");
-      try { await fsp.unlink(outTxt); } catch {}
-      return normalizeArabicText(txt);
+    // pdftohtml -xml (orig & safe)
+    for (const fp of [safePath, tmp]) {
+      const t = await tryPdftohtmlXml(fp);
+      if (t) candidates.push({ name: `pdftohtml-xml(${fp === tmp ? "orig" : "safe"})`, text: t });
     }
 
-    async function tryPdftotextBest(filePath) {
-      const a = await tryPdftotextWithMode(filePath, "layout");
-      const b = await tryPdftotextWithMode(filePath, "raw");
-      const cand = [a, b].filter(Boolean);
-      if (cand.length === 0) return null;
-      cand.sort((x, y) => {
-        const bx = looksBrokenArabic(x) ? 1 : 0;
-        const by = looksBrokenArabic(y) ? 1 : 0;
-        if (bx !== by) return bx - by;
-        return (y.length || 0) - (x.length || 0);
-      });
-      return cand[0];
+    // OCR كحل أخير (safe ثم orig)
+    {
+      const t = (await tryOcrAra(safePath)) || (await tryOcrAra(tmp));
+      if (t && t.length > 30) candidates.push({ name: "tesseract(ara+eng)", text: t });
     }
 
-    // ===== NEW: OCR fallback with Tesseract (ara+eng) =====
-    async function tryOcrAra(filePath) {
-      const bin = await findBin(process.platform === "win32" ? "tesseract.exe" : "tesseract");
-      if (!bin) return null;
-      const base = path.join(os.tmpdir(), `ocr_${Date.now()}`);
-      // يخرج نصاً مباشراً (.txt)
-      await execFileP(bin, [filePath, base, "-l", "ara+eng", "--oem", "1", "--psm", "6"]);
-      const txt = await fsp.readFile(`${base}.txt`, "utf8").catch(() => "");
-      try { await fsp.unlink(`${base}.txt`); } catch {}
-      return normalizeArabicText(txt);
-    }
+    if (!candidates.length) throw new Error("تعذّر استخراج نص عربي قابل للقراءة من الملف.");
 
-    // ===== Try chain: Poppler → pdf-parse → OCR =====
-    let methodUsed = "pdftotext(orig)";
-    let text = await tryPdftotextBest(tmp);
+    candidates.forEach(c => c.score = scoreArabicQuality(c.text));
+    candidates.sort((a, b) => b.score - a.score);
 
-    if (!text || looksBrokenArabic(text)) {
-      const t2 = await tryPdftotextBest(safePath);
-      if (t2 && !looksBrokenArabic(t2)) { text = t2; methodUsed = "pdftotext(safe)"; }
-    }
+    const best = candidates[0];
+    const text = best.text;
+    const methodUsed = `${best.name} [score=${best.score.toFixed(2)} len=${text.length}]`;
 
-    if (!text || looksBrokenArabic(text)) {
-      const t3 = await tryPdfParse(safePath);
-      if (t3 && !looksBrokenArabic(t3)) { text = t3; methodUsed = "pdf-parse(safe)"; }
-    }
-
-    if (!text || looksBrokenArabic(text)) {
-      const t4 = await tryPdfParse(tmp);
-      if (t4 && !looksBrokenArabic(t4)) { text = t4; methodUsed = "pdf-parse(orig)"; }
-    }
-
-    // NEW: OCR as last resort
-    if (!text || looksBrokenArabic(text)) {
-      const t5 = await tryOcrAra(safePath) || await tryOcrAra(tmp);
-      if (t5 && t5.length > 30) { text = t5; methodUsed = "tesseract(ara+eng)"; }
-    }
-
-    if (!text) throw new Error("تعذّر استخراج نص عربي قابل للقراءة من الملف.");
-    console.log("[extract] chosen method:", methodUsed, "len=", text.length);
+    console.log("[extract] chosen method:", methodUsed);
+    if (!text || text.length < 5) throw new Error("النص المستخرج قصير جدًا.");
 
     stage = "save";
     // الحفظ في Firestore — كولكشن pdf (سيتكوّن تلقائيًا)
@@ -322,6 +401,7 @@ exports.uploadThenGenerate = async (req, res) => {
       originalName: originalNameUtf8,
       size: req.file.size,
       text,
+      methodUsed,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
@@ -346,6 +426,7 @@ exports.uploadThenGenerate = async (req, res) => {
       stage: "done",
       savedId: docRef.id,
       textChars: text.length,
+      methodUsed,
       model: modelResp,
       modelError, // يكون null إذا نجح الاتصال بالمودل
     });

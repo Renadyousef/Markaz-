@@ -3,14 +3,24 @@ const OpenAI = require("openai");
 const { z } = require("zod");
 const { v4: uuidv4 } = require("uuid");
 
-// Ensure Firebase Admin is initialized once (same style as upload)
+// Firebase Admin مُهيأ مسبقاً مثل uploadController
 require("../config/firebase-config");
 const admin = require("firebase-admin");
 const db = admin.firestore();
 
-// OpenAI client
+// OpenAI
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL  = process.env.FLASHCARDS_MODEL || "gpt-4o-mini";
+
+/* ========== نفس أسلوب الرفع: نلقط الهوية من req.user ========== */
+function resolveUser(req) {
+  // تماماً مثل uploadController: userId: req.user?.id || req.user?._id || null
+  const u = req.user || {};
+  const uid = u.id || u._id || u.uid || req.userId || null;
+  const email = u.email || null;
+  const role = u.role || null;
+  return { uid, email, role };
+}
 
 /* ========== Schemas ========== */
 const FromTextSchema = z.object({
@@ -56,7 +66,7 @@ function normalizeModelCards(cards) {
 
 /* ========== Controllers ========== */
 
-// 1) Generate from free text (no save)
+// (1) توليد من نص حر (بدون حفظ)
 exports.generateFromText = async (req, res) => {
   const parsed = FromTextSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -111,13 +121,12 @@ Text:
   }
 };
 
-// 2) Generate from pdfId (no save)
+// (2) توليد من pdfId (بدون حفظ)
 exports.generateFromPdfId = async (req, res) => {
   try {
     const pdfId = req.params.pdfId || req.body.pdfId;
     const limit = Math.max(1, Math.min(10, Number(req.query.limit || req.body.limit || 10)));
     const language = "ar";
-
     if (!pdfId) return res.status(400).json({ ok:false, error:"pdfId is required" });
 
     const text = await getPdfText(pdfId);
@@ -172,7 +181,7 @@ Text:
   }
 };
 
-// 3) Save approved deck
+// (3) حفظ الديك — نحفظ ownerId بنفس أسلوب uploadController
 exports.saveDeck = async (req, res) => {
   const parsed = SaveDeckSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -180,11 +189,16 @@ exports.saveDeck = async (req, res) => {
   }
   const { pdfId, language, cards, known, unknown, deckName } = parsed.data;
 
+  // 👇 نفس سطر الرفع بالضبط لكن نستخدمه هنا
+  const { uid, email } = resolveUser(req); // uid قد يكون null إذا ما في req.user
+
   try {
     const deckId = uuidv4().slice(0, 12);
     const deckRef = db.collection("flash_cards").doc(deckId);
 
     await deckRef.set({
+      ownerId: uid || null,          // <-- نفس فكرة userId في كولكشن pdf
+      ownerEmail: email || null,
       name: deckName,
       nameLower: (deckName || "").toLowerCase(),
       pdfId,
@@ -225,17 +239,44 @@ exports.saveDeck = async (req, res) => {
   }
 };
 
-// 4) Read a saved deck
+// (4) قراءة ديك محفوظ — نسمح فقط للمالك إذا كان ownerId موجود
 exports.getDeckCards = async (req, res) => {
+  const { uid, role } = resolveUser(req);
+
   try {
     const { deckId } = req.params;
     const deckRef = db.collection("flash_cards").doc(deckId);
     const deckSnap = await deckRef.get();
     if (!deckSnap.exists) return res.status(404).json({ ok:false, error:"Deck not found" });
 
+    const deck = deckSnap.data();
+
+    // إذا الديك له مالك، امنع أي شخص غيره (إلا لو بتحط لاحقاً رول أدمن)
+    if (deck.ownerId && deck.ownerId !== uid /* && role !== "admin" */) {
+      return res.status(403).json({ ok:false, error:"Forbidden" });
+    }
+
     const qs = await deckRef.collection("cards").orderBy("order", "asc").get();
     const cards = qs.docs.map(d => ({ id: d.id, ...d.data() }));
-    return res.json({ ok:true, deck:{ id: deckId, ...deckSnap.data() }, cards });
+    return res.json({ ok:true, deck:{ id: deckId, ...deck }, cards });
+  } catch (e) {
+    return res.status(500).json({ ok:false, error: e.message });
+  }
+};
+
+// (5) (اختياري) لستة ديكات المستخدم الحالي
+exports.listMyDecks = async (req, res) => {
+  const { uid } = resolveUser(req);
+  if (!uid) return res.status(401).json({ ok:false, error:"Unauthorized" });
+
+  try {
+    const qs = await db.collection("flash_cards")
+      .where("ownerId", "==", uid)
+      .orderBy("createdAt", "desc")
+      .get();
+
+    const decks = qs.docs.map(d => ({ id: d.id, ...d.data() }));
+    return res.json({ ok:true, decks });
   } catch (e) {
     return res.status(500).json({ ok:false, error: e.message });
   }
