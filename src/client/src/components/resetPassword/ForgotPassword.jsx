@@ -45,7 +45,15 @@ export default function ForgotPassword({ goTo }) {
 
         {message && <div className="reset-message">{message}</div>}
 
-        <input type="submit" value="تحقق" />
+        <input   style={{
+    backgroundColor: "orange",
+    color: "white",
+    border: "none",
+    padding: "10px 20px",
+    fontSize: "1rem",
+    borderRadius: "5px",
+    cursor: "pointer"
+  }} type="submit" value="تحقق" />
       </form>
     </div>
   );

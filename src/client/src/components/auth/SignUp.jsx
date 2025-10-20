@@ -159,7 +159,16 @@ export default function SignUp({ setToken }) {
 
       {errorMessage && <div style={{ color: "red", fontWeight: "bold" }}>{errorMessage}</div>}
 
-      <input type="submit" value="إنشاء حساب" />
+      <input   style={{
+    backgroundColor: "orange",
+    color: "white",
+    border: "none",
+    padding: "10px 20px",
+    fontSize: "1rem",
+    borderRadius: "5px",
+    cursor: "pointer"
+  }}
+   type="submit" value="إنشاء حساب" />
     </form>
   );
 }

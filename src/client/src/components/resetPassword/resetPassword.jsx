@@ -96,7 +96,15 @@ export default function ResetPassword({ goTo }) {
 
         {message && <div className="reset-message">{message}</div>}
 
-        <input type="submit" value="إعادة التعيين" />
+        <input   style={{
+    backgroundColor: "orange",
+    color: "white",
+    border: "none",
+    padding: "10px 20px",
+    fontSize: "1rem",
+    borderRadius: "5px",
+    cursor: "pointer"
+  }} type="submit" value="إعادة التعيين" />
       </form>
 
       <Footer />
