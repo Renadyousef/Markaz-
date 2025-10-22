@@ -1,6 +1,8 @@
+// server/src/controllers/flashcardRetriveController.js
 const admin = require("firebase-admin");
 const db = admin.firestore();
 
+/* ---------- Helpers ---------- */
 function resolveUser(req) {
   const u = req.user || {};
   return {
@@ -59,11 +61,12 @@ exports.listDecks = async (req, res) => {
       .limit(limit)
       .get();
 
-    const items = snap.docs.map(d => {
+    const items = snap.docs.map((d) => {
       const j = deckDocToJson(d);
       delete j.ownerId;
       return j;
     });
+
     return res.json({ ok: true, items, count: items.length });
   } catch (e) {
     console.error("listDecks err:", e);
@@ -83,6 +86,7 @@ exports.getDeckMeta = async (req, res) => {
 
     const deck = deckDocToJson(snap);
     if (ensureOwnerOr403(deck, uid, res)) return;
+
     delete deck.ownerId;
     return res.json({ ok: true, deck });
   } catch (e) {
@@ -112,6 +116,38 @@ exports.getDeckFull = async (req, res) => {
     return res.json({ ok: true, deck, cards, count: cards.length });
   } catch (e) {
     console.error("getDeckFull err:", e);
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+};
+
+/* ---------- 4. Get paginated cards (optional) ---------- */
+exports.getDeckCardsPage = async (req, res) => {
+  const { uid } = resolveUser(req);
+  if (!uid) return res.status(401).json({ ok: false, error: "Unauthorized" });
+
+  try {
+    const { deckId } = req.params;
+    const { limit = 10, startAfter } = req.query;
+
+    const ref = db.collection("flash_cards").doc(deckId);
+    const deckSnap = await ref.get();
+    if (!deckSnap.exists) return res.status(404).json({ ok: false, error: "Deck not found" });
+
+    const deck = deckDocToJson(deckSnap);
+    if (ensureOwnerOr403(deck, uid, res)) return;
+
+    let query = ref.collection("cards").orderBy("order", "asc").limit(Number(limit));
+    if (startAfter) {
+      const startSnap = await ref.collection("cards").doc(startAfter).get();
+      if (startSnap.exists) query = query.startAfter(startSnap);
+    }
+
+    const snap = await query.get();
+    const cards = snap.docs.map(cardDocToJson);
+
+    return res.json({ ok: true, cards, count: cards.length });
+  } catch (e) {
+    console.error("getDeckCardsPage err:", e);
     return res.status(500).json({ ok: false, error: e.message });
   }
 };
