@@ -1,32 +1,25 @@
 // server/src/controllers/flashcardRetriveController.js
-const admin = require("firebase-admin");
+const admin = require("firebase-admin"); // مُهَيّأ مسبقًا في مكان آخر
 const db = admin.firestore();
 
-/* ---------- Helpers ---------- */
-function resolveUser(req) {
-  const u = req.user || {};
-  return {
-    uid: u.id || u._id || u.uid || u.userId || null,
-    email: u.email || null,
-    role: u.role || null,
-  };
-}
-
+/* helpers */
 function deckDocToJson(doc) {
   const d = doc.data() || {};
   return {
     id: doc.id,
     name: d.name || "",
+    nameLower: d.nameLower || "",
     language: d.language || "ar",
     pdfId: d.pdfId || null,
     count: d.count || 0,
     knownCount: d.knownCount || 0,
     unknownCount: d.unknownCount || 0,
+    // Expose saved classification so client can color cards
+    knownIds: Array.isArray(d.knownIds) ? d.knownIds : [],
+    unknownIds: Array.isArray(d.unknownIds) ? d.unknownIds : [],
     createdAt: d.createdAt ? d.createdAt.toMillis?.() || d.createdAt : null,
-    ownerId: d.ownerId || null,
   };
 }
-
 function cardDocToJson(doc) {
   const c = doc.data() || {};
   return {
@@ -39,34 +32,17 @@ function cardDocToJson(doc) {
   };
 }
 
-function ensureOwnerOr403(deck, uid, res) {
-  if (!deck.ownerId || deck.ownerId !== uid) {
-    res.status(403).json({ ok: false, error: "Forbidden" });
-    return true;
-  }
-  return false;
-}
-
-/* ---------- 1. List only my decks ---------- */
+/* GET /retrive/decks?limit=3  — أحدث المجموعات */
 exports.listDecks = async (req, res) => {
-  const { uid } = resolveUser(req);
-  if (!uid) return res.status(401).json({ ok: false, error: "Unauthorized" });
-
   try {
     const limit = Math.max(1, Math.min(50, Number(req.query.limit || 10)));
     const snap = await db
       .collection("flash_cards")
-      .where("ownerId", "==", uid)
       .orderBy("createdAt", "desc")
       .limit(limit)
       .get();
 
-    const items = snap.docs.map((d) => {
-      const j = deckDocToJson(d);
-      delete j.ownerId;
-      return j;
-    });
-
+    const items = snap.docs.map(deckDocToJson);
     return res.json({ ok: true, items, count: items.length });
   } catch (e) {
     console.error("listDecks err:", e);
@@ -74,78 +50,57 @@ exports.listDecks = async (req, res) => {
   }
 };
 
-/* ---------- 2. Get one deck metadata ---------- */
+/* GET /retrive/decks/:deckId  — ميتا فقط (بدون بطاقات) */
 exports.getDeckMeta = async (req, res) => {
-  const { uid } = resolveUser(req);
-  if (!uid) return res.status(401).json({ ok: false, error: "Unauthorized" });
-
   try {
     const { deckId } = req.params;
-    const snap = await db.collection("flash_cards").doc(deckId).get();
+    const ref = db.collection("flash_cards").doc(deckId);
+    const snap = await ref.get();
     if (!snap.exists) return res.status(404).json({ ok: false, error: "Deck not found" });
-
-    const deck = deckDocToJson(snap);
-    if (ensureOwnerOr403(deck, uid, res)) return;
-
-    delete deck.ownerId;
-    return res.json({ ok: true, deck });
+    return res.json({ ok: true, deck: deckDocToJson(snap) });
   } catch (e) {
     console.error("getDeckMeta err:", e);
     return res.status(500).json({ ok: false, error: e.message });
   }
 };
 
-/* ---------- 3. Get full deck with all cards ---------- */
+/* GET /retrive/decks/:deckId/full  — الديك + كل البطاقات */
 exports.getDeckFull = async (req, res) => {
-  const { uid } = resolveUser(req);
-  if (!uid) return res.status(401).json({ ok: false, error: "Unauthorized" });
-
   try {
     const { deckId } = req.params;
     const ref = db.collection("flash_cards").doc(deckId);
     const snap = await ref.get();
     if (!snap.exists) return res.status(404).json({ ok: false, error: "Deck not found" });
 
-    const deck = deckDocToJson(snap);
-    if (ensureOwnerOr403(deck, uid, res)) return;
-
     const cardsSnap = await ref.collection("cards").orderBy("order", "asc").get();
     const cards = cardsSnap.docs.map(cardDocToJson);
 
-    delete deck.ownerId;
-    return res.json({ ok: true, deck, cards, count: cards.length });
+    return res.json({ ok: true, deck: deckDocToJson(snap), cards, count: cards.length });
   } catch (e) {
     console.error("getDeckFull err:", e);
     return res.status(500).json({ ok: false, error: e.message });
   }
 };
 
-/* ---------- 4. Get paginated cards (optional) ---------- */
+/* GET /retrive/decks/:deckId/cards?limit=20&cursor=10  — صفحة بطاقات */
 exports.getDeckCardsPage = async (req, res) => {
-  const { uid } = resolveUser(req);
-  if (!uid) return res.status(401).json({ ok: false, error: "Unauthorized" });
-
   try {
     const { deckId } = req.params;
-    const { limit = 10, startAfter } = req.query;
+    const limit = Math.max(1, Math.min(100, Number(req.query.limit || 20)));
+    const cursor = req.query.cursor != null ? Number(req.query.cursor) : null;
 
     const ref = db.collection("flash_cards").doc(deckId);
     const deckSnap = await ref.get();
     if (!deckSnap.exists) return res.status(404).json({ ok: false, error: "Deck not found" });
 
-    const deck = deckDocToJson(deckSnap);
-    if (ensureOwnerOr403(deck, uid, res)) return;
+    let q = ref.collection("cards").orderBy("order", "asc").limit(limit);
+    if (!Number.isNaN(cursor) && cursor != null) q = q.startAfter(cursor);
 
-    let query = ref.collection("cards").orderBy("order", "asc").limit(Number(limit));
-    if (startAfter) {
-      const startSnap = await ref.collection("cards").doc(startAfter).get();
-      if (startSnap.exists) query = query.startAfter(startSnap);
-    }
-
-    const snap = await query.get();
+    const snap = await q.get();
     const cards = snap.docs.map(cardDocToJson);
+    const nextCursor = snap.size ? cards[cards.length - 1].order : null;
 
-    return res.json({ ok: true, cards, count: cards.length });
+    return res.json({ ok: true, deck: deckDocToJson(deckSnap), cards, nextCursor });
   } catch (e) {
     console.error("getDeckCardsPage err:", e);
     return res.status(500).json({ ok: false, error: e.message });

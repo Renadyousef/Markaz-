@@ -28,6 +28,7 @@ import SessionsPage from "./components/Pages/SessionsPage.jsx";
 import QuizWithTTS from "./components/Pages/QuizWithTTS.jsx";
 import FlashCardView from "./components/FlashCards/FlashCardView.jsx";
 import DeckView from "./components/FlashCards/DeckView";
+import FlashCards from "./components/FlashCards/FlashCards.jsx";
 
 /* الواجهة */
 import Header from "./components/Header_Footer/Header";
@@ -166,8 +167,10 @@ export default function App() {
           <Route path="/chat"    element={<QuizWithTTS />} />
           <Route path="/flashcards" element={<FlashCardView />} />
           <Route path="/cards/deck/:deckId" element={<DeckView />} />
-           <Route path="/session-setup" element={<StudySessionSetup />} />
-             <Route path="/session-timer" element={<StudySessionTimer />} />
+          <Route path="/session-setup" element={<StudySessionSetup />} />
+          <Route path="/session-timer" element={<StudySessionTimer />} />
+          {/* <Route path="/cards" element={<FlashCards />} />   */}
+
 
 
         </Routes>
