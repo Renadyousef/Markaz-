@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -34,29 +34,58 @@ const local = `
 }
 `;
 
-export default function FlashCards(){
+export default function FlashCards() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [decks, setDecks] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let ignore = false;
+
     (async () => {
-      setLoading(true); setErr("");
+      setLoading(true);
+      setErr("");
+
       try {
-        const { data } = await axios.get(`${API}/retrive/decks?limit=${LIMIT}`);
+        const token = localStorage.getItem("token");
+        if (!token) {
+          // no token → redirect to login
+          navigate("/login");
+          return;
+        }
+
+        const { data } = await axios.get(`${API}/retrive/decks?limit=${LIMIT}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
         if (!ignore) {
-          if (data?.ok) setDecks(data.items || []);
-          else setErr(data?.error || "فشل الجلب");
+          if (data?.ok) {
+            setDecks(data.items || []);
+          } else {
+            setErr(data?.error || "فشل الجلب");
+          }
         }
       } catch (e) {
-        if (!ignore) setErr(e?.response?.data?.error || e.message);
+        if (!ignore) {
+          // if unauthorized, push to login
+          if (e?.response?.status === 401) {
+            navigate("/login");
+          } else {
+            setErr(e?.response?.data?.error || e.message);
+          }
+        }
       } finally {
         if (!ignore) setLoading(false);
       }
     })();
-    return () => { ignore = true; };
-  }, []);
+
+    return () => {
+      ignore = true;
+    };
+  }, [navigate]);
 
   return (
     <div className="hp">
@@ -70,23 +99,32 @@ export default function FlashCards(){
 
       <section className="panel fcSimple">
         <div className="actionsRow">
-          <Link to="/upload" className="createBtn">+ إنشاء بطاقات جديدة</Link>
+          <Link to="/upload" className="createBtn">
+            + إنشاء بطاقات جديدة
+          </Link>
         </div>
 
         <div className="lastRow">
-          <h3 className="panel__title">آخر {LIMIT.toLocaleString("ar-EG")} مجموعات</h3>
+          <h3 className="panel__title">
+            آخر {LIMIT.toLocaleString("ar-EG")} مجموعات
+          </h3>
 
           {loading && <div className="alert">... جارٍ الجلب</div>}
           {err && <div className="alert">خطأ: {err}</div>}
 
           <div className="lastList">
-            {decks.map((d)=>(
+            {decks.map((d) => (
               <article key={d.id} className="deckItem">
                 <div className="deckMeta">
                   <h4 className="deckTitle">{d.name || d.id}</h4>
                   <p className="deckSub">{d.count || 0} بطاقة</p>
                 </div>
-                <Link className="deckCTA" to={`/cards/view/${encodeURIComponent(d.id)}`}>فتح</Link>
+                <Link
+                  className="deckCTA"
+                  to={`/cards/view/${encodeURIComponent(d.id)}`}
+                >
+                  فتح
+                </Link>
               </article>
             ))}
 

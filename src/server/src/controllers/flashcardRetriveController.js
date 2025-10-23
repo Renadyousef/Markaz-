@@ -2,7 +2,11 @@
 const admin = require("firebase-admin"); // مُهَيّأ مسبقًا في مكان آخر
 const db = admin.firestore();
 
-/* helpers */
+/* ========== config ========== */
+/** Field used in flash_cards collection to store deck owner */
+const DECK_OWNER_FIELD = "ownerId";
+
+/* ========== helpers ========== */
 function deckDocToJson(doc) {
   const d = doc.data() || {};
   return {
@@ -14,12 +18,12 @@ function deckDocToJson(doc) {
     count: d.count || 0,
     knownCount: d.knownCount || 0,
     unknownCount: d.unknownCount || 0,
-    // Expose saved classification so client can color cards
     knownIds: Array.isArray(d.knownIds) ? d.knownIds : [],
     unknownIds: Array.isArray(d.unknownIds) ? d.unknownIds : [],
     createdAt: d.createdAt ? d.createdAt.toMillis?.() || d.createdAt : null,
   };
 }
+
 function cardDocToJson(doc) {
   const c = doc.data() || {};
   return {
@@ -32,12 +36,43 @@ function cardDocToJson(doc) {
   };
 }
 
-/* GET /retrive/decks?limit=3  — أحدث المجموعات */
+/** Guard: require req.user.id (set by your authMiddleware) */
+function requireUserId(req, res) {
+  const userId = req?.user?.id;
+  if (!userId) {
+    res.status(401).json({ ok: false, error: "Unauthorized: missing user id" });
+    return null;
+  }
+  return userId;
+}
+
+/** Ownership check */
+function isOwnedByUser(deckSnap, userId) {
+  const d = deckSnap.data() || {};
+  const owner =
+    d?.[DECK_OWNER_FIELD] ??
+    d?.userId ??
+    d?.ownerId ??
+    d?.user_id ??
+    null;
+  return owner === userId;
+}
+
+/* ========== controllers ========== */
+
+/* GET /retrive/decks?limit=3 — أحدث المجموعات (scoped to user) */
 exports.listDecks = async (req, res) => {
   try {
+    const userId = requireUserId(req, res);
+    if (!userId) return;
+
     const limit = Math.max(1, Math.min(50, Number(req.query.limit || 10)));
+
+    // 🔴 IMPORTANT: This query needs a composite Firestore index
+    // Fields: ownerId (ASC) + createdAt (DESC)
     const snap = await db
       .collection("flash_cards")
+      .where(DECK_OWNER_FIELD, "==", userId)
       .orderBy("createdAt", "desc")
       .limit(limit)
       .get();
@@ -50,13 +85,21 @@ exports.listDecks = async (req, res) => {
   }
 };
 
-/* GET /retrive/decks/:deckId  — ميتا فقط (بدون بطاقات) */
+/* GET /retrive/decks/:deckId — ميتا فقط */
 exports.getDeckMeta = async (req, res) => {
   try {
+    const userId = requireUserId(req, res);
+    if (!userId) return;
+
     const { deckId } = req.params;
     const ref = db.collection("flash_cards").doc(deckId);
     const snap = await ref.get();
     if (!snap.exists) return res.status(404).json({ ok: false, error: "Deck not found" });
+
+    if (!isOwnedByUser(snap, userId)) {
+      return res.status(404).json({ ok: false, error: "Deck not found" });
+    }
+
     return res.json({ ok: true, deck: deckDocToJson(snap) });
   } catch (e) {
     console.error("getDeckMeta err:", e);
@@ -64,13 +107,20 @@ exports.getDeckMeta = async (req, res) => {
   }
 };
 
-/* GET /retrive/decks/:deckId/full  — الديك + كل البطاقات */
+/* GET /retrive/decks/:deckId/full — الديك + كل البطاقات */
 exports.getDeckFull = async (req, res) => {
   try {
+    const userId = requireUserId(req, res);
+    if (!userId) return;
+
     const { deckId } = req.params;
     const ref = db.collection("flash_cards").doc(deckId);
     const snap = await ref.get();
     if (!snap.exists) return res.status(404).json({ ok: false, error: "Deck not found" });
+
+    if (!isOwnedByUser(snap, userId)) {
+      return res.status(404).json({ ok: false, error: "Deck not found" });
+    }
 
     const cardsSnap = await ref.collection("cards").orderBy("order", "asc").get();
     const cards = cardsSnap.docs.map(cardDocToJson);
@@ -82,9 +132,12 @@ exports.getDeckFull = async (req, res) => {
   }
 };
 
-/* GET /retrive/decks/:deckId/cards?limit=20&cursor=10  — صفحة بطاقات */
+/* GET /retrive/decks/:deckId/cards?limit=20&cursor=10 — صفحة بطاقات */
 exports.getDeckCardsPage = async (req, res) => {
   try {
+    const userId = requireUserId(req, res);
+    if (!userId) return;
+
     const { deckId } = req.params;
     const limit = Math.max(1, Math.min(100, Number(req.query.limit || 20)));
     const cursor = req.query.cursor != null ? Number(req.query.cursor) : null;
@@ -92,6 +145,10 @@ exports.getDeckCardsPage = async (req, res) => {
     const ref = db.collection("flash_cards").doc(deckId);
     const deckSnap = await ref.get();
     if (!deckSnap.exists) return res.status(404).json({ ok: false, error: "Deck not found" });
+
+    if (!isOwnedByUser(deckSnap, userId)) {
+      return res.status(404).json({ ok: false, error: "Deck not found" });
+    }
 
     let q = ref.collection("cards").orderBy("order", "asc").limit(limit);
     if (!Number.isNaN(cursor) && cursor != null) q = q.startAfter(cursor);
