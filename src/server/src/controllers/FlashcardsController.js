@@ -14,7 +14,7 @@ const MODEL  = process.env.FLASHCARDS_MODEL || "gpt-4o-mini";
 
 /* ========== نفس أسلوب الرفع: نلقط الهوية من req.user ========== */
 function resolveUser(req) {
-  // تماماً مثل uploadController: userId: req.user?.id || req.user?._id || null
+  // نفس منطق uploadController
   const u = req.user || {};
   const uid = u.id || u._id || u.uid || req.userId || null;
   const email = u.email || null;
@@ -181,7 +181,7 @@ Text:
   }
 };
 
-// (3) حفظ الديك — نحفظ ownerId بنفس أسلوب uploadController
+// (3) حفظ الديك — نحفظ ownerId بنفس منطق الرفع + Fallback من مستند الـ PDF
 exports.saveDeck = async (req, res) => {
   const parsed = SaveDeckSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -189,16 +189,28 @@ exports.saveDeck = async (req, res) => {
   }
   const { pdfId, language, cards, known, unknown, deckName } = parsed.data;
 
-  // 👇 نفس سطر الرفع بالضبط لكن نستخدمه هنا
-  const { uid, email } = resolveUser(req); // uid قد يكون null إذا ما في req.user
+  // مثل uploadController تمامًا
+  const { uid, email } = resolveUser(req); // قد يكون null لو الراوت غير محمي
+  let ownerId = uid || null;
+  let ownerEmail = email || null;
 
   try {
+    // Fallback: لو ما فيه req.user، خذ المالك من وثيقة الـ PDF (الرفع يحفظ userId هناك)
+    if (!ownerId && pdfId) {
+      const pdfSnap = await db.collection("pdf").doc(pdfId).get();
+      if (pdfSnap.exists) {
+        const p = pdfSnap.data() || {};
+        ownerId = p.userId || ownerId || null;
+        ownerEmail = p.userEmail || ownerEmail || null;
+      }
+    }
+
     const deckId = uuidv4().slice(0, 12);
     const deckRef = db.collection("flash_cards").doc(deckId);
 
     await deckRef.set({
-      ownerId: uid || null,          // <-- نفس فكرة userId في كولكشن pdf
-      ownerEmail: email || null,
+      ownerId: ownerId || null,      // ✅ لن تكون null إذا كان pdf.userId موجود
+      ownerEmail: ownerEmail || null,
       name: deckName,
       nameLower: (deckName || "").toLowerCase(),
       pdfId,

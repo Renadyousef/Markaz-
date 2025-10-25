@@ -4,6 +4,7 @@ const FC = require("../controllers/FlashcardsController");
 
 const router = express.Router();
 
+
 // POST /api/flashcards/from-text
 router.post("/from-text", FC.generateFromText);
 
@@ -15,5 +16,8 @@ router.post("/save-deck", FC.saveDeck);
 
 // GET /api/flashcards/deck/:deckId
 router.get("/deck/:deckId", FC.getDeckCards);
+
+// (اختياري) لو عندك صفحة "آخر مجموعاتي" وتحبي تحميها، أضفي التوكن في هذه فقط
+// router.get("/my-decks", verifyToken, FC.listMyDecks);
 
 module.exports = router;
