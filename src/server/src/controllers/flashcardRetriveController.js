@@ -36,14 +36,34 @@ function cardDocToJson(doc) {
   };
 }
 
-/** Guard: require req.user.id (set by your authMiddleware) */
+// at top, add a helper consistent with your other controllers
+function resolveUser(req) {
+  const u = req.user || {};
+
+  // ✅ Accept all possible token key names
+  const uid =
+    u.id ||
+    u._id ||
+    u.uid ||
+    u.userId ||
+    u.sub ||
+    u.user?.id ||
+    u.user?._id ||
+    u.user?.uid ||
+    req.userId ||
+    null;
+
+  return { uid };
+}
+
 function requireUserId(req, res) {
-  const userId = req?.user?.id;
-  if (!userId) {
+  const { uid } = resolveUser(req);
+  if (!uid) {
+    console.log("⚠️ Missing user id in token:", req.user);
     res.status(401).json({ ok: false, error: "Unauthorized: missing user id" });
     return null;
   }
-  return userId;
+  return uid;
 }
 
 /** Ownership check */
@@ -63,6 +83,7 @@ function isOwnedByUser(deckSnap, userId) {
 /* GET /retrive/decks?limit=3 — أحدث المجموعات (scoped to user) */
 exports.listDecks = async (req, res) => {
   try {
+
     const userId = requireUserId(req, res);
     if (!userId) return;
 
@@ -87,7 +108,10 @@ exports.listDecks = async (req, res) => {
 
 /* GET /retrive/decks/:deckId — ميتا فقط */
 exports.getDeckMeta = async (req, res) => {
+        console.log("🧩 req.user payload:", req.user); // 👈 add this line
+
   try {
+    
     const userId = requireUserId(req, res);
     if (!userId) return;
 

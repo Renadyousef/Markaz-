@@ -65,7 +65,7 @@ export default function Sidebar({
     { key: "home",     label: "الشاشة الرئيسية",       icon: DashboardIcon, path: "/home" },
     { key: "plans",    label: "الخطط الدراسية",        icon: PlanIcon,      path: "/plans" },
     { key: "quizzes",  label: "الاختبارات",            icon: QuizIcon,      path: "/quizzes" },
-    { key: "cards",    label: "الطاقات التعليمية",     icon: CardsIcon,     path: "/cards" },
+    { key: "cards",    label: "البطاقات التعليمية",     icon: CardsIcon,     path: "/cards" },
     { key: "sessions", label: "جلسات المذاكرة",        icon: ClockIcon,     path: "/sessions" },
     { key: "progress", label: "التقدم",                icon: ChartIcon,     path: "/progress" },
     { key: "chat",     label: "دردشة الذكاء الاصطناعي", icon: ChatIcon,     path: "/chat" },

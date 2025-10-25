@@ -217,7 +217,17 @@ export default function FlashCardView() {
   async function loadDeckById(id){
     setLoading(true); setErr(""); setSaveMsg(""); setSaveOk(null);
     try{
-      const { data } = await axios.get(`${API_RETR}/decks/${id}/full`);
+       const token = localStorage.getItem("token");
+  if (!token) {
+    setErr("يجب تسجيل الدخول أولاً");
+    return;
+  }
+
+  const { data } = await axios.get(`${API_RETR}/decks/${id}/full`, {
+    headers: {
+      Authorization: `Bearer ${token}`, // ✅ attach token for protected route
+    },
+  });
       if(!data?.ok) throw new Error(data?.error || "فشل الجلب");
       const deck = data.deck || {};
       const list = (data.cards || [])
