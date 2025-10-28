@@ -91,11 +91,19 @@ const local = `
   display:grid; place-items:center;
 }
 .slide{
-  position:absolute; inset:0; padding:20px;
-  display:flex; flex-direction:column; gap:14px;
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
   transition: transform .25s ease, opacity .25s ease;
-  border-radius:16px; border:2px solid transparent;
+  border-radius:16px;
+  border:2px solid transparent;
+  box-sizing:border-box;
+  padding:0; /* ✅ أزلنا البادينق حتى يلتصق تمامًا بالإطار الأبيض */
 }
+
 .center{ transform:translateX(0); opacity:1; }
 .left{   transform:translateX(-100%); opacity:0; }
 .right{  transform:translateX(100%);  opacity:0; }
@@ -104,11 +112,56 @@ const local = `
 .slide.known{ border-color:#86efac; box-shadow:0 0 0 4px rgba(134,239,172,.25) inset; }
 .slide.unknown{ border-color:#fca5a5; box-shadow:0 0 0 4px rgba(252,165,165,.25) inset; }
 
-.block{ border:1px solid #e5e7eb; border-radius:12px; padding:12px 14px; background:#fff; }
-.block h4{ margin:0 0 8px; font-size:16px; font-weight:900; color:#0f172a; }
-.block p{ margin:0; font-size:16px; line-height:1.9; color:#334155; }
-.block.def{ background:#fff8f0; border-color:#ffe4c7; }
-.block.term{ background:#f8fafc; border-color:#e2e8f0; }
+/* Content blocks (used inside the flip faces) */
+/* Content blocks (used inside the flip faces) */
+/* ✨ Light modern style — fixed full alignment with white border */
+.block {
+  border: 2px solid #fff;             /* clean white frame */
+  border-radius: 16px;
+  padding: 24px;                      /* more breathing space */
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;             /* ✅ ensures white border fits perfectly */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1.9;
+  color: #334155;
+  background-clip: padding-box;       /* ✅ fixes white edge size */
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.05);
+}
+
+
+/* Title + text color */
+.block h4{
+  margin:0 0 8px;
+  font-size:18px;
+  font-weight:900;
+  color:#0f172a;
+}
+
+.block p{
+  margin:0;
+  color:#334155;
+  font-size:17px;
+}
+
+/* 🟧 Front side (definition) — soft orange background */
+.block.def{
+  background:linear-gradient(145deg,#fff4e1,#ffe8bf);
+  border-color:#ffffff;
+}
+
+/* 🩵 Back side (term) — soft baby blue background */
+.block.term{
+  background:linear-gradient(145deg,#f3faff,#e6f3ff);
+  border-color:#ffffff;
+}
+
 
 .navBtns{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
 .navBtn{
@@ -141,8 +194,39 @@ const local = `
 .select{ border:1px solid #e5e7eb; border-radius:10px; padding:8px 10px; background:#fff; font-weight:700; }
 .ttsBtn{ border:1px solid var(--fx-card-ring); background:#fff; padding:10px 14px; border-radius:12px; font-weight:900; cursor:pointer; }
 .ttsBtn.playing{ background:#fee2e2; border-color:#fecaca; }
+
+/* ===== Flip Card Styles ===== */
+.flipWrap{
+  width:100%; height:100%;
+  display:grid; place-items:center;
+  perspective: 1200px;
+}
+.flipCard {
+  position: relative;
+  width: 100%;              /* ياخذ عرض الحاوية بالكامل */
+  height: 100%;
+  transition: transform .5s ease;
+  transform-style: preserve-3d;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.flipCard.isFlipped{ transform: rotateY(180deg); }
+
+.face{
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; gap:14px;
+  backface-visibility: hidden;
+  border-radius:14px;
+}
+.face.back{ transform: rotateY(180deg); }
+.clickHint{
+  position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+  font-size:12px; opacity:.7; background:#fff; border:1px dashed #e5e7eb;
+  padding:6px 10px; border-radius:999px; user-select:none;
+}
 `;
 
+/* ====================== Component ====================== */
 export default function FlashCardView() {
   // من صفحة الرفع (للتوليد)
   const { state } = useLocation();
@@ -168,6 +252,9 @@ export default function FlashCardView() {
   const [saveOk, setSaveOk] = useState(null);
   const [known, setKnown] = useState(new Set());
   const [unknown, setUnknown] = useState(new Set());
+
+  // حالة القلب (flip) لكل بطاقة حسب id
+  const [flippedIds, setFlippedIds] = useState(new Set());
 
   // سحب
   const startXRef = useRef(null);
@@ -196,6 +283,7 @@ export default function FlashCardView() {
         setKnown(new Set());
         setUnknown(new Set());
         setMeta(null);
+        setFlippedIds(new Set()); // إعادة الضبط
 
         // ✅ اقرأ أول بطاقة تلقائيًا بعد التوليد
         const first = mapped[0];
@@ -217,17 +305,17 @@ export default function FlashCardView() {
   async function loadDeckById(id){
     setLoading(true); setErr(""); setSaveMsg(""); setSaveOk(null);
     try{
-       const token = localStorage.getItem("token");
-  if (!token) {
-    setErr("يجب تسجيل الدخول أولاً");
-    return;
-  }
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setErr("يجب تسجيل الدخول أولاً");
+        return;
+      }
 
-  const { data } = await axios.get(`${API_RETR}/decks/${id}/full`, {
-    headers: {
-      Authorization: `Bearer ${token}`, // ✅ attach token for protected route
-    },
-  });
+      const { data } = await axios.get(`${API_RETR}/decks/${id}/full`, {
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ attach token for protected route
+        },
+      });
       if(!data?.ok) throw new Error(data?.error || "فشل الجلب");
       const deck = data.deck || {};
       const list = (data.cards || [])
@@ -246,10 +334,10 @@ export default function FlashCardView() {
         knownCount: deck.knownCount ?? (deck.knownIds?.length||0),
         unknownCount: deck.unknownCount ?? (deck.unknownIds?.length||0),
       });
-      // لإظهار الشارات/الألوان
       setKnown(new Set(deck.knownIds || []));
       setUnknown(new Set(deck.unknownIds || []));
-      // (لا نشغّل الصوت تلقائيًا في عرض الدك حتى ما يزعج المستخدم)
+      setFlippedIds(new Set()); // يبدأ بواجهة التعريف
+      // لا نشغّل الصوت تلقائيًا هنا
     }catch(e){
       setErr(e?.response?.data?.error || e.message);
     }finally{
@@ -330,6 +418,12 @@ export default function FlashCardView() {
       // أوقفي أي تشغيل قبل البدء
       if (isPlaying) stop();
       const nxtCard = cards[next];
+      // ارجاع الوجه الأمامي عند الانتقال
+      setFlippedIds((old) => {
+        const n = new Set(old);
+        n.delete(nxtCard?.id);
+        return n;
+      });
       if (nxtCard) {
         const txt = `${nxtCard.a}\n\n${nxtCard.q}`;
         setTimeout(() => speak(txt), 40);
@@ -343,11 +437,22 @@ export default function FlashCardView() {
     const onKey = (e) => {
       if (e.key === "ArrowRight") {
         if (mode === "generate") mark("right");
-        else setI(prev=>Math.min(prev+1, Math.max(cards.length-1,0)));
+        else setI(prev=>{
+          const next = Math.min(prev+1, Math.max(cards.length-1,0));
+          // ارجاع الوجه الأمامي عند الانتقال
+          const nxt = cards[next];
+          if (nxt) setFlippedIds(f => { const s = new Set(f); s.delete(nxt.id); return s; });
+          return next;
+        });
       }
       if (e.key === "ArrowLeft") {
         if (mode === "generate") mark("left");
-        else setI(prev=>Math.max(prev-1, 0));
+        else setI(prev=>{
+          const next = Math.max(prev-1, 0);
+          const nxt = cards[next];
+          if (nxt) setFlippedIds(f => { const s = new Set(f); s.delete(nxt.id); return s; });
+          return next;
+        });
       }
       if (e.key === " ") {
         e.preventDefault();
@@ -404,6 +509,15 @@ export default function FlashCardView() {
     setSaveOk(null);
     setSaveMsg("تم تجاهل هذه المجموعة.");
     if (isPlaying) stop();
+  }
+
+  // قلب البطاقة الحالية (أو أي بطاقة بالنقر عليها)
+  function toggleFlip(id) {
+    setFlippedIds(prev => {
+      const s = new Set(prev);
+      if (s.has(id)) s.delete(id); else s.add(id);
+      return s;
+    });
   }
 
   // نص البطاقة الحالية (الترتيب: التعريف ثم المصطلح)
@@ -486,16 +600,37 @@ export default function FlashCardView() {
           >
             {cards.map((c, idx) => {
               const pos = idx === i ? "center" : idx < i ? "left" : "right";
+              const flipped = flippedIds.has(c.id);
               return (
-                <article key={c.id} className={`slide ${pos} ${known.has(c.id) ? 'known' : (unknown.has(c.id) ? 'unknown' : '')}`}>
-                  <section className="block def">
-                    <h4>التعريف</h4>
-                    <p>{c.a}</p>
-                  </section>
-                  <section className="block term">
-                    <h4>المصطلح</h4>
-                    <p>{c.q}</p>
-                  </section>
+                <article
+                  key={c.id}
+                  className={`slide ${pos} ${known.has(c.id) ? 'known' : (unknown.has(c.id) ? 'unknown' : '')}`}
+                >
+                  <div className="flipWrap">
+                    <div
+                      className={`flipCard ${flipped ? "isFlipped" : ""}`}
+                      onClick={() => toggleFlip(c.id)}
+                      title="اضغطي لقلب البطاقة"
+                    >
+                      {/* Front: التعريف */}
+                      <div className="face front">
+                        <section className="block def">
+                          <h4>التعريف</h4>
+                          <p>{c.a}</p>
+                        </section>
+                        <div className="clickHint">انقري لقلب البطاقة لعرض المصطلح</div>
+                      </div>
+
+                      {/* Back: المصطلح */}
+                      <div className="face back">
+                        <section className="block term">
+                          <h4>المصطلح</h4>
+                          <p>{c.q}</p>
+                        </section>
+                        <div className="clickHint">انقري للعودة إلى التعريف</div>
+                      </div>
+                    </div>
+                  </div>
                 </article>
               );
             })}
@@ -525,14 +660,40 @@ export default function FlashCardView() {
                 </>
               ) : (
                 <>
-                  <button className="navBtn" onClick={()=>{ if (isPlaying) stop(); setI(v=>Math.max(v-1,0)); }}>السابق</button>
+                  <button
+                    className="navBtn"
+                    onClick={()=>{
+                      if (isPlaying) stop();
+                      setI(v=>{
+                        const next = Math.max(v-1,0);
+                        const nxt = cards[next];
+                        if (nxt) setFlippedIds(s=>{ const n=new Set(s); n.delete(nxt.id); return n; });
+                        return next;
+                      });
+                    }}
+                  >
+                    السابق
+                  </button>
                   <div className="dots">
                     {cards.map((c2, idx)=>{
                       const cls = known.has(c2.id) ? 'known' : (unknown.has(c2.id) ? 'unknown' : '');
                       return <span key={idx} className={`dot ${cls} ${idx===i? "isActive":""}`} />
                     })}
                   </div>
-                  <button className="navBtn" onClick={()=>{ if (isPlaying) stop(); setI(v=>Math.min(v+1, cards.length-1)); }}>التالي</button>
+                  <button
+                    className="navBtn"
+                    onClick={()=>{
+                      if (isPlaying) stop();
+                      setI(v=>{
+                        const next = Math.min(v+1, cards.length-1);
+                        const nxt = cards[next];
+                        if (nxt) setFlippedIds(s=>{ const n=new Set(s); n.delete(nxt.id); return n; });
+                        return next;
+                      });
+                    }}
+                  >
+                    التالي
+                  </button>
                 </>
               )}
             </div>
@@ -563,7 +724,7 @@ export default function FlashCardView() {
                   </div>
                 )}
 
-                {!doneAll && <div className="alert">اسحبي كل البطاقات أولاً: يمين = عرفتها، يسار = ما فهمتها.</div>}
+                {!doneAll && <div className="alert">اسحبي كل البطاقات أولاً: يمين =  فهمتها، يسار = ما فهمتها.</div>}
               </div>
             )}
           </>
