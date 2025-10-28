@@ -454,13 +454,13 @@ export default function FlashCardView() {
           return next;
         });
       }
-      if (e.key === " ") {
-        e.preventDefault();
-        const cur = cards[i];
-        if (!cur) return;
-        const text = `${cur.a}\n\n${cur.q}`;
-        if (isPlaying) stop(); else speak(text);
-      }
+      // if (e.key === " ") {
+      //   e.preventDefault();
+      //   const cur = cards[i];
+      //   if (!cur) return;
+      //   const text = `${cur.a}\n\n${cur.q}`;
+      //   if (isPlaying) stop(); else speak(text);
+      // }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
