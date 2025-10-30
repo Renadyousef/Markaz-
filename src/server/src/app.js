@@ -18,6 +18,7 @@ const FlashcardsRoutes = require("./routes/FlashcardsRoutes");
 const flashcardsRetriveRoutes = require("./routes/flashcardsRetriveRoutes");
 const passwordReset = require("./routes/ResetRoutes"); 
 const studySessionRoutes = require("./routes/studySessionRoutes");
+const ChatBot=require('./routes/ChatBotRoute')
 
 
 const OpenAI = require("openai");
@@ -54,7 +55,8 @@ app.use("/api/flashcards", FlashcardsRoutes);
 app.use("/retrive", flashcardsRetriveRoutes); 
 app.use("/ResetRoutes", passwordReset );
 app.use("/sessions", studySessionRoutes);
-
+//ChatBot
+app.use("/chat",ChatBot);
 // ====== Polly ثابت ======
 const VOICE_META = {
   Hala:  { label: "Hala (Arabic Gulf, Neural, Female)", engine: "neural" },

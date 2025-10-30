@@ -13,6 +13,7 @@ import ResetPassword from "./components/resetPassword/resetPassword.jsx";
 import ForgotPassword from "./components/resetPassword/ForgotPassword.jsx";
 import StudySessionSetup from "./components/studySession/StudySessionSetup.jsx";
 import StudySessionTimer from "./components/studySession/StudySessionTimer.jsx";
+import ChatBot from "./components/ChatBot.jsx";
 
 /* صفحات الفوتر */
 import About from "./components/Header_Footer/About.jsx";
@@ -164,11 +165,12 @@ export default function App() {
           <Route path="/plans"   element={<StudyPlansPage />} />
           <Route path="/quizzes" element={<ViewQuizzes/>} />
           <Route path="/cards"   element={<FlashcardsPage />} />
-          <Route path="/chat"    element={<QuizWithTTS />} />
+          <Route path="/chat"    element={<ChatBot />} />
           <Route path="/flashcards" element={<FlashCardView />} />
           <Route path="/cards/deck/:deckId" element={<DeckView />} />
           <Route path="/session-setup" element={<StudySessionSetup />} />
           <Route path="/session-timer" element={<StudySessionTimer />} />
+        
           {/* <Route path="/cards" element={<FlashCards />} />   */}
 
 
