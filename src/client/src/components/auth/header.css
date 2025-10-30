@@ -1,0 +1,92 @@
+/* =========================
+   Base Header
+   ========================= */
+.hero-header {
+  display: flex;
+  flex-direction: row-reverse;  /* logo right, button left */
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+}
+
+.site-logo {
+  width: 160px;
+  height: auto;
+}
+
+.chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: clamp(12px, 2.5vw, 14px);
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,.06);
+  border: 1px solid transparent;
+}
+
+.chip--primary {
+  background: linear-gradient(135deg,#ff914d,#ff914d);
+  color: #fff;
+}
+
+/* =========================
+   Responsive Header
+   ========================= */
+
+/* Desktop (≥1024px) */
+@media (min-width: 1024px) {
+  .hero-header {
+    padding: 0 32px 6px;
+  }
+  .site-logo {
+    width: 260px;
+    margin-left: 20px;
+  }
+  .chip {
+    font-size: 16px;
+    padding: 10px 22px;
+    margin-right: 32px;
+  }
+}
+
+/* Tablet / Mobile (≤768px) */
+@media (max-width: 768px) {
+  .hero-header {
+    flex-direction: row-reverse;  
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px 6px;
+  }
+
+  .site-logo {
+    width: 140px;
+    height: auto;
+  }
+
+  .chip {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,.06);
+    border: 1px solid transparent;
+  }
+
+  .chip--primary {
+    background: linear-gradient(135deg,#ff914d,#ff914d);
+    color: #fff;
+  }
+}
+
+/* iPad fix */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .chip {
+    margin-left: 24px;
+  }
+} 

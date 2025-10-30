@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import SignUp from "./SignUp";
 import SignIn from "./SignIn";
 import Footer from '../Header_Footer/Footer'
+import LandingHeader from "./AuthHeader";
 
 export default function AuthPage({ setToken, initialTab = "signin" , goTo}) {
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -11,7 +12,10 @@ export default function AuthPage({ setToken, initialTab = "signin" , goTo}) {
   }, [initialTab]);
 
   return (
-   <div className="after_footer">  <div className="auth-container">
+   <div className="after_footer"> 
+   <LandingHeader/>
+    <div className="auth-container" style={{ marginTop: "100px" }}>
+
       <div className="auth-tabs">
         <button
           className={activeTab === "signin" ? "tab active" : "tab"}
