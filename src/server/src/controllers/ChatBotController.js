@@ -7,23 +7,28 @@ const ChatBot = async (req, res) => {
   try {
     const { pdfId, message } = req.body;
 
-    if (!pdfId) return res.status(400).json({ ok: false, error: "Missing pdfId" });
     if (!message) return res.status(400).json({ ok: false, error: "Missing message" });
 
-    // Fetch PDF content
-    const docSnap = await pdf.doc(pdfId).get();
-    if (!docSnap.exists) return res.status(404).json({ ok: false, error: "PDF not found" });
+    let promptContent = `سؤال المستخدم: ${message}`;
 
-    const pdfText = docSnap.data().text;
+    // If pdfId exists, try to fetch PDF content
+    if (pdfId) {
+      const docSnap = await pdf.doc(pdfId).get();
+      if (docSnap.exists) {
+        const pdfText = docSnap.data().text;
+        promptContent = `المحتوى التالي من PDF:\n${pdfText}\n\nسؤال المستخدم: ${message}`;
+      }
+      // if PDF doesn't exist, we just continue with user's message
+    }
 
     // Send prompt to OpenAI (Arabic chatbot)
     const response = await client.chat.completions.create({
       model: "gpt-4",
       messages: [
         { role: "system", content: "أنت مساعد ذكي باللغة العربية، تجيب بشكل ودود وبسيط." },
-        { role: "user", content: `المحتوى التالي من PDF:\n${pdfText}\n\nسؤال المستخدم: ${message}` }
+        { role: "user", content: promptContent }
       ],
-      temperature: 0.7,
+      temperature: 0.5,
       max_tokens: 800,
     });
 
