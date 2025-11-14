@@ -172,57 +172,92 @@ function FeatureAccessPanel() {
 
 /* ========== 5) التقدم الأسبوعي (نفس ستايل الحلقة) ========== */
 function WeeklyProgress() {
-  const days = [
-    { d: "الأحد", h: 4, max: 4.5 },
-    { d: "الإثنين", h: 3, max: 4 },
-    { d: "الثلاثاء", h: 5, max: 5 },
-    { d: "الأربعاء", h: 2, max: 3 },
-    { d: "الخميس", h: 4.5, max: 4.5 },
-    { d: "الجمعة", h: 1, max: 2 },
-    { d: "السبت", h: 0, max: 2 },
-  ];
+  const [weekData, setWeekData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const pct = (h, max) =>
-    Math.max(0, Math.min(100, Math.round((h / max) * 100)));
+  // أسماء الأيام بالعربية (ثابتة لعرض كل الأيام)
+  const daysOfWeek = ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:5000/api/progress/history", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = res.data.data || [];
+
+        // نضمن إننا نعرض كل أيام الأسبوع حتى لو ما فيها بيانات
+        const today = new Date();
+        const week = daysOfWeek.map((name, i) => {
+          const day = new Date(today);
+          day.setDate(today.getDate() - ((6 - i))); // ترتيب من الأحد إلى السبت
+          const iso = day.toISOString().slice(0, 10);
+          const match = data.find(d => d.date === iso);
+          return { day: name, percent: match ? match.percent : 0 };
+        });
+
+        setWeekData(week);
+      } catch (err) {
+        console.error("Error loading weekly progress:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // إعدادات الحلقة
   const R = 20, C = 2 * Math.PI * R;
   const dash = (p) => C - (C * p) / 100;
 
   return (
-    <section className="panel wp2Soft" id="section-progress">
+    <section className="panel wp2Soft" id="section-progress" dir="rtl">
       <div className="wp2Header">
-        <h2 className="panel__title">التقدم الأسبوعي</h2>
+        <h2 className="panel__title">التقدّم الأسبوعي</h2>
       </div>
-      <div className="wp2Grid">
-        {days.map((x, i) => {
-          const p = pct(x.h, x.max);
-          return (
-            <div
-              key={i}
-              className="wp2Card"
-              role="group"
-              aria-label={`${x.d}: ${x.h} من ${x.max} ساعة`}
-            >
-              <div className="ring sm">
-                <svg viewBox="0 0 48 48" width="48" height="48" className="ringSvg" aria-hidden>
-                  <circle cx="24" cy="24" r={R} className="ringBg" />
-                  <circle
-                    cx="24" cy="24" r={R}
-                    className={`ringFg ${p >= 100 ? "isDone" : ""}`}
-                    style={{ strokeDasharray: `${C}px`, strokeDashoffset: `${dash(p)}px` }}
-                  />
-                </svg>
-                <div className="ringLabel">{p}%</div>
-              </div>
-              <div className="wp2Info">
-                <div className="wp2Day">{x.d}</div>
-                <div className="wp2Hours">
-                  {x.h}س من {x.max}س
+
+      {loading ? (
+        <p style={{ textAlign: "center", color: "#666" }}>جاري تحميل التقدّم...</p>
+      ) : (
+        <div className="wp2Grid">
+          {weekData.map((x, i) => {
+            const p = Math.round(x.percent);
+            const color =
+              p >= 80 ? "#22c55e" : // أخضر
+              p >= 40 ? "#f59e0b" : // برتقالي
+              "#d1d5db"; // رمادي
+
+            return (
+              <div key={i} className="wp2Card" role="group" aria-label={`${x.day}: ${p}%`}>
+                <div className="ring sm">
+                  <svg viewBox="0 0 48 48" width="48" height="48" className="ringSvg">
+                    <circle cx="24" cy="24" r={R} className="ringBg" stroke="#f1f5f9" strokeWidth="4" />
+                    <circle
+                      cx="24" cy="24" r={R}
+                      className="ringFg"
+                      stroke={color}
+                      strokeWidth="4"
+                      style={{
+                        strokeDasharray: `${C}px`,
+                        strokeDashoffset: `${dash(p)}px`,
+                        transition: "stroke-dashoffset 0.5s ease",
+                      }}
+                    />
+                  </svg>
+                  <div className="ringLabel" style={{ color }}>{p}%</div>
+                </div>
+                <div className="wp2Info">
+                  <div className="wp2Day">{x.day}</div>
+                  <div className="wp2Hours">نسبة التقدّم {p}%</div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }

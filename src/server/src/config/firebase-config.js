@@ -26,6 +26,8 @@ const FeedBack = DB.collection('feed_back');//no feed back
 const QuizResult = DB.collection('quiz_result');//results should be in same quiz collection
 const StudySession = DB.collection('study_session');
 const pdf = DB.collection('pdf');
+const Progress = DB.collection('progress');
+
 module.exports = {
   
   DB,                  
@@ -38,5 +40,6 @@ module.exports = {
   FeedBack,//initiallt i dont think we can do this rn
   QuizResult,
   StudySession,
-  pdf
+  pdf,
+  Progress
 };

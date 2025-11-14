@@ -33,6 +33,7 @@ import FlashCards from "./components/FlashCards/FlashCards.jsx";
 import AllStudyPlans   from "./components/StudyPlan/AllStudyPlans.jsx";
 import CreateStudyPlan from "./components/StudyPlan/CreateStudyPlan.jsx";
 import ViewStudyPlan   from "./components/StudyPlan/ViewStudyPlan.jsx";
+import ProgressPage from "./components/trackProgress/ProgressPage.jsx";
 /* الواجهة */
 import Header from "./components/Header_Footer/Header";
 import Sidebar from "./components/Header_Footer/Sidebar";
@@ -175,6 +176,7 @@ export default function App() {
     <Route path="/plans/create" element={<CreateStudyPlan />} />
   <Route path="/plans/all"    element={<AllStudyPlans />} />
   <Route path="/plans/view"   element={<ViewStudyPlan />} />
+  <Route path="/progress" element={<ProgressPage />} />
 
 
           {/* <Route path="/cards" element={<FlashCards />} />   */}
