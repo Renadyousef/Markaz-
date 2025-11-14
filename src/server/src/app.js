@@ -19,6 +19,10 @@ const flashcardsRetriveRoutes = require("./routes/flashcardsRetriveRoutes");
 const passwordReset = require("./routes/ResetRoutes"); 
 const studySessionRoutes = require("./routes/studySessionRoutes");
 const ChatBot=require('./routes/ChatBotRoute')
+const studyPlanRoutes = require("./routes/studyPlanRoutes");       
+const studyPlanFetchRoutes = require("./routes/studyPlanFetchRoutes"); 
+const studyPlanListRoutes = require("./routes/studyPlanListRoutes");
+const studyPlanTasksRoutes = require("./routes/studyPlanTasksRoutes");
 
 
 const OpenAI = require("openai");
@@ -57,6 +61,11 @@ app.use("/ResetRoutes", passwordReset );
 app.use("/sessions", studySessionRoutes);
 //ChatBot
 app.use("/chat",ChatBot);
+app.use("/study-plans", require("./routes/studyPlanRoutes"));
+app.use("/study-plans", studyPlanRoutes); // ← انتبهي: هذا يبقى كما هو
+app.use("/", studyPlanFetchRoutes);       // ← overview
+app.use("/study-plans", studyPlanListRoutes); 
+app.use("/study-plans", studyPlanTasksRoutes); 
 // ====== Polly ثابت ======
 const VOICE_META = {
   Hala:  { label: "Hala (Arabic Gulf, Neural, Female)", engine: "neural" },

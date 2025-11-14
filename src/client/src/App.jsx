@@ -30,7 +30,9 @@ import QuizWithTTS from "./components/Pages/QuizWithTTS.jsx";
 import FlashCardView from "./components/FlashCards/FlashCardView.jsx";
 import DeckView from "./components/FlashCards/DeckView";
 import FlashCards from "./components/FlashCards/FlashCards.jsx";
-
+import AllStudyPlans   from "./components/StudyPlan/AllStudyPlans.jsx";
+import CreateStudyPlan from "./components/StudyPlan/CreateStudyPlan.jsx";
+import ViewStudyPlan   from "./components/StudyPlan/ViewStudyPlan.jsx";
 /* الواجهة */
 import Header from "./components/Header_Footer/Header";
 import Sidebar from "./components/Header_Footer/Sidebar";
@@ -170,7 +172,11 @@ export default function App() {
           <Route path="/cards/deck/:deckId" element={<DeckView />} />
           <Route path="/session-setup" element={<StudySessionSetup />} />
           <Route path="/session-timer" element={<StudySessionTimer />} />
-        
+    <Route path="/plans/create" element={<CreateStudyPlan />} />
+  <Route path="/plans/all"    element={<AllStudyPlans />} />
+  <Route path="/plans/view"   element={<ViewStudyPlan />} />
+
+
           {/* <Route path="/cards" element={<FlashCards />} />   */}
 
 
