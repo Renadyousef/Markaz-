@@ -21,7 +21,7 @@ const ChatBot = async (req, res) => {
       // if PDF doesn't exist, we just continue with user's message
     }
 
-    // Send prompt to OpenAI (Arabic chatbot)
+    // Send prompt to OpenAI 
     const response = await client.chat.completions.create({
       model: "gpt-4",
       messages: [
@@ -39,6 +39,7 @@ const ChatBot = async (req, res) => {
   } catch (err) {
     console.error("ChatBot Error:", err);
     res.status(500).json({ ok: false, error: err.message });
+    //validate the limit rate to gpt tokens
   }
 };
 

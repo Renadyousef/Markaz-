@@ -40,10 +40,23 @@ export default function GetQuiz() {
     setLoading(true);
     setError("");
     try {
+      //batch for level
+      //  Arabic → English mapping
+    const levelMap = {
+      "سهل": "easy",
+      "متوسط": "medium",
+      "صعب": "hard",
+      "easy": "easy",
+      "medium": "medium",
+      "hard": "hard"
+    };
+
+    const englishLevel = levelMap[level] || "medium";
+
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        "http://localhost:5000/Quizess/GetQuiz",
-        { pdfId, level },
+        "http://localhost:5000/Quizess/GetQuiz", //why is level always meduim?
+        { pdfId,englishLevel },
         { headers: { Authorization: token ? `Bearer ${token}` : "" } }
       );
 
