@@ -204,19 +204,24 @@ export default function Upload({ maxMB = 20 }) {
       });
 
       if (res.data?.ok) {
-        const parts = [];
-        if (res.data.textChars) parts.push(`أحرف مستخرجة: ${res.data.textChars}`);
-        if (res.data.savedId) {
-          parts.push(`تم الحفظ (ID: ${res.data.savedId})`); // <-- existing line
-          setPdfId(res.data.savedId); // <-- ADDED: save PDF ID
-        }
-        if (!parts.length) parts.push("تم التحميل والمعالجة بنجاح.");
-        setStatus("done"); setMessage(parts.join(" — "));
-      } else {
-        setStatus("error");
-        const msg = res.data?.msg || res.data?.error || `HTTP ${res.status}`;
-        setMessage(msg);
-      }
+
+  // نخزن الـ pdfId بدون ما نعرضه
+  if (res.data.savedId) {
+    setPdfId(res.data.savedId);
+  }
+
+  // رسالة واحدة فقط
+  setStatus("done");
+  setMessage("تم الرفع بنجاح ✔️");
+
+} else {
+
+  setStatus("error");
+  const msg = res.data?.msg || res.data?.error || `HTTP ${res.status}`;
+  setMessage(msg);
+
+}
+
     } catch (e) {
       setStatus("error");
       setMessage(extractErr(e));
@@ -274,8 +279,7 @@ export default function Upload({ maxMB = 20 }) {
               <div className="upMeta">
                 <div className="upName">{file?.name || (isError ? "فشل الرفع" : "")}</div>
                 <div className="upSizes">
-                  {isUploading && `${fmtSize(bytes.loaded)} of ${fmtSize(bytes.total)} — جاري التحميل`}
-                  {(isDone || isError) && (message || (isError ? "حدث خطأ" : ""))}
+  {isUploading && "جاري التحميل..."}
                 </div>
               </div>
 

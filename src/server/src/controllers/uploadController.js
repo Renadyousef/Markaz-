@@ -422,14 +422,14 @@ exports.uploadThenGenerate = async (req, res) => {
     }
 
     return res.json({
-      ok: true,
-      stage: "done",
-      savedId: docRef.id,
-      textChars: text.length,
-      methodUsed,
-      model: modelResp,
-      modelError, // يكون null إذا نجح الاتصال بالمودل
-    });
+  ok: true,
+  stage: "done",
+  savedId: docRef.id,
+  methodUsed,
+  model: modelResp,
+  modelError,
+});
+
   } catch (err) {
     console.error("UPLOAD ERROR @", stage, err?.message || err);
     return res.status(400).json({ ok: false, stage, msg: err.message });

@@ -490,7 +490,7 @@ export default function FlashCardView() {
       if (data?.ok) {
         setDeckId(data.deckId);
         setSaveOk(true);
-        setSaveMsg(data.message || `تم الحفظ بنجاح: "${data.name}" (ID: ${data.deckId}) • عدد: ${data.count}`);
+setSaveMsg(`تم الحفظ بنجاح: "${data.name}"`);
       } else {
         setSaveOk(false);
         setSaveMsg(`فشل الحفظ: ${data?.error || "Unknown error"}`);
@@ -531,11 +531,12 @@ export default function FlashCardView() {
       <section className="panel fcView">
         <div className="fcTop">
           <h3 className="title">
-            {mode === "viewDeck"
-              ? `عرض المجموعة • ${meta?.name || deckId}`
-              : `عرض البطاقات ${pdfId ? `• ${pdfId}` : ""} ${deckId ? `• تم الحفظ: ${deckId}` : ""}`
-            }
-          </h3>
+  {mode === "viewDeck"
+    ? `عرض المجموعة • ${meta?.name || "مجموعة"}`
+    : `عرض البطاقات`
+  }
+</h3>
+
           <div className="badges">
             <span className="badge ok">عرفتها: {known.size}</span>
             <span className="badge no">ما عرفتها: {unknown.size}</span>
@@ -642,7 +643,7 @@ export default function FlashCardView() {
             <div className="navBtns">
               {mode === "generate" ? (
                 <>
-                  <button className="navBtn" onClick={()=>mark("left")} disabled={i>=cards.length}>ما فهمتها (←)</button>
+                  <button className="navBtn" onClick={()=>mark("left")} disabled={i>=cards.length}>ما عرفتها (←)</button>
                   <div className="dots">
                     {cards.map((c2, idx)=>{
                       const cls = known.has(c2.id) ? 'known' : (unknown.has(c2.id) ? 'unknown' : '');
@@ -724,7 +725,7 @@ export default function FlashCardView() {
                   </div>
                 )}
 
-                {!doneAll && <div className="alert">اسحبي كل البطاقات أولاً: يمين =  فهمتها، يسار = ما فهمتها.</div>}
+                {!doneAll && <div className="alert">اسحبي كل البطاقات أولاً: يمين = عرفتها، يسار = ما عرفتها.</div>}
               </div>
             )}
           </>
