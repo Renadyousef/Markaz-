@@ -84,10 +84,18 @@ exports.getProgress = async (req, res) => {
     ).toFixed(1);
 
     /* 🟢 5. Motivational Message */
-    let message;
-    if (improvement > 0) message = `🎉 You improved by ${improvement} points! Keep it up!`;
-    else if (improvement < 0) message = `Keep going! You'll do better next time 💪`;
-    else message = `Let's study more and take another quiz to track progress 🚀`;
+   let message;
+
+if (improvement > 0) {
+  message = `🎉 لقد تحسّن أداؤك بمقدار ${improvement} نقطة! استمري هكذا!`;
+} 
+else if (improvement < 0) {
+  message = `لا بأس! يمكنك تحسين نتيجتك في المرة القادمة 💪`;
+} 
+else {
+  message = `✨ جرّبي حل اختبار جديد لمتابعة مستوى تقدمك!`;
+}
+
 
     /* 🟢 6. Save to "progress" collection (uses userId) */
     await db.collection("progress").doc(`${userId}_${today}`).set({
