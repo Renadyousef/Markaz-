@@ -3,25 +3,72 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Session.css";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const SESSIONS_API = `${API_BASE}/sessions`;
+
 export default function StudySessionSetup() {
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
   const [studyM, setStudyM] = useState(25);
   const [breakM, setBreakM] = useState(5);
+  const [saving, setSaving] = useState(false);
   const navigate = useNavigate(); // ✅
 
   const next = () => setStep((s) => s + 1);
   const prev = () => setStep((s) => s - 1);
 
-  const start = () => {
+  const start = async () => {
+    if (saving) return;
     if (studyM <= 0) return alert("وقت الدراسة يجب أن يكون أكبر من صفر.");
+
+    const token =
+      localStorage.getItem("token") ||
+      sessionStorage.getItem("token");
+    if (!token) {
+      return alert("يجب تسجيل الدخول لبدء جلسة دراسية.");
+    }
+
     const session = {
       sessionTitle: title.trim() || "جلسة جديدة",
       studyTime: Number(studyM),
       breakTime: Number(breakM),
+      status: "in-progress",
     };
-    localStorage.setItem("currentSession", JSON.stringify(session));
-    navigate("/session-timer"); // ✅ go to timer route
+
+    try {
+      setSaving(true);
+      const res = await fetch(SESSIONS_API, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token.replace(/^Bearer\s+/i, "")}`,
+        },
+        body: JSON.stringify({
+          sessionTitle: session.sessionTitle,
+          totalStudyTime: session.studyTime,
+          totalBreakTime: session.breakTime,
+          status: session.status,
+        }),
+      });
+
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(payload?.msg || payload?.error || "تعذر إنشاء الجلسة");
+      }
+      localStorage.setItem(
+        "currentSession",
+        JSON.stringify({
+          ...session,
+          sessionId: payload.id || payload.sessionId || null,
+        })
+      );
+      navigate("/session-timer"); // ✅ go to timer route
+    } catch (err) {
+      console.error("FAILED TO START SESSION =>", err);
+      alert(err.message || "حدث خطأ أثناء بدء الجلسة.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const studyFill = ((studyM - 5) / (120 - 5)) * 100;
@@ -112,8 +159,8 @@ export default function StudySessionSetup() {
               <button className="btn ghost" onClick={prev}>
                 رجوع
               </button>
-              <button className="btn btn--primary" onClick={start}>
-                ابدأ الجلسة
+              <button className="btn btn--primary" onClick={start} disabled={saving}>
+                {saving ? "يتم التحميل..." : "ابدأ الجلسة"}
               </button>
             </div>
           </>
