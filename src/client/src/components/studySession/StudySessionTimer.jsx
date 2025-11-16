@@ -1,21 +1,59 @@
 // src/components/studySession/StudySessionTimer.jsx
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Session.css";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const SESSIONS_API = `${API_BASE}/sessions`;
+
 export default function StudySessionTimer() {
   const saved = JSON.parse(localStorage.getItem("currentSession") || "{}");
-  const { sessionTitle = "جلسة جديدة", studyTime = 25, breakTime = 5 } = saved;
+  const {
+    sessionTitle = "جلسة جديدة",
+    studyTime = 25,
+    breakTime = 5,
+    sessionId = null,
+  } = saved;
 
   const [mode, setMode] = useState("study");
   const [timeLeft, setTimeLeft] = useState(studyTime * 60);
   const [isRunning, setIsRunning] = useState(true);
   const timerRef = useRef(null);
   const wakeLockRef = useRef(null);
+  const closedRef = useRef(false);
   const navigate = useNavigate(); // ✅
 
   const totalTime = mode === "study" ? studyTime * 60 : breakTime * 60;
   const progress = ((totalTime - timeLeft) / totalTime) * 100;
+
+  const updateSessionStatus = useCallback(async (status = "completed") => {
+    if (!sessionId) return;
+    const token =
+      localStorage.getItem("token") ||
+      sessionStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      await fetch(`${SESSIONS_API}/${sessionId}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token.replace(/^Bearer\s+/i, "")}`,
+        },
+        body: JSON.stringify({ status }),
+      });
+    } catch (err) {
+      console.error("FAILED TO UPDATE SESSION STATUS =>", err);
+    }
+  }, [sessionId]);
+
+  const handleSessionEnd = useCallback(async () => {
+    if (closedRef.current) return;
+    closedRef.current = true;
+    await updateSessionStatus("completed");
+    localStorage.removeItem("currentSession");
+    navigate("/sessions"); // ✅ back to sessions list
+  }, [navigate, updateSessionStatus]);
 
   useEffect(() => {
     if (document.documentElement.requestFullscreen) {
@@ -43,12 +81,11 @@ export default function StudySessionTimer() {
         setMode("break");
         setTimeLeft(breakTime * 60);
       } else {
-        localStorage.removeItem("currentSession");
-        navigate("/sessions"); // ✅ back to sessions list
+        handleSessionEnd();
       }
     }
     return () => clearTimeout(timerRef.current);
-  }, [isRunning, timeLeft, mode, breakTime, navigate]);
+  }, [isRunning, timeLeft, mode, breakTime, handleSessionEnd]);
 
   const formatTime = s => {
     const m = String(Math.floor(s / 60)).padStart(2, "0");
@@ -81,10 +118,7 @@ export default function StudySessionTimer() {
       <div className="timer-actions">
         <button
           className="btn danger"
-          onClick={() => {
-            localStorage.removeItem("currentSession");
-            navigate("/sessions"); // ✅
-          }}
+          onClick={handleSessionEnd}
         >
           إنهاء
         </button>
