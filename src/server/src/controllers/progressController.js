@@ -38,6 +38,31 @@ exports.getProgress = async (req, res) => {
 
     const today = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
 
+    /* 🔵 Daily Snapshot Check (NEW LOGIC) — ADD THIS PART */
+    const todayKey = `${userId}_${today}`;
+    const todayDoc = await db.collection("progress").doc(todayKey).get();
+
+    // If today's progress DOES NOT exist → snapshot yesterday
+    if (!todayDoc.exists) {
+      const yesterday = new Date(Date.now() - 86400000)
+        .toISOString()
+        .slice(0, 10);
+
+      const yesterdayKey = `${userId}_${yesterday}`;
+      const yesterdayDoc = await db.collection("progress").doc(yesterdayKey).get();
+
+      if (!yesterdayDoc.exists) {
+        await db.collection("progress").doc(yesterdayKey).set({
+          userId,
+          date: yesterday,
+          percent: 0, // يوم بدون دخول → صفر
+          createdAt: admin.firestore.Timestamp.now(),
+        });
+      }
+    }
+    /* 🔵 END OF NEW LOGIC */
+
+
     /* 🟢 1. Fetch Tasks (collection uses ownerId) */
     const tasksSnap = await db.collection("tasks")
       .where("ownerId", "==", userId)
@@ -57,12 +82,12 @@ exports.getProgress = async (req, res) => {
       return createdDate === today;
     }).length;
 
-    /* 🟢 3. Fetch last two quiz results (collection uses userId or user_id) */
+    /* 🟢 3. Fetch last two quiz results */
     let quizSnap = await db.collection("quiz_result")
-  .where("user_id", "==", userId)   // <-- عدلنا الاسم ليتطابق مع Firestore
-  .orderBy("createdAt", "desc")
-  .limit(2)
-  .get();
+      .where("user_id", "==", userId)
+      .orderBy("createdAt", "desc")
+      .limit(2)
+      .get();
 
     if (quizSnap.empty) {
       quizSnap = await db.collection("quiz_result")
@@ -84,28 +109,26 @@ exports.getProgress = async (req, res) => {
     ).toFixed(1);
 
     /* 🟢 5. Motivational Message */
-   let message;
+    let message;
 
-if (improvement > 0) {
-  message = `🎉 لقد تحسّن أداؤك بمقدار ${improvement} نقطة! استمري هكذا!`;
-} 
-else if (improvement < 0) {
-  message = `لا بأس! يمكنك تحسين نتيجتك في المرة القادمة 💪`;
-} 
-else {
-  message = `✨ جرّبي حل اختبار جديد لمتابعة مستوى تقدمك!`;
-}
+    if (improvement > 0) {
+      message = `🎉 لقد تحسّن أداؤك بمقدار ${improvement} نقطة! استمري هكذا!`;
+    } 
+    else if (improvement < 0) {
+      message = `لا بأس! يمكنك تحسين نتيجتك في المرة القادمة 💪`;
+    } 
+    else {
+      message = `✨ جرّبي حل اختبار جديد لمتابعة مستوى تقدمك!`;
+    }
 
-
-    /* 🟢 6. Save to "progress" collection (uses userId) */
-    await db.collection("progress").doc(`${userId}_${today}`).set({
-      userId: userId,
+    /* 🟢 6. Save today's progress */
+    await db.collection("progress").doc(todayKey).set({
+      userId,
       createdAt: admin.firestore.Timestamp.now(),
       date: today,
       percent: Number(progressPercent),
     }, { merge: true });
 
-    /* ✅ Return today’s summary */
     return res.json({
       ok: true,
       date: today,
@@ -122,6 +145,7 @@ else {
     res.status(500).json({ ok: false, error: err.message });
   }
 };
+
 
 
 /**
