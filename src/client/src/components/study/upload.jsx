@@ -268,7 +268,7 @@ export default function Upload({ maxMB = 20 }) {
             </div>
             <div className="uploadBox__text">
               <div className="uploadBox__title">إضافة ملف</div>
-              <div className="uploadBox__sub">اسحب وأفلت  الملف هنا  — فقط PDF (حد 20 صفحة)</div>
+              <div className="uploadBox__sub">اسحب وأفلت  الملف هنا  — فقط PDF (حد 30 صفحة)</div>
             </div>
             <button type="button" className="uploadBox__btn" disabled={isUploading}>اختيار ملف</button>
             <input ref={inputRef} type="file" accept="application/pdf,.pdf" onChange={onInputChange} style={{ display: "none" }} />
