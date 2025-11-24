@@ -26,7 +26,6 @@ describe("Profile Controller test cases for unit testing", () => {
     jest.clearAllMocks();
   });
 
-  // ---------- GET /profile/me ----------
 
   // 1) Success
   test("getMe success", async () => {

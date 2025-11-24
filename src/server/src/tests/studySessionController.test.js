@@ -36,9 +36,7 @@ describe("Study Session Controller Unit Tests", () => {
     jest.clearAllMocks();
   });
 
-  // ==========================================
   // 1️⃣ createSession Tests
-  // ==========================================
   test("createSession success", async () => {
     req.body = { sessionTitle: "Study Math", totalStudyTime: 50 };
 
@@ -88,9 +86,8 @@ describe("Study Session Controller Unit Tests", () => {
     );
   });
 
-  // ==========================================
+  
   // 2️⃣ updateSessionStatus Tests
-  // ==========================================
   test("updateSessionStatus success", async () => {
     req.params = { id: "session-1" };
     req.body = { status: "completed" };

@@ -1,11 +1,7 @@
-// =============================================================
-// 🟢 1) Mock serviceAccountKey.json (قبل استدعاء أي ملف آخر)
-// =============================================================
+// 🟢 1) Mock serviceAccountKey.json
 jest.mock("../../src/config/serviceAccountKey.json", () => ({}), { virtual: true });
 
-// =============================================================
-// 🟢 2) Mock firebase-admin بالكامل
-// =============================================================
+// 🟢 2) Mock firebase-admin 
 jest.mock("firebase-admin", () => {
   const mockAdd = jest.fn();
   const mockDoc = jest.fn(() => ({ id: "mock-task-id" }));
@@ -40,9 +36,7 @@ const db = admin.firestore();
 const studyPlansCol = db.collection("study_plans");
 const tasksCol = db.collection("tasks");
 
-// =============================================================
 // 🟣 Start Test Suite
-// =============================================================
 describe("StudyPlan Controller – createPlan", () => {
   let req, res;
 
@@ -60,9 +54,7 @@ describe("StudyPlan Controller – createPlan", () => {
     jest.clearAllMocks();
   });
 
-  // ---------------------------------------------------------
   // 1️⃣ Unauthorized
-  // ---------------------------------------------------------
   test("createPlan unauthorized (no req.user)", async () => {
     req.user = undefined;
 
@@ -72,9 +64,7 @@ describe("StudyPlan Controller – createPlan", () => {
     expect(res.json).toHaveBeenCalledWith({ msg: "غير مصرّح بالدخول" });
   });
 
-  // ---------------------------------------------------------
   // 2️⃣ Missing title
-  // ---------------------------------------------------------
   test("createPlan missing title", async () => {
     req.body = { tasks: [] };
 
@@ -84,9 +74,7 @@ describe("StudyPlan Controller – createPlan", () => {
     expect(res.json).toHaveBeenCalledWith({ msg: "العنوان مطلوب" });
   });
 
-  // ---------------------------------------------------------
   // 3️⃣ Success (no tasks)
-  // ---------------------------------------------------------
   test("createPlan success without tasks", async () => {
     req.body = {
       title: "My Study Plan",
@@ -108,9 +96,7 @@ describe("StudyPlan Controller – createPlan", () => {
     });
   });
 
-  // ---------------------------------------------------------
   // 4️⃣ Success (with tasks + batch)
-  // ---------------------------------------------------------
   test("createPlan success with tasks", async () => {
     req.body = {
       title: "Plan With Tasks",
@@ -139,9 +125,7 @@ describe("StudyPlan Controller – createPlan", () => {
     });
   });
 
-  // ---------------------------------------------------------
   // 5️⃣ Internal Error
-  // ---------------------------------------------------------
   test("createPlan internal error", async () => {
     req.body = {
       title: "Error Plan",

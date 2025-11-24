@@ -3,9 +3,7 @@
 // Mock serviceAccountKey.json
 jest.mock("../config/serviceAccountKey.json", () => ({}), { virtual: true });
 
-// ======================================================
 // Mock firebase-admin (FieldValue is STATIC under admin.firestore)
-// ======================================================
 jest.mock("firebase-admin", () => {
   const get = jest.fn();
   const set = jest.fn();
@@ -37,9 +35,7 @@ jest.mock("firebase-admin", () => {
   return adminMock;
 });
 
-// ======================================================
 // Import controller
-// ======================================================
 const {
   getPlanMeta,
   createTask,

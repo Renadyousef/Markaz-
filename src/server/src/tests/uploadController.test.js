@@ -1,6 +1,4 @@
-// ===============================
-//  MOCK كامل للكنترولر
-// ===============================
+//  MOCK FOR uploadController.js
 jest.mock("../../src/controllers/uploadController", () => {
   return {
     uploadThenGenerate: jest.fn(async (req, res) => {
@@ -34,7 +32,6 @@ jest.mock("../../src/controllers/uploadController", () => {
   };
 });
 
-// الآن فقط نستورد الدالة بعد الموك:
 const { uploadThenGenerate } = require("../../src/controllers/uploadController");
 
 // mock response
@@ -45,9 +42,7 @@ function mockRes() {
   return res;
 }
 
-// =======================================
 //                TESTS
-// =======================================
 describe("uploadThenGenerate (FULL MOCK)", () => {
   let req, res;
 

@@ -1,7 +1,5 @@
-// ========== تعريف الموك أولاً ==========
 const mockCreate = jest.fn();
 
-// ========== Mock OpenAI ==========
 jest.mock("openai", () => {
   return jest.fn().mockImplementation(() => ({
     chat: {
@@ -12,7 +10,6 @@ jest.mock("openai", () => {
   }));
 });
 
-// ========== استدعاء الفنكشن ==========
 const { generateFromText } = require("../../src/controllers/FlashcardsController.js");
 
 describe("generateFromText Unit Tests", () => {
