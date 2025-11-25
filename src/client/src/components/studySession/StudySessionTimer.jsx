@@ -15,117 +15,307 @@ export default function StudySessionTimer() {
     sessionId = null,
   } = saved;
 
+  const navigate = useNavigate();
+
+  const studySeconds = Math.max(1, Math.round(Number(studyTime) * 60));
+  const breakSeconds = Math.max(0, Math.round(Number(breakTime) * 60));
+
   const [mode, setMode] = useState("study");
-  const [timeLeft, setTimeLeft] = useState(studyTime * 60);
+  const [timeLeft, setTimeLeft] = useState(studySeconds);
   const [isRunning, setIsRunning] = useState(true);
-  const timerRef = useRef(null);
-  const wakeLockRef = useRef(null);
+  const [modalType, setModalType] = useState(null); // 'finished' | 'quit'
   const closedRef = useRef(false);
-  const navigate = useNavigate(); // ✅
+  const fullscreenRef = useRef(false);
 
-  const totalTime = mode === "study" ? studyTime * 60 : breakTime * 60;
-  const progress = ((totalTime - timeLeft) / totalTime) * 100;
+  const totalSeconds = mode === "study"
+    ? studySeconds
+    : Math.max(breakSeconds, 1);
+  const progress = Math.min(
+    1,
+    Math.max(0, 1 - timeLeft / totalSeconds)
+  );
+  const isBreakMode = mode === "break";
 
-  const updateSessionStatus = useCallback(async (status = "completed") => {
-    if (!sessionId) return;
-    const token =
-      localStorage.getItem("token") ||
-      sessionStorage.getItem("token");
-    if (!token) return;
+  const updateSessionStatus = useCallback(
+    async (status = "completed") => {
+      if (!sessionId) return;
+      const token =
+        localStorage.getItem("token") ||
+        sessionStorage.getItem("token");
+      if (!token) return;
 
-    try {
-      await fetch(`${SESSIONS_API}/${sessionId}/status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token.replace(/^Bearer\s+/i, "")}`,
-        },
-        body: JSON.stringify({ status }),
-      });
-    } catch (err) {
-      console.error("FAILED TO UPDATE SESSION STATUS =>", err);
-    }
-  }, [sessionId]);
+      try {
+        await fetch(`${SESSIONS_API}/${sessionId}/status`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token.replace(/^Bearer\s+/i, "")}`,
+          },
+          body: JSON.stringify({ status }),
+        });
+      } catch (err) {
+        console.error("FAILED TO UPDATE SESSION STATUS =>", err);
+      }
+    },
+    [sessionId]
+  );
 
   const handleSessionEnd = useCallback(async () => {
     if (closedRef.current) return;
     closedRef.current = true;
     await updateSessionStatus("completed");
     localStorage.removeItem("currentSession");
-    navigate("/sessions"); // ✅ back to sessions list
+    navigate("/sessions");
   }, [navigate, updateSessionStatus]);
 
   useEffect(() => {
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(() => {});
-    }
-    if ("wakeLock" in navigator) {
-      navigator.wakeLock.request("screen")
-        .then(lock => { wakeLockRef.current = lock; })
-        .catch(() => {});
-    }
     document.body.classList.add("focus-mode");
-
     return () => {
-      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-      if (wakeLockRef.current) wakeLockRef.current.release();
       document.body.classList.remove("focus-mode");
     };
   }, []);
 
   useEffect(() => {
-    if (isRunning && timeLeft > 0) {
-      timerRef.current = setTimeout(() => setTimeLeft(t => t - 1), 1000);
-    } else if (timeLeft === 0) {
-      if (mode === "study" && breakTime > 0) {
-        setMode("break");
-        setTimeLeft(breakTime * 60);
-      } else {
-        handleSessionEnd();
+    const el = document.documentElement;
+    const request =
+      el.requestFullscreen ||
+      el.webkitRequestFullscreen ||
+      el.mozRequestFullScreen ||
+      el.msRequestFullscreen;
+    if (request) {
+      try {
+        const maybePromise = request.call(el);
+        if (maybePromise && typeof maybePromise.then === "function") {
+          maybePromise.then(() => {
+            fullscreenRef.current = true;
+          }).catch(() => {});
+        } else {
+          fullscreenRef.current = true;
+        }
+      } catch {
+        fullscreenRef.current = false;
       }
     }
-    return () => clearTimeout(timerRef.current);
-  }, [isRunning, timeLeft, mode, breakTime, handleSessionEnd]);
+    return () => {
+      const exit =
+        document.exitFullscreen ||
+        document.webkitExitFullscreen ||
+        document.mozCancelFullScreen ||
+        document.msExitFullscreen;
+      if (fullscreenRef.current && exit) {
+        try {
+          exit.call(document);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    };
+  }, []);
 
-  const formatTime = s => {
-    const m = String(Math.floor(s / 60)).padStart(2, "0");
-    const sec = String(s % 60).padStart(2, "0");
-    return `${m}:${sec}`;
+  useEffect(() => {
+    if (!isRunning) return;
+    if (timeLeft <= 0) return;
+    const id = setTimeout(() => {
+      setTimeLeft((t) => Math.max(t - 1, 0));
+    }, 1000);
+    return () => clearTimeout(id);
+  }, [isRunning, timeLeft]);
+
+  useEffect(() => {
+    if (timeLeft !== 0) return;
+      if (mode === "study" && breakSeconds > 0) {
+        setMode("break");
+        setTimeLeft(Math.max(breakSeconds, 1));
+        setIsRunning(true);
+      } else if (!modalType) {
+        setIsRunning(false);
+      setModalType("finished");
+    }
+  }, [timeLeft, mode, breakSeconds, modalType]);
+
+  const formatTime = (s) => {
+    const hours = String(Math.floor(s / 3600)).padStart(2, "0");
+    const minutes = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
+    const seconds = String(s % 60).padStart(2, "0");
+    return `${hours}:${minutes}:${seconds}`;
+  };
+
+  const handleBottomPress = () => {
+    setIsRunning((running) => !running);
+  };
+
+  const requestQuit = () => {
+    setIsRunning(false);
+    setModalType("quit");
+  };
+
+  const handleAnotherRound = () => {
+    setModalType(null);
+    setMode("study");
+    setTimeLeft(studySeconds);
+    setIsRunning(true);
+  };
+
+  const closeModal = () => {
+    if (modalType === "quit" && timeLeft > 0) {
+      setIsRunning(true);
+    }
+    setModalType(null);
+  };
+
+  const renderModal = () => {
+    if (!modalType) return null;
+    if (modalType === "finished") {
+      return (
+        <div className="timer-modal">
+          <div className="timer-modal__content">
+            <h3>انتهت الجلسة</h3>
+            <p>هل تريد بدء جولة جديدة أم إنهاء الجلسة؟</p>
+            <div className="timer-modal__actions">
+              <button className="ghost" onClick={handleSessionEnd}>
+                إنهاء
+              </button>
+              <button className="solid" onClick={handleAnotherRound}>
+                جولة أخرى
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="timer-modal">
+        <div className="timer-modal__content">
+          <h3>إنهاء الجلسة؟</h3>
+          <p>هل أنت متأكد من إنهاء هذه الجلسة؟</p>
+          <div className="timer-modal__actions">
+            <button className="ghost" onClick={closeModal}>
+              لا، ابق
+            </button>
+            <button className="solid" onClick={handleSessionEnd}>
+              نعم، أنهِ
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
-    <div className="timer-screen">
-      <div className="timer-header">
-        <h2 className="timer-title">{sessionTitle}</h2>
-        <p className="timer-mode">{mode === "study" ? "دراسة" : "استراحة"}</p>
-      </div>
+    <div className={`session-timer-page ${isBreakMode ? "break" : "study"}`}>
+      <div className="timer-surface">
+        <p className="timer-page-title">{sessionTitle}</p>
 
-      <div className="timer-ring">
-        <svg viewBox="0 0 300 300">
-          <circle className="ring-bg" cx="150" cy="150" r="140" />
-          <circle
-            className="ring-fg"
-            cx="150"
-            cy="150"
-            r="140"
-            strokeDasharray={2 * Math.PI * 140}
-            strokeDashoffset={(2 * Math.PI * 140) * (1 - progress / 100)}
-          />
-        </svg>
-        <div className="ring-time">{formatTime(timeLeft)}</div>
-      </div>
+        <div className="timer-circle-wrap">
+          <svg className="timer-circle" viewBox="0 0 200 200">
+            <circle className="timer-circle__bg" cx="100" cy="100" r="90" />
+            <circle
+              className="timer-circle__progress"
+              cx="100"
+              cy="100"
+              r="90"
+              strokeDasharray={2 * Math.PI * 90}
+              strokeDashoffset={
+                (2 * Math.PI * 90) * (1 - progress)
+              }
+            />
+          </svg>
+          <div className="timer-circle__time">{formatTime(timeLeft)}</div>
+        </div>
 
-      <div className="timer-actions">
-        <button
-          className="btn danger"
-          onClick={handleSessionEnd}
-        >
-          إنهاء
-        </button>
-        <button className="btn ghost" onClick={() => setIsRunning(r => !r)}>
-          {isRunning ? "إيقاف" : "استئناف"}
-        </button>
+        <p className="timer-mode-label">
+          {isBreakMode ? "وقت الاستراحة" : "وقت الدراسة"}
+        </p>
+        <div className="timer-icon-wrap">
+          {isBreakMode ? (
+            <svg viewBox="0 0 48 48">
+              <path
+                d="M12 16h20v14a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6V16Z"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M32 20h4a4 4 0 0 1 0 8h-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              />
+              <path
+                d="M16 10v4m8-4v4"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              <path
+                d="M10 38h24"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 48 48">
+              <rect
+                x="8"
+                y="12"
+                width="32"
+                height="24"
+                rx="3"
+                ry="3"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              />
+              <path
+                d="M20 36v6h8v-6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          )}
+        </div>
+
+        <div className="timer-controls">
+          <div className="control-stack">
+            <button
+              className={`control-btn main ${isBreakMode ? "break" : "study"} ${
+                !isRunning ? "paused" : ""
+              }`}
+              onClick={handleBottomPress}
+            >
+              {isRunning ? (
+                <svg viewBox="0 0 24 24">
+                  <rect x="7" y="5" width="3" height="14" rx="1.5" />
+                  <rect x="14" y="5" width="3" height="14" rx="1.5" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24">
+                  <polygon points="8,5 19,12 8,19" />
+                </svg>
+              )}
+            </button>
+            <p className="control-label">
+              {isRunning ? "إيقاف" : "استئناف"}
+            </p>
+          </div>
+
+          <div className="control-stack">
+            <button className="control-btn finish" onClick={requestQuit}>
+              <svg viewBox="0 0 24 24">
+                <rect x="7" y="7" width="10" height="10" rx="2" />
+              </svg>
+            </button>
+            <p className="control-label">إنهاء</p>
+          </div>
+        </div>
       </div>
+      {renderModal()}
     </div>
   );
 }
