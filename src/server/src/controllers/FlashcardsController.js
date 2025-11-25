@@ -122,50 +122,85 @@ Text:
 };
 
 // (2) توليد من pdfId (بدون حفظ)
+// (2) توليد من pdfId (بدون حفظ) — مع دعم chunking مثل ChatBot
 exports.generateFromPdfId = async (req, res) => {
   try {
     const pdfId = req.params.pdfId || req.body.pdfId;
-    const limit = Math.max(1, Math.min(10, Number(req.query.limit || req.body.limit || 10)));
     const language = "ar";
-    if (!pdfId) return res.status(400).json({ ok:false, error:"pdfId is required" });
+    const limit = Math.max(1, Math.min(10, Number(req.query.limit || req.body.limit || 10)));
+
+    if (!pdfId) {
+      return res.status(400).json({ ok: false, error: "pdfId is required" });
+    }
 
     const text = await getPdfText(pdfId);
     if (!text || text.length < 10) {
-      return res.status(404).json({ ok:false, error:"No extracted text for this pdfId" });
+      return res.status(404).json({ ok: false, error: "No extracted text for this pdfId" });
     }
 
-    const completion = await client.chat.completions.create({
-      model: MODEL,
-      temperature: 0.2,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: "Return STRICT JSON only. Generate concise *definition* flashcards in Arabic." },
-        {
-          role: "user",
-          content: `
-Create up to ${limit} Arabic flashcards (definition style).
-Return STRICT JSON:
-{
-  "sourceDocId":"${pdfId}",
-  "language":"${language}",
-  "cards":[
-    {"id":"fc_1","question":"اسم المصطلح","answer":"تعريف مختصر وواضح","hint":null,"tags":["تعريف"]}
-  ]
-}
-Text:
-"""${String(text).slice(0, 50000)}"""
-`.trim(),
-        },
-      ],
-    });
+    // ----------------------
+    // 🔥 1) Chunking نظام
+    // ----------------------
+    const MAX_CHARS = 8000;
+    const paragraphs = text.split("\n\n");
 
-    const raw = completion.choices?.[0]?.message?.content ?? "";
-    let json;
-    try { json = typeof raw === "object" ? raw : JSON.parse(raw); }
-    catch { return res.status(502).json({ ok:false, error:"Model returned non-JSON", raw }); }
+    let chunks = [];
+    let currentChunk = "";
 
-    const cards = normalizeModelCards(json.cards);
-    if (cards.length === 0) return res.status(502).json({ ok:false, error:"No cards in model response", raw: json });
+    for (const p of paragraphs) {
+      if ((currentChunk + p).length > MAX_CHARS) {
+        chunks.push(currentChunk);
+        currentChunk = p + "\n\n";
+      } else {
+        currentChunk += p + "\n\n";
+      }
+    }
+    if (currentChunk) chunks.push(currentChunk);
+
+    // ----------------------
+    // 🔥 2) إرسال كل chunk إلى GPT
+    // ----------------------
+    let allCards = [];
+
+    for (const chunk of chunks) {
+      const completion = await client.chat.completions.create({
+        model: MODEL,
+        temperature: 0.2,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: "Return STRICT JSON only. Generate concise *definition* flashcards in Arabic." },
+          {
+            role: "user",
+            content: `
+Generate flashcards from this part of the PDF.
+Return ONLY JSON with "cards":[ ... ].
+
+PDF PART:
+"""${chunk.slice(0, 50000)}"""
+            `.trim()
+          }
+        ]
+      });
+
+      const raw = completion.choices?.[0]?.message?.content ?? "{}";
+
+      let json;
+      try { json = JSON.parse(raw); }
+      catch { continue; }
+
+      if (Array.isArray(json.cards)) {
+        allCards.push(...json.cards);
+      }
+    }
+
+    // ----------------------
+    // 🔥 3) Normalize + return
+    // ----------------------
+    const cards = normalizeModelCards(allCards);
+
+    if (cards.length === 0) {
+      return res.status(502).json({ ok: false, error: "No cards generated from chunks" });
+    }
 
     return res.status(200).json({
       ok: true,
@@ -173,13 +208,15 @@ Text:
       language,
       count: cards.length,
       cards,
-      saved: false,
+      chunkCount: chunks.length
     });
+
   } catch (err) {
     console.error("generateFromPdfId err:", err);
-    return res.status(500).json({ ok:false, error: err?.message || "Server error" });
+    return res.status(500).json({ ok: false, error: err?.message || "Server error" });
   }
 };
+
 
 // (3) حفظ الديك — نحفظ ownerId بنفس منطق الرفع + Fallback من مستند الـ PDF
 exports.saveDeck = async (req, res) => {
