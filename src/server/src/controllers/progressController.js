@@ -13,9 +13,10 @@ if (!isTest) {
   }
 }
 
-//for unit tests 17
-// const db = admin.firestore();
 
+
+//for unit tests 19
+// const db = admin.firestore();
 
 /* ================= HELPERS ================= */
 
