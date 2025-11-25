@@ -5,21 +5,79 @@ import "./Session.css";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const SESSIONS_API = `${API_BASE}/sessions`;
+const ACCENT = "#FF914D";
+const PRESETS = [
+  { minutes: 5, valueLabel: "5", unitLabel: "دقائق" },
+  { minutes: 10, valueLabel: "10", unitLabel: "دقائق" },
+  { minutes: 15, valueLabel: "15", unitLabel: "دقائق" },
+  { minutes: 30, valueLabel: "30", unitLabel: "دقيقة" },
+  { minutes: 60, valueLabel: "1", unitLabel: "ساعة" },
+];
+
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+const toSeconds = (duration) =>
+  duration.hours * 3600 + duration.minutes * 60 + duration.seconds;
+const toMinutes = (duration) =>
+  Number((toSeconds(duration) / 60).toFixed(2));
+const buildDurationFromMinutes = (mins) => ({
+  hours: Math.floor(mins / 60),
+  minutes: mins % 60,
+  seconds: 0,
+});
 
 export default function StudySessionSetup() {
-  const [step, setStep] = useState(1);
-  const [title, setTitle] = useState("");
-  const [studyM, setStudyM] = useState(25);
-  const [breakM, setBreakM] = useState(5);
+  const [title, setTitle] = useState("جلسة دراسة");
+  const [selectedTimer, setSelectedTimer] = useState("study");
+  const [studyDuration, setStudyDuration] = useState({
+    hours: 0,
+    minutes: 25,
+    seconds: 0,
+  });
+  const [breakDuration, setBreakDuration] = useState({
+    hours: 0,
+    minutes: 5,
+    seconds: 0,
+  });
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate(); // ✅
 
-  const next = () => setStep((s) => s + 1);
-  const prev = () => setStep((s) => s - 1);
+  const updateDuration = (timer, unit, delta) => {
+    const setter = timer === "study" ? setStudyDuration : setBreakDuration;
+    setSelectedTimer(timer);
+    setter((prev) => {
+      const limit = unit === "hours" ? 23 : 59;
+      return {
+        ...prev,
+        [unit]: clamp(prev[unit] + delta, 0, limit),
+      };
+    });
+  };
+
+  const applyPreset = (minutes) => {
+    const duration = buildDurationFromMinutes(minutes);
+    if (selectedTimer === "study") {
+      setStudyDuration(duration);
+    } else {
+      setBreakDuration(duration);
+    }
+  };
+
+  const handleManualInput = (timer, unit, value) => {
+    const setter = timer === "study" ? setStudyDuration : setBreakDuration;
+    const clean = value.replace(/\D/g, "");
+    const limit = unit === "hours" ? 23 : 59;
+    setSelectedTimer(timer);
+    setter((prev) => ({
+      ...prev,
+      [unit]: clean === "" ? 0 : clamp(parseInt(clean, 10), 0, limit),
+    }));
+  };
 
   const start = async () => {
     if (saving) return;
-    if (studyM <= 0) return alert("وقت الدراسة يجب أن يكون أكبر من صفر.");
+    if (toSeconds(studyDuration) <= 0) {
+      return alert("وقت الدراسة يجب أن يكون أكبر من صفر.");
+    }
 
     const token =
       localStorage.getItem("token") ||
@@ -29,9 +87,9 @@ export default function StudySessionSetup() {
     }
 
     const session = {
-      sessionTitle: title.trim() || "جلسة جديدة",
-      studyTime: Number(studyM),
-      breakTime: Number(breakM),
+      sessionTitle: title.trim() || "جلسة دراسة",
+      studyTime: toMinutes(studyDuration),
+      breakTime: toMinutes(breakDuration),
       status: "in-progress",
     };
 
@@ -71,100 +129,103 @@ export default function StudySessionSetup() {
     }
   };
 
-  const studyFill = ((studyM - 5) / (120 - 5)) * 100;
-  const breakFill = (breakM / 30) * 100;
+  const renderTimerBlock = (type, label, duration) => {
+    const isSelected = selectedTimer === type;
+    const formatted = {
+      hours: String(duration.hours).padStart(2, "0"),
+      minutes: String(duration.minutes).padStart(2, "0"),
+      seconds: String(duration.seconds).padStart(2, "0"),
+    };
+
+    const unitLabels = ["ساعات", "دقائق", "ثوانٍ"];
+    const units = ["hours", "minutes", "seconds"];
+
+    return (
+      <div
+        className={`timer-block${isSelected ? " selected" : ""}`}
+        onClick={() => setSelectedTimer(type)}
+        key={type}
+      >
+        <p className="timer-label">{label}</p>
+        <div className="timer-grid">
+          {units.map((unit, idx) => (
+            <div className="timer-unit" key={unit}>
+              <button
+                type="button"
+                className="timer-arrow"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  updateDuration(type, unit, 1);
+                }}
+              >
+                ▲
+              </button>
+              <input
+                type="text"
+                inputMode="numeric"
+                className="timer-input"
+                value={formatted[unit]}
+                onFocus={(e) => {
+                  e.stopPropagation();
+                  setSelectedTimer(type);
+                  e.target.select();
+                }}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => handleManualInput(type, unit, e.target.value)}
+              />
+              <span className="timer-unit-label">{unitLabels[idx]}</span>
+              <button
+                type="button"
+                className="timer-arrow"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  updateDuration(type, unit, -1);
+                }}
+              >
+                ▼
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <div className="setup-screen">
-      <section className="wizard-card wide">
-        <div className="wizard-progress">
-          <div className="bar" style={{ width: `${(step / 3) * 100}%` }} />
+    <div className="session-setup-screen">
+      <section className="session-panel">
+        <input
+          className="session-name-field"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="جلسة دراسة"
+        />
+
+        <div className="timers-stack">
+          {renderTimerBlock("study", "وقت الدراسة", studyDuration)}
+          {renderTimerBlock("break", "وقت الاستراحة", breakDuration)}
         </div>
 
-        {step === 1 && (
-          <>
-            <h2 className="wizard-title">اسم الجلسة</h2>
-            <input
-              className="line-input big"
-              placeholder="مثال: مراجعة SWE"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-            <div className="wizard-nav center">
-              <button className="btn btn--primary" onClick={next}>
-                التالي
-              </button>
-            </div>
-          </>
-        )}
+        <button className="start-button" onClick={start} disabled={saving}>
+          {saving ? "..." : "ابدأ"}
+        </button>
 
-        {step === 2 && (
-          <>
-            <h2 className="wizard-title">مدة الدراسة</h2>
-            <input
-              type="range"
-              min="5"
-              max="120"
-              step="5"
-              value={studyM}
-              onChange={(e) => setStudyM(Number(e.target.value))}
-              className="range green"
-              style={{
-                background: `linear-gradient(to right, #ff914d 0% ${studyFill}%, #e5e7eb ${studyFill}% 100%)`,
-              }}
-            />
-            <div className="slider-value">{studyM} دقيقة</div>
-            <div className="quick-preset">
-              {[25, 45, 60].map((v) => (
-                <button key={v} onClick={() => setStudyM(v)}>
-                  {v}
-                </button>
-              ))}
-            </div>
-            <div className="wizard-nav">
-              <button className="btn ghost" onClick={prev}>
-                رجوع
+        <div className="preset-section">
+          <p className="preset-title">أوقات شائعة</p>
+          <div className="preset-grid">
+            {PRESETS.map((preset) => (
+              <button
+                key={`${preset.minutes}-${preset.unitLabel}`}
+                type="button"
+                className="preset-btn"
+                onClick={() => applyPreset(preset.minutes)}
+              >
+                <span>{preset.valueLabel}</span>
+                <small>{preset.unitLabel}</small>
               </button>
-              <button className="btn btn--primary" onClick={next}>
-                التالي
-              </button>
-            </div>
-          </>
-        )}
-
-        {step === 3 && (
-          <>
-            <h2 className="wizard-title">مدة الاستراحة</h2>
-            <input
-              type="range"
-              min="0"
-              max="30"
-              step="5"
-              value={breakM}
-              onChange={(e) => setBreakM(Number(e.target.value))}
-              className="range green"
-              style={{
-                background: `linear-gradient(to right, #ff914d 0% ${breakFill}%, #e5e7eb ${breakFill}% 100%)`,
-              }}
-            />
-            <div className="slider-value">{breakM} دقيقة</div>
-            <div className="quick-preset">
-              {[0, 5, 10].map((v) => (
-                <button key={v} onClick={() => setBreakM(v)}>
-                  {v}
-                </button>
-              ))}
-            </div>
-            <div className="wizard-nav">
-              <button className="btn ghost" onClick={prev}>
-                رجوع
-              </button>
-              <button className="btn btn--primary" onClick={start} disabled={saving}>
-                {saving ? "يتم التحميل..." : "ابدأ الجلسة"}
-              </button>
-            </div>
-          </>
-        )}
+            ))}
+          </div>
+        </div>
       </section>
     </div>
   );

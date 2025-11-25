@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap");
+
 /* ===== Background (shared for both pages, matches HomePage) ===== */
 .session-screen {
   min-height: 100vh;
@@ -6,7 +8,7 @@
   align-items: center;
   padding: 20px;
   text-align: center;
-  font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+  font-family: "Cairo", "Helvetica Neue", sans-serif;
   background:
     radial-gradient(1000px 420px at 10% -5%, #fff7ed 0%, transparent 60%),
     radial-gradient(1200px 520px at 90% -8%, #ffedd5 10%, transparent 58%),
@@ -15,6 +17,442 @@
   background-repeat: no-repeat;
   background-attachment: fixed;
   color: #1f2937;
+}
+
+/* ===== Study Session Setup (Flutter inspired) ===== */
+.session-setup-screen {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(40px, 8vh, 80px) 24px;
+  background:
+    radial-gradient(1000px 420px at 10% -5%, #fff7ed 0%, transparent 60%),
+    radial-gradient(1200px 520px at 90% -8%, #ffedd5 10%, transparent 58%),
+    radial-gradient(900px 360px at 50% 100%, rgba(15,23,42,.06) 0%, transparent 60%),
+    #f9fafb;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  font-family: "Cairo", "Helvetica Neue", sans-serif;
+  color: #000;
+}
+.session-setup-screen * {
+  font-family: "Cairo", "Helvetica Neue", sans-serif;
+}
+
+.session-panel {
+  width: clamp(320px, 80vw, 760px);
+  background: #fff;
+  border-radius: 32px;
+  padding: clamp(20px, 4vw, 32px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: clamp(18px, 4vh, 28px);
+  text-align: center;
+  margin: 0 auto;
+}
+
+.session-name-field {
+  width: 100%;
+  border: none;
+  border-radius: 18px;
+  padding: 16px 20px;
+  font-size: 1.4rem;
+  text-align: center;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s ease;
+}
+.session-name-field:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 2px #ff914d;
+}
+
+.timers-stack {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.timer-block {
+  background: #fff;
+  border-radius: 28px;
+  padding: 22px;
+  border: 2px solid transparent;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+}
+.timer-block.selected {
+  border-color: #ff914d;
+  transform: translateY(-2px);
+}
+
+.timer-label {
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 12px;
+}
+
+.timer-grid {
+  display: flex;
+  justify-content: center;
+  flex-direction: row-reverse;
+  gap: clamp(14px, 2vw, 22px);
+}
+
+.timer-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.timer-arrow {
+  border: none;
+  background: transparent;
+  color: #ff914d;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.timer-arrow:hover {
+  color: #ff7a24;
+}
+
+.timer-input {
+  width: 72px;
+  border: none;
+  border-radius: 14px;
+  background: #f7f7f7;
+  font-size: 2.6rem;
+  font-weight: 600;
+  color: #000;
+  text-align: center;
+  padding: 6px 0;
+}
+.timer-input:focus {
+  outline: 2px solid #ff914d;
+  background: #fff6ef;
+}
+
+.timer-unit-label {
+  font-size: 0.8rem;
+  color: #999;
+  letter-spacing: 0.2em;
+}
+
+.start-button {
+  width: 100%;
+  max-width: 260px;
+  margin: 0 auto;
+  border-radius: 14px;
+  border: none;
+  background: #ff914d;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 16px 28px;
+  box-shadow: 0 10px 25px rgba(255, 145, 77, 0.35);
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.start-button:hover {
+  transform: translateY(-1px);
+}
+.start-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.session-timer-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(12px, 5vh, 36px) 16px;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: "Cairo", "Helvetica Neue", sans-serif;
+  background:
+    radial-gradient(1000px 420px at 10% -5%, #fff7ed 0%, transparent 60%),
+    radial-gradient(1200px 520px at 90% -8%, #ffedd5 10%, transparent 58%),
+    radial-gradient(900px 360px at 50% 100%, rgba(15,23,42,.06) 0%, transparent 60%),
+    #f9fafb;
+  background-attachment: fixed;
+  color: #1c2c20;
+}
+
+.timer-surface {
+  width: min(420px, 92vw);
+  border-radius: 36px;
+  padding: 28px 24px 40px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.14);
+  text-align: center;
+  background: #fff;
+  color: inherit;
+}
+.session-timer-page.break .timer-surface {
+  animation: break-enter 0.9s ease;
+}
+
+.timer-page-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: inherit;
+  font-family: "Cairo", "Helvetica Neue", sans-serif;
+}
+
+.timer-circle-wrap {
+  position: relative;
+  width: 240px;
+  height: 240px;
+  margin: 24px auto;
+}
+.timer-circle {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.timer-circle__bg {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.12);
+  stroke-width: 8;
+}
+.timer-circle__progress {
+  fill: none;
+  stroke: #ff914d;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s linear;
+}
+.timer-circle__time {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 700;
+  color: inherit;
+  letter-spacing: 1px;
+}
+
+.timer-mode-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: inherit;
+  direction: rtl;
+  font-family: "Cairo", "Helvetica Neue", sans-serif;
+}
+.timer-icon-wrap {
+  width: 66px;
+  margin: 0 auto 18px;
+  color: inherit;
+}
+.timer-icon-wrap svg {
+  width: 100%;
+  height: 100%;
+}
+
+.timer-controls {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+.timer-controls,
+.control-label,
+.timer-page-title {
+  direction: rtl;
+}
+
+@keyframes break-enter {
+  from {
+    transform: translateY(18px) scale(0.97);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+  to {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.14);
+  }
+}
+.control-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.control-btn {
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.control-btn.main svg,
+.control-btn.finish svg {
+  width: 30px;
+  height: 30px;
+  fill: currentColor;
+}
+.control-btn.main {
+  background: #e8f0eb;
+  color: #1f3d2b;
+}
+.control-btn.main.paused {
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+.control-btn.finish {
+  background: #ffe7dc;
+  color: #c2410c;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+.control-btn:hover {
+  transform: translateY(-2px);
+}
+.control-label {
+  font-size: 0.95rem;
+  color: inherit;
+  font-weight: 500;
+}
+
+.timer-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 20;
+}
+.timer-modal__content {
+  width: min(90vw, 360px);
+  background: #fff;
+  border-radius: 24px;
+  padding: 24px 22px 28px;
+  text-align: center;
+  color: #1f2937;
+  box-shadow: 0 24px 55px rgba(0,0,0,0.15);
+}
+.timer-modal__content h3 {
+  margin-bottom: 10px;
+  font-size: 1.25rem;
+}
+.timer-modal__content p {
+  margin-bottom: 20px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+.timer-modal__actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.timer-modal__actions button {
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.timer-modal__actions .ghost {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #1f2937;
+}
+.timer-modal__actions .solid {
+  border: none;
+  background: #ff914d;
+  color: #fff;
+}
+
+.timer-modal__actions .solid:hover,
+.control-btn:hover,
+.start-button:hover {
+  filter: brightness(1.05);
+}
+
+.preset-section {
+  width: 100%;
+}
+
+.preset-title {
+  font-size: 0.95rem;
+  color: #8d8d8d;
+  margin-bottom: 12px;
+}
+
+.preset-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.preset-btn {
+  width: 86px;
+  height: 62px;
+  border-radius: 18px;
+  border: 1px solid #ff914d;
+  background: #fff;
+  color: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  gap: 2px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+}
+.preset-btn span {
+  font-size: 1.1rem;
+}
+.preset-btn small {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: #6b6b6b;
+}
+
+@media (max-width: 480px) {
+  .session-panel {
+    padding: 20px 16px;
+  }
+  .timer-grid {
+    gap: 10px;
+  }
+  .timer-input {
+    font-size: 2rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .session-panel {
+    max-width: 720px;
+  }
+  .timers-stack {
+    flex-direction: row;
+  }
+  .timer-block {
+    flex: 1;
+  }
 }
 
 /* ===== Setup Page Card ===== */
@@ -63,105 +501,6 @@
 .line-input:focus {
   border-color: #ff914d;
 }
-/* ===== Timer Page (Redesigned) ===== */
-.timer-screen {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-background:
-    radial-gradient(1000px 420px at 10% -5%, #fff7ed 0%, transparent 60%),
-    radial-gradient(1200px 520px at 90% -8%, #ffedd5 10%, transparent 58%),
-    radial-gradient(900px 360px at 50% 100%, rgba(15,23,42,.06) 0%, transparent 60%),
-  ;
-  color: #f59e0b;
-  text-align: center;
-  font-family: "Segoe UI", "Helvetica Neue", sans-serif;
-}
-
-.timer-header {
-  margin-bottom: 12px;
-}
-.timer-title {
-  font-size: 2.6rem;
-  font-weight: 600;
-}
-.timer-mode {
-  font-size: 1rem;
-  color: #8987829f; /* grey */
-  margin-top: 4px;
-  font-weight: 600;
-}
-
-.timer-ring {
-  position: relative;
-  width: 360px;
-  height: 360px;
-  margin: 70px 0;
-}
-.timer-ring svg {
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
-}
-.ring-bg {
-  fill: none;
-  stroke: #e5e7eb;
-  stroke-width: 9;
-}
-.ring-fg {
-  fill: none;
-  stroke: #ff914d;
-  stroke-width: 9;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 1s linear;
-}
-.ring-time {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: 3rem;
-  font-weight: 400;
-}
-
-.timer-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-}
-
-.btn {
-  border: none;
-  border-radius: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 12px 20px;
-  font-size: 1rem;
-  transition: 0.2s ease;
-}
-.btn.ghost {
-  background: #fff;
-  border: 1px solid #d1d5db;
-  color: #1f2937;
-}
-.btn.danger {
-  background: #ef4444;
-  color: #fff;
-}
-.btn:hover {
-  transform: translateY(-1px);
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 500px) {
-  .timer-title { font-size: 1.3rem; }
-  .ring-time { font-size: 2.2rem; }
-  .timer-ring { width: 200px; height: 200px; }
-}
-
 /* ===== Buttons ===== */
 .btn {
   border: 0;
@@ -391,7 +730,7 @@ appearance: none;
 }
 /* ---- Place this at the very bottom of Session.css ---- */
 .setup-screen,
-.timer-screen {
+.session-timer-page {
   min-height: calc(90vh - 80px); /* remove header height */
   display: flex;
   flex-direction: column;
@@ -404,4 +743,13 @@ body.focus-mode .headerWrap,
 body.focus-mode footer,
 body.focus-mode .app-body > aside {
   display: none !important;
+}
+body.focus-mode {
+  background:
+    radial-gradient(1000px 420px at 10% -5%, #fff7ed 0%, transparent 60%),
+    radial-gradient(1200px 520px at 90% -8%, #ffedd5 10%, transparent 58%),
+    radial-gradient(900px 360px at 50% 100%, rgba(15,23,42,.06) 0%, transparent 60%),
+    #f9fafb !important;
+  margin: 0;
+  min-height: 100vh;
 }
