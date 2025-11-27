@@ -37,7 +37,7 @@ const ChatBot = async (req, res) => {
         const responses = await Promise.all(
           chunks.map((chunk) =>
             client.chat.completions.create({
-              model: "gpt-4",
+              model: "gpt-4o-mini",
               messages: [
                 {
                   role: "system",
