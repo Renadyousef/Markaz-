@@ -62,7 +62,7 @@ const ChatBot = async (req, res) => {
     // --- If no PDF or normal message, just send the user message to GPT ---
     if (!pdfId || combinedReply === "") {
       const response = await client.chat.completions.create({
-        model: "gpt-4",
+        model: "gpt-4o-mini",
         messages: [
           {
             role: "system",
