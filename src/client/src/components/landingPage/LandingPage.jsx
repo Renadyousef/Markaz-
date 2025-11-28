@@ -1,4 +1,5 @@
 // src/components/landingPage/LandingPage.jsx
+import { useEffect } from "react";
 import "./landing.css";
 import { Navbar, Container, Button } from "react-bootstrap";
 
@@ -36,6 +37,25 @@ const features = [
 ];
 
 export default function LandingPage({ goTo }) {
+  useEffect(() => {
+    const elements = document.querySelectorAll("[data-reveal]");
+    if (!elements.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-visible");
+          obs.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    elements.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, []);
+
   const goToFeatures = () => {
     document.getElementById("features")?.scrollIntoView({
       behavior: "smooth",
@@ -81,7 +101,7 @@ export default function LandingPage({ goTo }) {
       {/* === HERO === */}
       <section className="landing-bg">
         <div className="hero-content">
-          <div className="hero-text">
+          <div className="hero-text" data-reveal="left">
             <h1 className="hero-title">
               مرحبًا بك في <span className="accent">مركز</span>
             </h1>
@@ -100,7 +120,7 @@ export default function LandingPage({ goTo }) {
             </Button>
           </div>
 
-          <div className="book-group">
+          <div className="book-group" data-reveal="right">
             <img src="/book.svg" alt="" className="book" />
             <div className="icon i-timer" />
             <div className="icon i-tasklist" />
@@ -117,7 +137,12 @@ export default function LandingPage({ goTo }) {
         <div className="features__container">
           <div className="features__grid">
             {features.map((f, idx) => (
-              <article className="feature-card" key={f.title}>
+              <article
+                className="feature-card"
+                key={f.title}
+                data-reveal
+                style={{ "--reveal-delay": `${idx * 70}ms` }}
+              >
                 <div className="feature-card__icon-box" data-card={idx + 1}>
                   <img className="feature-card__icon" src={f.icon} alt="" />
                 </div>
