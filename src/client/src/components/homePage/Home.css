@@ -816,6 +816,34 @@ body::before{
 .wp2Day, .wp2Hours{
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+/* إزالة الخط تحت نصوص: عرض الخطة / ابدأ المراجعة / ابدأ الاختبار / ابدأ الدردشة / ابدأ جلسة / ابدأ الآن */
+
+/* روابط لوحة الوصول */
+.featureCTA,
+.featureCTA:link,
+.featureCTA:visited,
+.featureCTA:hover,
+.featureCTA:active {
+  text-decoration: none;
+}
+
+/* زر "ابدأ الآن" في كرت الرفع */
+.uploadBox__btn,
+.uploadBox__btn:link,
+.uploadBox__btn:visited,
+.uploadBox__btn:hover,
+.uploadBox__btn:active {
+  text-decoration: none;
+}
+
+/* تأكيد إضافي لو حابّة على مستوى الصفحة */
+.hp a {
+  text-decoration: none;
+}
+.hp a:hover {
+  text-decoration: none;
+}
+
 /* ===== Responsive Footer ===== */
 @media (max-width: 768px){
   .mkzFooter {

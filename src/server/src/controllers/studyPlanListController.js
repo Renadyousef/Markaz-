@@ -24,9 +24,9 @@ async function autoUpdatePlanStatus(planId) {
     const allCompleted = tasks.every((t) => t.completed === true);
 
     if (allCompleted) {
-      await StudyPlansCol.doc(planId).update({ status: "منتهية" });
+      await StudyPlansCol.doc(planId).update({ status: "مكتملة" });
     } else {
-      await StudyPlansCol.doc(planId).update({ status: "نشطة" });
+      await StudyPlansCol.doc(planId).update({ status: "غير مكتملة" });
     }
   } catch (err) {
     console.error("❌ autoUpdatePlanStatus error:", err.message);

@@ -594,14 +594,12 @@ export default function AllStudyPlans() {
         break;
       case "tasks_desc":
         arr.sort(
-          (a, b) =>
-            Number(b.tasksCount || 0) - Number(a.tasksCount || 0)
+          (a, b) => Number(b.tasksCount || 0) - Number(a.tasksCount || 0)
         );
         break;
       case "tasks_asc":
         arr.sort(
-          (a, b) =>
-            Number(a.tasksCount || 0) - Number(b.tasksCount || 0)
+          (a, b) => Number(a.tasksCount || 0) - Number(b.tasksCount || 0)
         );
         break;
       default:
@@ -724,8 +722,8 @@ export default function AllStudyPlans() {
                 }}
               >
                 <option>الكل</option>
-                <option>نشطة</option>
-                <option>منتهية</option>
+                <option>غير مكتملة</option>
+                <option>مكتملة</option>
               </select>
             </div>
 
@@ -822,7 +820,7 @@ export default function AllStudyPlans() {
                         <span
                           className={
                             "status-badge " +
-                            (p.status === "نشطة"
+                            (p.status === "غير مكتملة"
                               ? "status-active"
                               : "status-done")
                           }
@@ -879,9 +877,7 @@ export default function AllStudyPlans() {
               {pageSafe > 1 && (
                 <button
                   className="btn btn-outline-orange"
-                  onClick={() =>
-                    setPage((p) => Math.max(1, p - 1))
-                  }
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
                 >
                   السابق
                 </button>
@@ -890,9 +886,7 @@ export default function AllStudyPlans() {
               {pageSafe < totalPages && (
                 <button
                   className="btn btn-orange"
-                  onClick={() =>
-                    setPage((p) => Math.min(totalPages, p + 1))
-                  }
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 >
                   التالي
                 </button>
