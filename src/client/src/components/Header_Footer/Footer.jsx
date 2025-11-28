@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="mkzFooter__top">
         <Link to="/" className="mkzBrand" style={{ cursor: "pointer" }}>
           <img src="/logo1.png" alt="شعار مركز" />
-          <span>مركز</span>
+         
         </Link>
       </div>
 

@@ -1,21 +1,38 @@
 // client/src/components/Pages/StudyPlansPage.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import "bootstrap/dist/css/bootstrap.min.css";
+import {
+  CalendarClock,
+  ListChecks,
+  Folders,
+  AlertTriangle,
+} from "lucide-react";
+
+/* ===== ثوابت الأسلوب والألوان (مماثلة لـ ProgressPage) ===== */
+const PRIMARY_COLOR = "#ff8c42"; // برتقالي أكثر حيوية
+const PRIMARY_LIGHT = "#ffdbbf"; // درجة فاتحة ناعمة
 
 /* ===== Helpers ===== */
 function prettyDate(iso) {
   if (!iso) return "";
   try {
     const d = new Date(iso);
-    return d.toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" });
+    // تاريخ ميلادي عربي مثل: ٢٧ نوفمبر ٢٠٢٥
+    return d.toLocaleDateString("ar-EG", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   } catch {
     return iso;
   }
 }
 function safeStr(v) {
-  try { return typeof v === "string" ? v : JSON.stringify(v, null, 2); }
-  catch { return String(v); }
+  try {
+    return typeof v === "string" ? v : JSON.stringify(v, null, 2);
+  } catch {
+    return String(v);
+  }
 }
 async function fetchWithDiagnostics(url, options = {}) {
   const startedAt = new Date().toISOString();
@@ -28,7 +45,7 @@ async function fetchWithDiagnostics(url, options = {}) {
       type: "NETWORK_ERROR",
       startedAt,
       finishedAt: new Date().toISOString(),
-      request: { url, method: options?.method || "GET", headers: options?.headers || {}, body: options?.body || null },
+      request: { url, method: options?.method || "GET" },
       error: { message: networkErr?.message, stack: networkErr?.stack },
     };
     throw err;
@@ -36,44 +53,64 @@ async function fetchWithDiagnostics(url, options = {}) {
   const contentType = res.headers.get("content-type") || "";
   let rawText = "";
   let json = null;
-  try { rawText = await res.text(); } catch { rawText = ""; }
-  if (contentType.includes("application/json")) { try { json = rawText ? JSON.parse(rawText) : null; } catch {} }
+  try {
+    rawText = await res.text();
+  } catch {
+    rawText = "";
+  }
+  if (contentType.includes("application/json")) {
+    try {
+      json = rawText ? JSON.parse(rawText) : null;
+    } catch {}
+  }
   if (!res.ok) {
-    const err = new Error(json?.msg || json?.error || `HTTP ${res.status} ${res.statusText}`);
+    const err = new Error(
+      json?.msg || json?.error || `HTTP ${res.status} ${res.statusText}`
+    );
     err.__diag = {
       type: "HTTP_ERROR",
       status: res.status,
       statusText: res.statusText,
       startedAt,
       finishedAt: new Date().toISOString(),
-      request: { url, method: options?.method || "GET", headers: options?.headers || {}, body: options?.body || null },
-      response: { headers: Object.fromEntries(res.headers.entries()), contentType, json, raw: rawText },
+      request: { url, method: options?.method || "GET" },
+      response: { contentType, json },
     };
     throw err;
   }
-  return {
-    json: json ?? (rawText ? { raw: rawText } : {}),
-    diag: { type: "OK", status: res.status, startedAt, finishedAt: new Date().toISOString(), request: { url, method: options?.method || "GET" } },
-  };
+  return { json: json ?? (rawText ? { raw: rawText } : {}), diag: { type: "OK" } };
 }
 
-/* ===== ترتيب حسب الأولوية ثم الموعد (وقائي في الواجهة) ===== */
+/* ===== ترتيب حسب الأولوية ثم الموعد ===== */
 const PRIORITY_RANK = {
-  High: 0, "عالية": 0,
-  Medium: 1, "متوسطة": 1,
-  Low: 2, "منخفضة": 2,
+  High: 0,
+  "عالية": 0,
+  Medium: 1,
+  "متوسطة": 1,
+  Low: 2,
+  "منخفضة": 2,
 };
+const PRIORITY_STYLE = {
+  High: { class: "p-high", name: "عالية" },
+  "عالية": { class: "p-high", name: "عالية" },
+  Medium: { class: "p-mid", name: "متوسطة" },
+  "متوسطة": { class: "p-mid", name: "متوسطة" },
+  Low: { class: "p-low", name: "منخفضة" },
+  "منخفضة": { class: "p-low", name: "منخفضة" },
+};
+
 function toDate(val) {
   if (!val) return null;
   if (val?.toMillis) return new Date(val.toMillis());
   if (typeof val === "number") return new Date(val);
   if (typeof val === "string") {
-    return /^\d{4}-\d{2}-\d{2}$/.test(val) ? new Date(val + "T00:00:00Z") : new Date(val);
+    return /^\d{4}-\d{2}-\d{2}$/.test(val)
+      ? new Date(val + "T00:00:00Z")
+      : new Date(val);
   }
   return null;
 }
 
-/* ✅ helper: هل التاريخ يوافق اليوم؟ (بمقارنة YYYY-MM-DD) */
 function todayISO() {
   const d = new Date();
   const y = d.getFullYear();
@@ -95,6 +132,58 @@ function isToday(v) {
   return normalizeToISODateOnly(v) === todayISO();
 }
 
+/* ===== Progress Ring ===== */
+const ProgressRing = ({
+  percentage = 0,
+  size = 60,
+  strokeWidth = 5,
+  color = PRIMARY_COLOR,
+}) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div
+      className="progress-ring-wrap"
+      style={{ width: size, height: size, minWidth: size, minHeight: size }}
+    >
+      <svg
+        height={size}
+        width={size}
+        viewBox={`0 0 ${size} ${size}`}
+        style={{ transform: "rotate(-90deg)" }}
+      >
+        <circle
+          className="progress-ring-background"
+          stroke="#e5e7eb"
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          r={radius}
+          cx={size / 2}
+          cy={size / 2}
+        />
+        <circle
+          className="progress-ring-foreground"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          fill="transparent"
+          r={radius}
+          cx={size / 2}
+          cy={size / 2}
+          style={{ transition: "stroke-dashoffset 0.5s ease-in-out" }}
+        />
+      </svg>
+      <span className="progress-ring-text" style={{ fontSize: size * 0.35 }}>
+        {Math.round(percentage)}%
+      </span>
+    </div>
+  );
+};
+
 export default function StudyPlansPage() {
   const navigate = useNavigate();
 
@@ -108,7 +197,10 @@ export default function StudyPlansPage() {
   // ترتيب وقائي (الأولوية ثم الموعد)
   const sortedTodayTasks = useMemo(() => {
     if (!Array.isArray(nearestTasks)) return [];
-    const copy = [...nearestTasks];
+  const todayTasks = nearestTasks.filter(
+  (t) => isToday(t.deadlineISO || t.deadline) && !t.completed
+);
+    const copy = [...todayTasks];
     copy.sort((a, b) => {
       const ra = PRIORITY_RANK[a.priority] ?? 999;
       const rb = PRIORITY_RANK[b.priority] ?? 999;
@@ -128,7 +220,9 @@ export default function StudyPlansPage() {
       setError({
         title: "لم يتم العثور على توكن",
         message: "يرجى تسجيل الدخول أولًا.",
-        diag: { hint: "تأكد أن عملية تسجيل الدخول تحفظ التوكن في localStorage باسم token" },
+        diag: {
+          hint: "تأكد أن عملية تسجيل الدخول تحفظ التوكن في localStorage باسم token",
+        },
       });
       return;
     }
@@ -138,184 +232,551 @@ export default function StudyPlansPage() {
       try {
         setLoading(true);
         setError(null);
-        const { json } = await fetchWithDiagnostics("http://localhost:5000/study-plans/overview", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const { json } = await fetchWithDiagnostics(
+          "http://localhost:5000/study-plans/overview",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         if (aborted) return;
-        setNearestTasks(Array.isArray(json.nearestTasks) ? json.nearestTasks : []);
-        setTopThreePlans(Array.isArray(json.topThreePlans) ? json.topThreePlans : []);
+
+        setNearestTasks(
+          Array.isArray(json.nearestTasks) ? json.nearestTasks : []
+        );
+
+        const plansStats = json.plansStats || {};
+        const topRaw = Array.isArray(json.topThreePlans)
+          ? json.topThreePlans
+          : [];
+
+        const plansWithPercentage = topRaw.map((p) => {
+          const stat = plansStats[p.id] || {};
+          const totalFromStats = Number(stat.total ?? 0);
+          const total =
+            totalFromStats > 0
+              ? totalFromStats
+              : Number(p.tasksCount || 0);
+          const completed = Number(stat.completed ?? 0);
+          const percent =
+            total > 0
+              ? Math.min(100, Math.max(0, (completed / total) * 100))
+              : 0;
+
+          return {
+            ...p,
+            completionPercentage: percent,
+          };
+        });
+
+        setTopThreePlans(plansWithPercentage);
       } catch (e) {
         if (aborted) return;
         console.error("Fetch overview failed:", e?.__diag || e);
-        setError({ title: "فشل في الجلب", message: e?.message || "Unknown error", diag: e?.__diag || null });
+        setError({
+          title: "فشل في الجلب",
+          message: e?.message || "Unknown error",
+          diag: e?.__diag || null,
+        });
       } finally {
         if (!aborted) setLoading(false);
       }
     })();
 
-    return () => { aborted = true; };
+  return () => {
+      aborted = true;
+    };
   }, []);
 
   return (
-    <div dir="rtl" className="min-vh-100">
+    <div dir="rtl" className="studyPlansRoot modern-dashboard">
       <style>{`
-        .page-title{ font-weight:800; line-height:1.25; font-size:clamp(1.35rem,1.2rem + 1vw,1.9rem); letter-spacing:.15px; }
-        .section-title h2{ font-weight:800; line-height:1.3; font-size:clamp(1rem,.8rem + .6vw,1.25rem); margin:0; }
+        .modern-dashboard, .modern-dashboard * {
+          font-family: "Cairo", "Helvetica Neue", sans-serif;
+        }
 
-        .card-orange { background: linear-gradient(135deg, #ffedd5, #fed7aa); border: 1px solid #ffd8a8; }
-        .border-orange { border-color: #ffe7c2 !important; }
-        .text-muted-700 { color: #6b7280; }
-        .btn-orange { background-color: #fb923c; border-color: #fb923c; color: #fff; }
-        .btn-orange:hover { background-color: #f97316; border-color: #f97316; color: #fff; }
-        .btn-outline-orange { border-color: #ffe7c2; color: #0b0b0c; background-color: #fff; }
-        .btn-outline-orange:hover { background-color: #fff7ed; border-color: #fb923c; color: #fb923c; }
+        .progress-wrap {
+          display: flex;
+          flex-direction: column;
+          gap: 30px; 
+          padding: 30px 20px 60px;
+          max-width: 1200px;
+          margin: 0 auto;
+        }
 
-        .badge-orange-soft { background-color: #fff3e0; color: #7a3f00; border: 1px solid #ffe0b2; }
-        .task-item { border: 1px solid #ffe7c2; border-radius: 14px; padding: 0.85rem 1rem; background: #fff; }
-        .task-item + .task-item { margin-top: 0.65rem; }
-        .section-title { display:flex; align-items:center; gap:.5rem; margin-bottom:.6rem; }
+        .fc-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 20px;
+          padding-bottom: 15px;
+          border-bottom: 2px solid #e5e7eb;
+          margin-bottom: 20px;
+        }
 
-        .skel { position: relative; overflow: hidden; background: #f3f4f6; border-radius: 12px; }
-        .skel::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent);
-          animation: shimmer 1.2s infinite; }
+        @media (max-width: 768px) {
+          .fc-top { flex-direction: column; align-items: flex-start; }
+        }
+
+        .title-block {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          text-align: right;
+        }
+
+        .fc-top .title {
+          font-size: 2.2rem;
+          font-weight: 800;
+          color: #1f2937;
+          line-height: 1.2;
+        }
+
+        .page-subtitle {
+          font-size: 1rem;
+          font-weight: 500;
+          color: #6b7280;
+        }
+
+        .modern-action-btn {
+          padding: 10px 22px;
+          border-radius: 10px;
+          background: #ffffff;
+          border: 1px solid ${PRIMARY_LIGHT};
+          font-size: 1rem;
+          font-weight: 600;
+          color: ${PRIMARY_COLOR};
+          text-decoration: none;
+          white-space: nowrap;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          transition: all .2s ease;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .modern-action-btn:hover {
+          background: ${PRIMARY_LIGHT};
+          color: ${PRIMARY_COLOR};
+          border-color: ${PRIMARY_COLOR};
+          box-shadow: 0 8px 18px rgba(255, 140, 66, 0.2);
+          transform: translateY(-1px);
+        }
+        .modern-primary-btn {
+          background: ${PRIMARY_COLOR};
+          color: #ffffff;
+          border-color: ${PRIMARY_COLOR};
+        }
+        .modern-primary-btn:hover {
+          background: #e57e3f;
+          border-color: #e57e3f;
+          color: #ffffff;
+          box-shadow: 0 8px 18px rgba(255, 140, 66, 0.4);
+        }
+
+        .section-title-wrap {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 15px;
+        }
+
+        .section-title {
+          font-size: 1.5rem;
+          font-weight: 800;
+          color: #1f2937;
+          line-height: 1.3;
+        }
+
+        .section-icon {
+          color: ${PRIMARY_COLOR};
+          flex-shrink: 0;
+        }
+
+        .tasks-list {
+          margin-top: 5px;
+        }
+
+        /* ===== كارد موحّد للمهام مثل PlanDetailsPage ===== */
+        .task-card {
+          border-radius: 16px;
+          border: 1px solid #ffe7c2;
+          background: #ffffff;
+          box-shadow: 0 10px 22px rgba(15,23,42,0.04);
+          transition: box-shadow .18s ease, border-color .18s ease, transform .18s ease;
+        }
+        .task-card:hover,
+        .task-card:focus-within {
+          border-color: #fdba74;
+          box-shadow: 0 18px 32px rgba(15,23,42,0.08);
+          transform: translateY(-1px);
+        }
+
+        .task-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+          padding: .9rem 1.1rem;
+          border-bottom: 1px solid #e5e7eb;
+        }
+        .task-row:last-child {
+          border-bottom: none;
+        }
+
+        .task-main {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .task-title {
+          font-weight: 700;
+          font-size: 1rem;
+          color: #1f2937;
+        }
+
+        .task-sub {
+          font-size: .85rem;
+          color: #6b7280;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .task-side {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 4px;
+          min-width: 170px;
+        }
+
+        .task-date {
+          font-size: .85rem;
+          color: #4b5563;
+        }
+
+        .priority-badge {
+          display: inline-block;
+          border-radius: 999px;
+          padding: .25rem .65rem;
+          font-weight: 700;
+          font-size: .8rem;
+          line-height: 1;
+          border: 1px solid transparent;
+        }
+        .p-high {
+          color: #B91C1C; background: #FEF2F2; border-color: #FCA5A5;
+        }
+        .p-mid {
+          color: #92400E; background: #FFFBEB; border-color: #FCD34D;
+        }
+        .p-low {
+          color: #065F46; background: #ECFDF5; border-color: #A7F3D0;
+        }
+        
+        .done-pill {
+          display: inline-block;
+          background: #d1fae5;
+          color: #065f46;
+          border-radius: 999px;
+          padding: 2px 8px;
+          font-weight: 600;
+          font-size: .75rem;
+        }
+
+        .plan-card {
+          background: #ffffff;
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          padding: 20px;
+          box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
+          transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .plan-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+          border-color: ${PRIMARY_COLOR};
+        }
+
+        .plan-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 15px;
+          margin-bottom: 10px;
+        }
+        
+        .plan-card-title {
+          font-weight: 800;
+          font-size: 1.25rem;
+          color: #1f2937;
+          line-height: 1.4;
+          flex-grow: 1;
+        }
+        .plan-card-meta {
+          font-size: 0.95rem;
+          color: #6b7280;
+          margin-top: 5px;
+        }
+
+        .progress-ring-wrap {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .progress-ring-text {
+          position: absolute;
+          font-weight: 700;
+          color: #1f2937;
+        }
+
+        .empty-state-card {
+          background: #fff7ed;
+          border: 1px dashed ${PRIMARY_LIGHT};
+          border-radius: 12px;
+          padding: 30px;
+          text-align: center;
+          margin-top: 10px;
+        }
+        
+        .skel {
+          position: relative; overflow: hidden; background: #e5e7eb; border-radius: 8px;
+        }
+        .skel::after {
+          content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+          animation: shimmer 1.1s infinite;
+        }
         @keyframes shimmer { 100% { transform: translateX(100%); } }
 
-        pre.small-pre { max-height: 280px; overflow: auto; background: #fff7ed; border:1px solid #ffd8a8; border-radius:10px; padding:10px; font-size:12px; }
-        .small-muted { font-size: .92rem; color:#6b7280; }
-
-       .done-pill {
-  display: inline-block;
-  background: #e8f5e9;
-  color: #166534;
-  border: 1px solid #cde9d6;
-  border-radius: 999px;
-  padding: 2px 6px; /* ✅ أصغر ليصير على قد الكلمة */
-  font-weight: 600;
-  line-height: 1;
-  width: fit-content; /* ✅ يجعل الخلفية فقط على قد النص */
-}
-
+        .modern-alert-error {
+          padding: 15px;
+          border-radius: 10px;
+          background-color: #fef2f2;
+          color: #ef4444;
+          border: 1px solid #fecaca;
+          margin: 20px 0;
+          text-align: right;
+          font-weight: 600;
+        }
+        .small-pre {
+          max-height: 250px;
+          overflow: auto;
+          background: #fffafa;
+          border: 1px solid #fecaca;
+          border-radius: 8px;
+          padding: 10px;
+          font-size: 12px;
+          color: #991b1b;
+          direction: ltr;
+          text-align: left;
+        }
+        .alert-action-btn {
+          background: #fecaca;
+          color: #991b1b;
+          border: none;
+          padding: 5px 10px;
+          border-radius: 6px;
+          font-weight: 700;
+          font-size: 0.85rem;
+          transition: background .2s;
+        }
+        .alert-action-btn:hover {
+          background: #fdc3c3;
+        }
       `}</style>
 
-      <div className="container py-4 py-md-5">
-        {/* رأس الصفحة */}
-        <div className="card card-orange shadow-sm border-0 rounded-4 mb-4">
-          <div className="card-body p-4 p-md-5">
-            <div className="row gy-3 align-items-center">
-              <div className="col-12 col-md">
-                <h1 className="page-title mb-1">الخطط الدراسية</h1>
-                <div className="text-muted-700 small">استعراض الخطط الحالية أو إنشاء خطة جديدة بسرعة.</div>
-              </div>
-              <div className="col-12 col-md-auto d-grid d-sm-flex gap-2">
-                <Link to="/plans/all" className="btn btn-outline-orange fw-bold px-3">رؤية جميع الخطط</Link>
-                <Link to="/plans/create" className="btn btn-orange fw-bold px-3">+ إنشاء خطة دراسية</Link>
-              </div>
+      <section className="progress-wrap">
+        {/* Header */}
+        <div className="fc-top">
+          <div className="title-block">
+            <h1 className="title">لوحة الخطط الدراسية</h1>
+            <div className="page-subtitle">
+              نظرة سريعة على مهامك اليومية وأحدث الخطط التي أنشأتها.
             </div>
+          </div>
+          <div className="d-flex gap-2">
+            <Link to="/plans/all" className="modern-action-btn">
+              <Folders size={20} strokeWidth={2.5} /> رؤية جميع الخطط
+            </Link>
+            <Link to="/plans/create" className="modern-action-btn modern-primary-btn">
+              + إنشاء خطة
+            </Link>
           </div>
         </div>
 
-        {/* صندوق الأخطاء */}
+        {/* الأخطاء */}
         {error && (
-          <div className="alert alert-danger" role="alert">
-            <div className="d-flex align-items-center justify-content-between">
-              <strong>{error.title}:</strong>
-              <button type="button" className="btn btn-sm btn-light" onClick={() => setShowDetails((v) => !v)}>
-                {showDetails ? "إخفاء التفاصيل" : "عرض التفاصيل"}
+          <div className="modern-alert-error">
+            <div className="d-flex align-items-center justify-content-between gap-2">
+              <div className="d-flex align-items-center gap-2">
+                <AlertTriangle size={20} />
+                <strong>{error.title}:</strong> {error.message}
+              </div>
+              <button
+                type="button"
+                className="alert-action-btn"
+                onClick={() => setShowDetails((v) => !v)}
+              >
+                {showDetails ? "إخفاء" : "عرض التفاصيل"}
               </button>
             </div>
-            <div className="mt-2">{error.message}</div>
             {showDetails && (
               <div className="mt-3">
-                <div className="mb-2"><strong>التشخيص:</strong></div>
+                <div className="mt-2" style={{ color: "#991b1b", fontWeight: "800" }}>
+                  التشخيص:
+                </div>
                 <pre className="small-pre">{safeStr(error.diag)}</pre>
               </div>
             )}
           </div>
         )}
 
-        {/* ✅ مهام موعدها اليوم — مرتّبة حسب الأولوية ثم الموعد */}
-        <div className="section-title"><h2>مهام موعدها اليوم</h2></div>
-        <div className="mb-4">
-          {loading ? (
-            <>
-              <div className="task-item skel" style={{ height: 64 }} />
-              <div className="task-item skel mt-2" style={{ height: 64 }} />
-              <div className="task-item skel mt-2" style={{ height: 64 }} />
-            </>
-          ) : sortedTodayTasks.length === 0 ? (
-            <div className="task-item">
-              <div className="fw-semibold">لا توجد مهام موعدها اليوم</div>
-              <div className="small-muted mt-1">أضف مهامًا جديدة أو عدّل المواعيد من صفحة الخطة.</div>
-            </div>
-          ) : (
-            sortedTodayTasks.map((t) => (
-              <div key={t.id} className="task-item">
-                <div className="fw-semibold">{t.title}</div>
+        {/* مهام اليوم */}
+        <div className="tasks-section">
+          <div className="section-title-wrap">
+            <CalendarClock size={24} className="section-icon" />
+            <h2 className="section-title">مهام موعدها اليوم</h2>
+          </div>
+          <div className="tasks-list">
+            {loading ? (
+              <div className="task-card skel" style={{ height: 160 }} />
+            ) : sortedTodayTasks.length === 0 ? (
+              <div className="empty-state-card">
+                <p
+                  style={{
+                    color: "#7a3f00",
+                    fontWeight: "600",
+                    marginBottom: "8px",
+                  }}
+                >
+                  لا توجد مهام مستحقة اليوم. رائع!
+                </p>
+                <small style={{ color: "#9d7547" }}>
+                  استمتع بيومك أو ابدأ بالتخطيط للمستقبل.
+                </small>
+              </div>
+            ) : (
+              <div className="card task-card mb-0">
+                <div className="card-body p-0">
+                  {sortedTodayTasks.map((t) => {
+                    const priorityInfo =
+                      PRIORITY_STYLE[t.priority] || PRIORITY_STYLE.Medium;
+                    return (
+                      <div key={t.id} className="task-row">
+                        <div className="task-main">
+                          <div className="task-title">{t.title}</div>
+                          <div className="task-sub">
+                            <ListChecks
+                              size={14}
+                              style={{ position: "relative", top: "1px" }}
+                            />
+                            <span>الخطة: {t.planTitle || "غير محدد"}</span>
+                          </div>
+                        </div>
 
-                {/* نجعل التاريخ وحالة الإنجاز في عمود واحد لتكون "منجزة" تحت التاريخ */}
-                <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2 mt-2 small">
-                  <div className="d-flex flex-column">
-                    <span className="text-muted">التاريخ: {prettyDate(t.deadlineISO || t.deadline)}</span>
-                    {/* ✅ منجزة: فقط إذا اليوم && completed === true */}
-                    {isToday(t.deadlineISO || t.deadline) && t.completed === true && (
-                      <span className="done-pill mt-1">منجزة</span>
-                    )}
-                  </div>
-
-                  <span className="text-muted">الخطة: {t.planTitle || "—"}</span>
-                  <span className="badge rounded-pill badge-orange-soft px-2 py-1">أولوية: {t.priority || "متوسطة"}</span>
+                        <div className="task-side">
+                          <span className="task-date">
+                            {prettyDate(t.deadlineISO || t.deadline)}
+                          </span>
+                          <span
+                            className={`priority-badge ${priorityInfo.class}`}
+                          >
+                            {priorityInfo.name}
+                          </span>
+                          {t.completed === true && (
+                            <span className="done-pill">تم الإنجاز</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            ))
-          )}
+            )}
+          </div>
         </div>
 
         {/* أحدث الخطط */}
-        <div className="section-title"><h2>أحدث الخطط الدراسية</h2></div>
-        <div className="row g-3 g-md-4">
-          {loading ? (
-            [0,1,2].map((i) => (
-              <div key={i} className="col-12 col-md-4">
-                <div className="card rounded-4 border-0 shadow-sm p-3">
-                  <div className="skel" style={{ height: 18, width: "60%" }}></div>
-                  <div className="skel mt-3" style={{ height: 18, width: "90%" }}></div>
-                  <div className="skel mt-3" style={{ height: 18, width: "40%" }}></div>
-                  <div className="skel mt-3" style={{ height: 34, width: "50%" }}></div>
+        <div className="plans-section" style={{ marginTop: "40px" }}>
+          <div className="section-title-wrap">
+            <Folders size={24} className="section-icon" />
+            <h2 className="section-title">أحدث الخطط</h2>
+          </div>
+          <div className="row g-4">
+            {loading ? (
+              [0, 1, 2].map((i) => (
+                <div key={i} className="col-12 col-md-4">
+                  <div className="plan-card skel" style={{ height: 180 }}></div>
+                </div>
+              ))
+            ) : topThreePlans.length === 0 ? (
+              <div className="col-12">
+                <div className="empty-state-card" style={{ padding: "40px" }}>
+                  <p
+                    style={{
+                      color: "#7a3f00",
+                      fontWeight: "600",
+                      marginBottom: "15px",
+                    }}
+                  >
+                    لا توجد خطط دراسية محفوظة.
+                  </p>
+                  <Link
+                    to="/plans/create"
+                    className="modern-action-btn modern-primary-btn"
+                  >
+                    + إنشاء أول خطة دراسية
+                  </Link>
                 </div>
               </div>
-            ))
-          ) : topThreePlans.length === 0 ? (
-            <div className="col-12">
-              <div className="card border-orange rounded-4 shadow-sm">
-                <div className="card-body d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2">
-                  <div>
-                    <div className="fw-semibold">لا توجد خطط دراسية بعد</div>
-                    <div className="small-muted mt-1">ابدأ بتنظيم دراستك من خلال إنشاء خطة دراسية</div>
+            ) : (
+              topThreePlans.map((p) => (
+                <div key={p.id} className="col-12 col-md-4">
+                  <div className="plan-card">
+                    <div className="flex-grow-1">
+                      <div className="plan-card-meta mb-2">
+                        أُنشئت في: {prettyDate(p.createdAt)}
+                      </div>
+
+                      <div className="plan-card-header">
+                        <h3 className="plan-card-title">{p.title}</h3>
+                        <ProgressRing
+                          percentage={p.completionPercentage || 0}
+                          size={70}
+                          strokeWidth={8}
+                          color={PRIMARY_COLOR}
+                        />
+                      </div>
+
+                      <div className="plan-card-meta">
+                        عدد المهام في الخطة:{" "}
+                        <strong>{Number(p.tasksCount || 0)}</strong>
+                      </div>
+                    </div>
+                    <div className="d-flex mt-4">
+                      <Link
+                        to={`/plans/view?planId=${p.id}`}
+                        className="modern-action-btn modern-primary-btn w-100 justify-content-center"
+                        style={{ padding: "8px" }}
+                      >
+                        عرض التفاصيل
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          ) : (
-            topThreePlans.map((p) => (
-              <div key={p.id} className="col-12 col-md-4">
-                <div className="card border-orange rounded-4 h-100 shadow-sm">
-                  <div className="card-body">
-                    <div className="d-flex align-items-center justify-content-between">
-                      <span className="text-muted small">أُنشئت: {prettyDate(p.createdAt)}</span>
-                    </div>
-                    <div className="fw-semibold mt-2">{p.title}</div>
-                    <div className="text-muted small mt-1">عدد المهام: {Number(p.tasksCount || 0)}</div>
-                    <div className="d-grid d-sm-flex gap-2 mt-3">
-                      <Link to={`/plans/view?planId=${p.id}`} className="btn btn-orange fw-bold px-3">عرض الخطة</Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
+              ))
+            )}
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

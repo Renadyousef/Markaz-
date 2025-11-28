@@ -1,331 +1,838 @@
 // client/src/components/Pages/CreateStudyPlan.jsx
-import React, { useState, useRef, useMemo } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "bootstrap/dist/css/bootstrap.min.css";
+import { ListChecks, Trash2, AlertTriangle } from "lucide-react";
+
+const PRIMARY_COLOR = "#ff8c42";
+const PRIMARY_LIGHT = "#ffdbbf";
+
+function prettyDate(iso) {
+  if (!iso) return "";
+  try {
+    const d = new Date(iso);
+    // مثال: ٢٧ نوفمبر ٢٠٢٥ (ميلادي)
+    return d.toLocaleDateString("ar-EG", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+// تاريخ اليوم بصيغة YYYY-MM-DD للمقارنة
+function todayStrLocal() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
 
 export default function CreateStudyPlan() {
-  const [planTitle, setPlanTitle] = useState("");
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-
-  const [taskTitle, setTaskTitle] = useState("");
-  // الأولوية بلا قيمة افتراضية — لازم يختار المستخدم
-  const [taskPriority, setTaskPriority] = useState("");
-  const [taskDeadline, setTaskDeadline] = useState("");
-
-  const [tasks, setTasks] = useState([]);
-  const [saving, setSaving] = useState(false);
-  const dateInputRef = useRef(null);
   const navigate = useNavigate();
 
-  const PRIORITY_RANK = { "عالية": 0, "متوسطة": 1, "منخفضة": 2 };
-  const compareByPriorityThenDeadline = (a, b) => {
-    const ra = PRIORITY_RANK[a.priority] ?? 99;
-    const rb = PRIORITY_RANK[b.priority] ?? 99;
-    if (ra !== rb) return ra - rb;
-    const da = a.deadline ? new Date(a.deadline).getTime() : Number.POSITIVE_INFINITY;
-    const db = b.deadline ? new Date(b.deadline).getTime() : Number.POSITIVE_INFINITY;
-    return da - db; 
-  };
-  const sortedTasks = useMemo(() => tasks.slice().sort(compareByPriorityThenDeadline), [tasks]);
+  const [planTitle, setPlanTitle] = useState("");
+  const [tasks, setTasks] = useState([]);
 
-  
-  const todayStrLocal = () => {
-    const d = new Date();
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskDeadline, setTaskDeadline] = useState("");
+  const [taskPriority, setTaskPriority] = useState("");
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null); // {title, message}
+
+  const dateInputRef = useRef(null);
+
+  // مودال موحّد
+  const [modal, setModal] = useState({
+    open: false,
+    title: "",
+    body: "",
+    primaryLabel: "",
+    secondaryLabel: "",
+    onPrimary: null,
+    onSecondary: null,
+  });
+
+  const openModal = (config) => {
+    setModal({
+      open: true,
+      title: config.title || "",
+      body: config.body || "",
+      primaryLabel: config.primaryLabel || "حسناً",
+      secondaryLabel: config.secondaryLabel || "",
+      onPrimary: config.onPrimary || null,
+      onSecondary: config.onSecondary || null,
+    });
   };
 
+  const closeModal = () => {
+    setModal((m) => ({ ...m, open: false }));
+  };
+
+  const handlePrimary = () => {
+    if (modal.onPrimary) modal.onPrimary();
+    closeModal();
+  };
+
+  const handleSecondary = () => {
+    if (modal.onSecondary) modal.onSecondary();
+    closeModal();
+  };
+
+  const styles = `
+    .createPlanRoot, .createPlanRoot * {
+      font-family: "Cairo", "Helvetica Neue", sans-serif;
+    }
+
+    .progress-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding: 30px 20px 50px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* ===== الهيدر ===== */
+    .fc-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #f3f4f6;
+    }
+
+    @media (max-width: 768px) {
+      .fc-top {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      text-align: right;
+    }
+
+    .fc-top .title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #1f2937;
+      line-height: 1.2;
+    }
+
+    .page-subtitle {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #6b7280;
+    }
+
+    .modern-action-btn {
+      padding: 8px 20px;
+      border-radius: 10px;
+      background: #ffffff;
+      border: 1px solid ${PRIMARY_LIGHT};
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: ${PRIMARY_COLOR};
+      text-decoration: none;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all .2s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    .modern-action-btn:hover {
+      background: ${PRIMARY_LIGHT};
+      color: ${PRIMARY_COLOR};
+      border-color: ${PRIMARY_COLOR};
+      box-shadow: 0 8px 18px rgba(255, 140, 66, 0.2);
+      transform: translateY(-1px);
+    }
+    .modern-primary-btn {
+      background: ${PRIMARY_COLOR};
+      color: #ffffff;
+      border-color: ${PRIMARY_COLOR};
+    }
+    .modern-primary-btn:hover {
+      background: #e57e3f;
+      border-color: #e57e3f;
+      color: #ffffff;
+      box-shadow: 0 8px 18px rgba(255, 140, 66, 0.4);
+    }
+
+    /* ===== الكروت / السكشن ===== */
+    .form-section {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      padding: 18px 20px 20px;
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.05);
+    }
+
+    .section-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .section-icon {
+      color: ${PRIMARY_COLOR};
+      flex-shrink: 0;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #1f2937;
+      border-right: 4px solid ${PRIMARY_COLOR};
+      padding-right: 8px;
+      line-height: 1.3;
+    }
+
+    .section-title-no-line {
+      border-right: none;
+      padding-right: 0;
+    }
+
+    .hint-text {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-top: 6px;
+    }
+
+    /* ===== الدروب داون الأبيض ===== */
+    .modern-select {
+      border: 1px solid #e5e7eb !important;
+      border-radius: 10px !important;
+      background-color: #ffffff !important;
+      color: #111 !important;
+      height: 44px;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      line-height: 1.25rem;
+      box-shadow: 0 1px 0 rgba(0,0,0,.02);
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+    }
+
+    .modern-select:focus {
+      border-color: ${PRIMARY_COLOR} !important;
+      background-color: #ffffff !important;
+      box-shadow: 0 0 0 0.15rem rgba(255, 140, 66, 0.25) !important;
+    }
+
+    .modern-select option {
+      background-color: #ffffff !important;
+      color: #111 !important;
+      padding: 10px;
+      font-size: 0.95rem;
+    }
+
+    select.form-select,
+    select.modern-select {
+      background-color: #ffffff !important;
+      border-radius: 10px !important;
+      border: 1px solid #e5e7eb !important;
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+    }
+
+    select.modern-select::-ms-expand {
+      display: none;
+    }
+
+    .date-display {
+      width: 100%;
+      text-align: right;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      color: #4b5563;
+      cursor: pointer;
+    }
+    .date-display:hover {
+      border-color: ${PRIMARY_COLOR};
+      background: #fff7ed;
+    }
+    .date-hidden {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .tasks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .task-item {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 12px 14px;
+      box-shadow: 0 6px 12px rgba(15, 23, 42, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .task-title {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .task-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    .task-meta-item {
+      font-weight: 500;
+    }
+
+    .priority-badge {
+      display: inline-block;
+      border-radius: 999px;
+      padding: .2rem .7rem;
+      font-weight: 700;
+      font-size: .75rem;
+      border: 1px solid transparent;
+    }
+    .p-high {
+      color: #B91C1C; background: #FEF2F2; border-color: #FCA5A5;
+    }
+    .p-mid {
+      color: #92400E; background: #FFFBEB; border-color: #FCD34D;
+    }
+    .p-low {
+      color: #065F46; background: #ECFDF5; border-color: #A7F3D0;
+    }
+
+    .empty-state-card {
+      background: #fff7ed;
+      border: 1px dashed ${PRIMARY_LIGHT};
+      border-radius: 10px;
+      padding: 18px;
+      text-align: center;
+      color: #7a3f00;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .bottom-actions {
+      margin-top: 8px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-link-danger {
+      background: none;
+      border: none;
+      color: #dc2626;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .modern-alert-error {
+      padding: 12px 14px;
+      border-radius: 10px;
+      background-color: #fef2f2;
+      color: #ef4444;
+      border: 1px solid #fecaca;
+      margin-top: 10px;
+      text-align: right;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    /* ===== مودال ===== */
+    .custom-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1050;
+    }
+
+    .custom-modal-card {
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 24px 28px 20px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 24px 60px rgba(15,23,42,0.22);
+      text-align: center;
+    }
+
+    .modal-title-text {
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: #111827;
+    }
+
+    .modal-body-text {
+      font-size: 0.95rem;
+      color: #6b7280;
+      margin-bottom: 18px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .modal-btn-primary {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 22px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      background-color: ${PRIMARY_COLOR};
+      color: #fff;
+    }
+
+    .modal-btn-primary:hover {
+      background-color: #e57e3f;
+    }
+
+    .modal-btn-outline {
+      border-radius: 999px;
+      padding: 8px 22px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      color: #111827;
+    }
+
+    .modal-btn-outline:hover {
+      border-color: ${PRIMARY_COLOR};
+      color: ${PRIMARY_COLOR};
+    }
+  `;
+
+  const sortedTasks = useMemo(() => {
+    const arr = [...tasks];
+    arr.sort((a, b) => {
+      const da = a.deadline || "";
+      const db = b.deadline || "";
+      if (da !== db) return String(da).localeCompare(String(db));
+      return String(a.title || "").localeCompare(String(b.title || ""), "ar");
+    });
+    return arr;
+  }, [tasks]);
+
+  const hasChanges =
+    planTitle.trim() ||
+    tasks.length > 0 ||
+    taskTitle.trim() ||
+    taskDeadline ||
+    taskPriority;
+
+  const openNativePicker = () => {
+    if (dateInputRef.current) {
+      dateInputRef.current.showPicker?.();
+      dateInputRef.current.focus();
+    }
+  };
+
+  // إضافة مهمة:
+  // - ولا حقل معبأ => رسالة
+  // - حقول ناقصة => رسالة
+  // - تاريخ أقدم من اليوم => رسالة
   const addTask = () => {
+    if (!taskTitle.trim() && !taskDeadline && !taskPriority) {
+      openModal({
+        title: "لا توجد بيانات للمهمة",
+        body: "يلزم تعبئة بيانات المهمة قبل إضافتها للخطة.",
+        primaryLabel: "حسناً",
+      });
+      return;
+    }
 
-    if (!taskTitle.trim()) {
-      alert("أدخل عنوان المهمة أولاً");
+    if (!taskTitle.trim() || !taskDeadline || !taskPriority) {
+      openModal({
+        title: "حقول غير مكتملة",
+        body: "يلزم إكمال الحقول: العنوان، الموعد النهائي، ومستوى الأولوية قبل إضافة المهمة.",
+        primaryLabel: "حسناً",
+      });
       return;
     }
-    if (!taskPriority) {
-      alert("اختر مستوى الأولوية");
-      return;
-    }
-    if (!taskDeadline) {
-      alert("اختر الموعد النهائي");
-      return;
-    }
-    // منع التاريخ القديم
+
     const today = todayStrLocal();
     if (taskDeadline < today) {
-      alert("غيّر التاريخ، التاريخ قديم.");
+      openModal({
+        title: "تاريخ غير صالح",
+        body: "لا يمكن اختيار تاريخ أقدم من تاريخ اليوم. تغيير التاريخ ضروري قبل المتابعة.",
+        primaryLabel: "حسناً",
+      });
       return;
     }
 
     const newTask = {
-      id: tasks.length + 1,
+      id: Date.now().toString(),
       title: taskTitle.trim(),
-      priority: taskPriority,
-      deadline: taskDeadline,
+      deadline: taskDeadline || "",
+      priority: taskPriority || "",
     };
-    setTasks((prev) => [...prev, newTask]); // نخلي الترتيب للعرض فقط
-    setIsEditingTitle(false);
+    setTasks((prev) => [...prev, newTask]);
     setTaskTitle("");
-    setTaskPriority("");   // نرجّعها فارغة بعد الإضافة
     setTaskDeadline("");
+    setTaskPriority("");
   };
 
   const removeTask = (id) => {
-    const ok = window.confirm("هل أنت متأكد من حذف هذه المهمة؟");
-    if (!ok) return;
     setTasks((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const prettyDate = (iso) => {
-    try {
-      const d = new Date(iso);
-      return d.toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" });
-    } catch {
-      return "";
+  // رجوع من الهيدر: لو ما في تغييرات يرجع مباشرة بدون رسالة
+  const handleBack = () => {
+    if (!hasChanges) {
+      navigate("/plans");
+      return;
     }
+    openModal({
+      title: "الخروج بدون إنشاء الخطة؟",
+      body: "في حال الرجوع الآن لن يتم حفظ البيانات الحالية.",
+      primaryLabel: "الخروج للخطط",
+      secondaryLabel: "البقاء في الصفحة",
+      onPrimary: () => navigate("/plans"),
+    });
   };
 
-  const openNativePicker = () => {
-    if (!dateInputRef.current) return;
-    if (dateInputRef.current.showPicker) dateInputRef.current.showPicker();
-    else dateInputRef.current.click();
+  // زر إلغاء: لو ما في تغييرات يرجع مباشرة بدون رسالة
+  const handleCancel = () => {
+    if (!hasChanges) {
+      navigate("/plans");
+      return;
+    }
+    openModal({
+      title: "إلغاء إنشاء الخطة؟",
+      body: "في حال تأكيد الإلغاء سيتم تجاهل جميع البيانات المدخلة في هذه الصفحة.",
+      primaryLabel: "نعم، إلغاء",
+      secondaryLabel: "متابعة بدون إلغاء",
+      onPrimary: () => navigate("/plans"),
+    });
   };
 
   const savePlan = async () => {
-    if (!planTitle.trim()) {
-      alert("أدخل عنوان الخطة أولاً");
-      return;
-    }
-    if (tasks.length === 0) {
-      alert("أضف مهمة واحدة على الأقل");
-      return;
-    }
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("يرجى تسجيل الدخول أولاً");
+    if (!planTitle.trim() || tasks.length === 0) {
+      setError({
+        title: "بيانات غير مكتملة",
+        message: "يلزم إدخال عنوان للخطة وإضافة مهمة واحدة على الأقل.",
+      });
       return;
     }
 
-    setSaving(true);
     try {
+      setSaving(true);
+      setError(null);
+      const token = localStorage.getItem("token");
+      const body = {
+        title: planTitle.trim(),
+        tasks: tasks.map((t) => ({
+          title: t.title,
+          deadline: t.deadline || null,
+          priority: t.priority || null,
+        })),
+      };
+
       const res = await fetch("http://localhost:5000/study-plans", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          title: planTitle.trim(),
-          // الإرسال كما هو؛ السيرفر لا يحتاج الترتيب
-          tasks: tasks.map((t) => ({ title: t.title, priority: t.priority, deadline: t.deadline })),
-        }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify(body),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.msg || "حدث خطأ أثناء الحفظ");
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j?.msg || j?.error || "فشل في إنشاء الخطة.");
+      }
 
-      alert("✅ تم حفظ الخطة بنجاح!");
       navigate("/plans");
-    } catch (err) {
-      console.error("❌ خطأ أثناء حفظ الخطة:", err);
-      alert("فشل في حفظ الخطة");
+    } catch (e) {
+      setError({
+        title: "خطأ في الحفظ",
+        message: e.message,
+      });
     } finally {
       setSaving(false);
     }
   };
 
-  const TrashIcon = ({ size = 18 }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 6H20M9 6V4H15V6M6 6L7 20H17L18 6" stroke="#C11A1A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-
-  const isTitleLocked = tasks.length > 0 && !isEditingTitle;
+  const TrashIcon = (props) => <Trash2 size={18} {...props} />;
 
   return (
-    <div dir="rtl" lang="ar" className="min-vh-100 d-flex flex-column">
-      <style>{`
-        :root{
-          --brand:#fb923c; --brand-hover:#f97316;
-          --border-orange:#ffe7c2; --ink:#0b0b0c;
-        }
-        .card-orange { background: linear-gradient(135deg, #ffedd5, #fed7aa); border: 1px solid #ffd8a8; }
-        .border-orange { border-color: var(--border-orange) !important; }
-        .text-muted-700 { color: #6b7280; }
+    <div dir="rtl" className="createPlanRoot">
+      <style>{styles}</style>
 
-        .btn-orange{ background-color: var(--brand); border-color: var(--brand); color:#fff; }
-        .btn-orange:hover{ background-color: var(--brand-hover); border-color: var(--brand-hover); color:#fff; }
-        .btn-outline-orange{ border-color: var(--border-orange); color: var(--ink); background-color:#fff; }
-        .btn-outline-orange:hover{ background-color:#fff7ed; border-color: var(--brand); color: var(--brand); }
-
-        .card-clean { background:#fff; border:1px solid var(--border-orange); border-radius:16px; box-shadow: 0 6px 18px rgba(234,88,12,0.10); }
-
-        .modern-select{
-          appearance:none; background:#fff; border:1px solid var(--border-orange);
-          border-radius:10px; height:44px; padding:10px 12px; font-size:.95rem; cursor:pointer;
-          background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23fb923c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-          background-repeat:no-repeat; background-position:left 12px center;
-        }
-        .modern-select:focus{ border-color:var(--brand); box-shadow:0 0 0 .2rem rgba(249,115,22,.18); }
-
-        .date-display{
-          width:100%; border:1px solid var(--border-orange); border-radius:10px; background:#fff;
-          padding:10px 12px; text-align:start; font-size:.95rem;
-        }
-        .date-display:focus{ outline:none; border-color:var(--brand); box-shadow:0 0 0 .2rem rgba(249,115,22,.18); }
-        .date-hidden{ position:absolute; inset:0; opacity:0; pointer-events:none; }
-
-        .priority-badge{
-          display:inline-block; border-radius:999px; padding:.3rem .65rem; font-weight:600; font-size:.85rem;
-          background:#fff; border:1px solid transparent;
-        }
-        .p-high{ color:#B42318; border-color:#FAD1D0; background:#FFF1F0; }
-        .p-mid { color:#7C4A03; border-color:#FFE4B5; background:#FFF7E6; }
-        .p-low { color:#075985; border-color:#CFEFFF; background:#F0FBFF; }
-
-        .task-row{ display:flex; align-items:center; gap:.75rem; padding:.75rem 0; border-bottom:1px solid var(--border-orange); }
-        .task-row:last-child{ border-bottom:none; }
-      `}</style>
-
-      {/* === الهيدر === */}
-      <div className="container py-4 py-md-5">
-        <div className="card card-orange shadow-sm border-0 rounded-4 mb-4">
-          <div className="card-body p-4 p-md-5">
-            <div className="row gy-3 align-items-center">
-              <div className="col-12 col-md">
-                <h1 className="h3 fw-bold mb-1">إنشاء خطة دراسية</h1>
-                <div className="text-muted-700 small">أنشئ خطة منظمة لإدارة مهامك الدراسية بسهولة.</div>
-              </div>
-              <div className="col-12 col-md-auto d-grid d-sm-flex gap-2">
-                <button type="button" className="btn btn-outline-orange fw-bold px-3" onClick={() => navigate("/plans")}>← رجوع</button>
-              </div>
+      {/* مودال موحّد للرسائل */}
+      {modal.open && (
+        <div className="custom-modal-backdrop">
+          <div className="custom-modal-card" dir="rtl">
+            {modal.title && (
+              <h5 className="modal-title-text">{modal.title}</h5>
+            )}
+            {modal.body && (
+              <p className="modal-body-text">{modal.body}</p>
+            )}
+            <div className="modal-actions">
+              {modal.secondaryLabel && (
+                <button
+                  type="button"
+                  className="modal-btn-outline"
+                  onClick={handleSecondary}
+                >
+                  {modal.secondaryLabel}
+                </button>
+              )}
+              <button
+                type="button"
+                className="modal-btn-primary"
+                onClick={handlePrimary}
+              >
+                {modal.primaryLabel || "حسناً"}
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* === المحتوى === */}
-      <main className="flex-grow-1 py-3">
-        <div className="container-lg">
-          {/* عنوان الخطة */}
-          <div className="card-clean p-4 mb-4">
-            <div className="d-flex align-items-center justify-content-between mb-3">
-              <h5 className="fw-bold mb-0 text-dark">عنوان الخطة</h5>
-              {tasks.length > 0 && (
-                isEditingTitle ? (
-                  <button type="button" className="btn btn-orange btn-sm fw-semibold" onClick={() => setIsEditingTitle(false)}>حفظ</button>
-                ) : (
-                  <button type="button" className="btn btn-outline-orange btn-sm fw-semibold" onClick={() => setIsEditingTitle(true)}>تعديل الاسم</button>
-                )
-              )}
+      <section className="progress-wrap">
+        {/* الهيدر */}
+        <div className="fc-top">
+          <div className="title-block">
+            <h3 className="title">إنشاء خطة دراسية جديدة</h3>
+            <div className="page-subtitle">
+              صفحة لإنشاء خطة دراسية مع مهام مرتّبة تسهّل المتابعة.
             </div>
+          </div>
+          <button
+            type="button"
+            className="modern-action-btn"
+            onClick={handleBack}
+          >
+            رجوع
+          </button>
+        </div>
 
-            <input
-              type="text"
-              className="form-control border-orange py-2"
-              placeholder="مثال: خطة دراسة نهاية الفصل"
-              value={planTitle}
-              onChange={(e) => setPlanTitle(e.target.value)}
-              disabled={tasks.length > 0 && !isEditingTitle}
-              style={{ cursor: tasks.length > 0 && !isEditingTitle ? "not-allowed" : "text" }}
-            />
-            {!planTitle.trim() && <div className="form-text text-muted-700 mt-2">اكتب عنوان الخطة أولًا.</div>}
+        {/* خطأ عام إن وجد */}
+        {error && (
+          <div className="modern-alert-error">
+            <div>
+              <AlertTriangle size={18} style={{ marginLeft: 6 }} />
+              <span>
+                {error.title}: {error.message}
+              </span>
+            </div>
+            <button
+              type="button"
+              className="btn-link-danger"
+              onClick={() => setError(null)}
+            >
+              إغلاق
+            </button>
+          </div>
+        )}
+
+        {/* 1) بيانات الخطة */}
+        <div className="form-section">
+          <div className="section-title-wrap">
+            <h2 className="section-title">بيانات الخطة</h2>
           </div>
 
-          {/* إضافة مهمة */}
-          <div className="card-clean p-4 mb-4">
-            <h5 className="fw-bold mb-3 text-dark">إضافة مهمة</h5>
+          <label className="form-label fw-semibold">عنوان الخطة</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="مثال: خطة مذاكرة اختبار منتصف الترم"
+            value={planTitle}
+            onChange={(e) => setPlanTitle(e.target.value)}
+          />
+          {!planTitle.trim() && (
+            <div className="hint-text">
+              يفضّل أن يكون عنوان الخطة واضح عشان يسهل تمييزها لاحقاً.
+            </div>
+          )}
+        </div>
 
-            <label className="form-label fw-semibold">عنوان المهمة</label>
-            <input
-              type="text"
-              className="form-control border-orange mb-3"
-              placeholder="مثال: مراجعة الفصل الثالث"
-              value={taskTitle}
-              onChange={(e) => setTaskTitle(e.target.value)}
-            />
+        {/* 2) إضافة مهمة للخطة */}
+        <div className="form-section">
+          <div className="section-title-wrap" style={{ marginBottom: 12 }}>
+            <h2 className="section-title">إضافة مهمة للخطة</h2>
+          </div>
 
-            <label className="form-label fw-semibold">مستوى الأولوية</label>
-            <div className="mb-3" style={{ width: "clamp(220px, 40%, 320px)" }}>
-              <select className="form-select modern-select" value={taskPriority} onChange={(e) => setTaskPriority(e.target.value)}>
+          <label className="form-label fw-semibold">عنوان المهمة</label>
+          <input
+            type="text"
+            className="form-control mb-3"
+            placeholder="مثال: مراجعة الفصل الثالث"
+            value={taskTitle}
+            onChange={(e) => setTaskTitle(e.target.value)}
+          />
+
+          <div className="row g-3">
+            <div className="col-12 col-md-6">
+              <label className="form-label fw-semibold">الموعد النهائي</label>
+              <div className="position-relative">
+                <button
+                  type="button"
+                  className="date-display"
+                  onClick={openNativePicker}
+                  title="اختيار تاريخ"
+                >
+                  {taskDeadline
+                    ? prettyDate(taskDeadline)
+                    : "اضغط لاختيار تاريخ"}
+                </button>
+                <input
+                  ref={dateInputRef}
+                  type="date"
+                  className="date-hidden"
+                  value={taskDeadline}
+                  onChange={(e) => setTaskDeadline(e.target.value)}
+                  aria-label="اختر تاريخ"
+                />
+              </div>
+            </div>
+
+            <div className="col-12 col-md-6">
+              <label className="form-label fw-semibold">مستوى الأولوية</label>
+              <select
+                className="form-select modern-select"
+                value={taskPriority}
+                onChange={(e) => setTaskPriority(e.target.value)}
+              >
                 <option value="">اختر مستوى الأولوية</option>
                 <option value="عالية">عالية</option>
                 <option value="متوسطة">متوسطة</option>
                 <option value="منخفضة">منخفضة</option>
               </select>
             </div>
-
-            <label className="form-label fw-semibold">الموعد النهائي</label>
-            <div className="position-relative mb-3" style={{ width: "clamp(220px, 50%, 360px)" }}>
-              <button type="button" className="date-display" onClick={openNativePicker} title="اضغط لإضافة تاريخ">
-                {taskDeadline ? prettyDate(taskDeadline) : "اضغط لإضافة تاريخ"}
-              </button>
-              <input
-                ref={dateInputRef}
-                type="date"
-                className="date-hidden"
-                value={taskDeadline}
-                onChange={(e) => setTaskDeadline(e.target.value)}
-                aria-label="اختر تاريخ"
-              />
-            </div>
-
-            {/* زر الإضافة: مفعّل بمجرد كتابة عنوان الخطة */}
-            <button
-              className="btn btn-orange w-100 fw-bold"
-              onClick={addTask}
-              disabled={!planTitle.trim()}
-              title={!planTitle.trim() ? "اكتب عنوان الخطة أولاً" : undefined}
-            >
-              + إضافة المهمة
-            </button>
           </div>
 
-          {/* قائمة المهام (مرتَّبة تلقائيًا) */}
-          <div className="card-clean p-4">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5 className="fw-bold mb-0 text-dark">المهام ({tasks.length})</h5>
-              <small className="text-muted">سيتم ترتيبها تلقائيًا</small>
-            </div>
-
-            {sortedTasks.length === 0 ? (
-              <p className="text-muted mb-0">لم تتم إضافة مهام بعد.</p>
-            ) : (
-              sortedTasks.map((task) => (
-                <div key={task.id} className="task-row">
-                  <div className="flex-grow-1">
-                    <strong>{task.title}</strong>
-                  </div>
-
-                  <div style={{ minWidth: 120, textAlign: "center" }}>
-                    <span className={`priority-badge ${
-                      task.priority === "عالية" ? "p-high" :
-                      task.priority === "متوسطة" ? "p-mid" : "p-low"
-                    }`}>
-                      {task.priority || "—"}
-                    </span>
-                  </div>
-
-                  <div className="text-muted small" style={{ minWidth: 160, textAlign: "start" }}>
-                    {task.deadline ? prettyDate(task.deadline) : "—"}
-                  </div>
-
-                  <button className="btn btn-sm btn-link text-danger" onClick={() => removeTask(task.id)} title="حذف">
-                    <TrashIcon />
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* زر الحفظ */}
-          <div className="d-flex justify-content-end gap-2 mt-4">
-            <button type="button" className="btn btn-outline-orange px-4 fw-bold" onClick={() => navigate("/plans")}>إلغاء</button>
-            <button className="btn btn-orange px-4 fw-bold" onClick={savePlan} disabled={saving}>
-              {saving ? "جارٍ الحفظ..." : "حفظ الخطة"}
-            </button>
-          </div>
+          <button
+            className="modern-action-btn modern-primary-btn w-100 mt-4"
+            onClick={addTask}
+            disabled={!planTitle.trim()}
+            title={
+              !planTitle.trim()
+                ? "يلزم إدخال عنوان للخطة أولاً."
+                : undefined
+            }
+            style={{ justifyContent: "center" }}
+          >
+            + إضافة المهمة إلى الخطة
+          </button>
         </div>
-      </main>
+
+        {/* 3) مهام الخطة */}
+        <div className="form-section">
+          <div className="section-title-wrap">
+            <ListChecks size={22} className="section-icon" />
+            <h2 className="section-title section-title-no-line">
+              مهام الخطة ({tasks.length})
+            </h2>
+          </div>
+
+          {sortedTasks.length === 0 ? (
+            <div className="empty-state-card">
+              لم يتم إضافة مهام حتى الآن.
+            </div>
+          ) : (
+            <div className="tasks-list">
+              {sortedTasks.map((task) => {
+                const priorityClass =
+                  task.priority === "عالية"
+                    ? "p-high"
+                    : task.priority === "متوسطة"
+                    ? "p-mid"
+                    : "p-low";
+
+                return (
+                  <div key={task.id} className="task-item">
+                    <div className="d-flex justify-content-between align-items-start gap-2">
+                      <div className="flex-grow-1">
+                        <div className="task-title">{task.title}</div>
+                        <div className="task-meta mt-1">
+                          <span className="task-meta-item">
+                            الموعد:{" "}
+                            {task.deadline ? prettyDate(task.deadline) : "—"}
+                          </span>
+                          <span className={`priority-badge ${priorityClass}`}>
+                            {task.priority || "—"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        className="btn btn-sm btn-link text-danger p-0"
+                        onClick={() => removeTask(task.id)}
+                        title="حذف المهمة من الخطة"
+                        style={{ whiteSpace: "nowrap" }}
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* الأزرار أسفل الصفحة */}
+        <div className="bottom-actions">
+          <button
+            type="button"
+            className="modern-action-btn"
+            onClick={handleCancel}
+          >
+            إلغاء
+          </button>
+          <button
+            type="button"
+            className="modern-action-btn modern-primary-btn"
+            onClick={savePlan}
+            disabled={saving}
+          >
+            {saving ? "جارٍ إنشاء الخطة..." : "إنشاء الخطة"}
+          </button>
+        </div>
+      </section>
     </div>
   );
 }

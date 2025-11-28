@@ -4,9 +4,11 @@
     "chart.js": "^4.5.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
+    "lucide-react": "^0.555.0",
     "multer": "^2.0.2",
     "pdf-parse": "^1.1.1",
     "react-chartjs-2": "^5.3.1",
+    "react-circular-progressbar": "^2.2.0",
     "react-router-dom": "^7.9.3"
   },
   "devDependencies": {

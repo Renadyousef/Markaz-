@@ -8,7 +8,7 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 const StudyPlansCol = db.collection("study_plans");
-const TasksCol      = db.collection("tasks");
+const TasksCol = db.collection("tasks");
 
 const withId = (doc) => ({ id: doc.id, ...doc.data() });
 
@@ -32,21 +32,29 @@ function riyadhStartEndTodayAsUTC() {
   const m = riyadh.getUTCMonth();
   const d = riyadh.getUTCDate();
   const startRiyadh = new Date(Date.UTC(y, m, d, 0, 0, 0)); // 00:00 الرياض
-  const endRiyadh   = new Date(Date.UTC(y, m, d, 23, 59, 59, 999)); // 23:59:59.999 الرياض
-  // وارجعها كـ Timestamp لو متاح
+  const endRiyadh = new Date(Date.UTC(y, m, d, 23, 59, 59, 999)); // 23:59:59.999 الرياض
   const ts = admin.firestore.Timestamp;
   return { startTS: ts.fromDate(startRiyadh), endTS: ts.fromDate(endRiyadh) };
 }
 
 const PRIORITY_RANK = {
-  High: 0, "عالية": 0, 3: 0, "3": 0,
-  Medium: 1, "متوسطة": 1, 2: 1, "2": 1,
-  Low: 2, "منخفضة": 2, 1: 2, "1": 2,
+  High: 0,
+  "عالية": 0,
+  3: 0,
+  "3": 0,
+  Medium: 1,
+  "متوسطة": 1,
+  2: 1,
+  "2": 1,
+  Low: 2,
+  "منخفضة": 2,
+  1: 2,
+  "1": 2,
 };
 
 function toDate(val) {
   if (!val) return null;
-  if (val?.toDate) return val.toDate();        // Firestore Timestamp
+  if (val?.toDate) return val.toDate(); // Firestore Timestamp
   if (val?.toMillis) return new Date(val.toMillis());
   if (typeof val === "number") return new Date(val);
   if (typeof val === "string") {
@@ -60,8 +68,9 @@ function toDate(val) {
 exports.getOverview = async (req, res) => {
   try {
     const user = req.user || {};
-    const ownerId = user.id || user.uid; // ✅ يدعم كلا الحقلين
-    if (!ownerId) return res.status(401).json({ ok:false, msg: "غير مصرّح بالدخول" });
+    const ownerId = user.id || user.uid; // يدعم كلا الحقلين
+    if (!ownerId)
+      return res.status(401).json({ ok: false, msg: "غير مصرّح بالدخول" });
 
     const todayISO = todayRiyadhISO();
     const { startTS, endTS } = riyadhStartEndTodayAsUTC();
@@ -88,7 +97,9 @@ exports.getOverview = async (req, res) => {
       const snap = await StudyPlansCol.where("ownerId", "==", ownerId).limit(50).get();
       topThreePlans = snap.docs
         .map((d) => withId(d))
-        .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
+        .sort((a, b) =>
+          String(b.createdAt || "").localeCompare(String(a.createdAt || ""))
+        )
         .slice(0, 3)
         .map((x) => ({
           id: x.id,
@@ -128,7 +139,7 @@ exports.getOverview = async (req, res) => {
       errors.push({ type: "timestamp-range", code: e.code, msg: e.message });
     }
 
-    // لو فشلت الفهارس، سوي Fallback شامل
+    // لو فشلت الفهارس، Fallback شامل
     let nearestTasksRaw = [...tasksStringType, ...tasksTimestampType];
     if (nearestTasksRaw.length === 0) {
       try {
@@ -137,11 +148,12 @@ exports.getOverview = async (req, res) => {
           .map(withId)
           .filter((x) => {
             const st = (x.status || "").toString().toLowerCase();
-            const isActive = ["pending", "inprogress", "in_progress", "قيد_التنفيذ"].includes(st) || !x.status;
+            const isActive =
+              ["pending", "inprogress", "in_progress", "قيد_التنفيذ"].includes(st) ||
+              !x.status;
             if (!isActive) return false;
             const d = toDate(x.deadline);
             if (!d) return false;
-            // طابقي اليوم في الرياض
             const todayStr = todayISO; // "YYYY-MM-DD" في الرياض
             const y = d.getUTCFullYear();
             const m = String(d.getUTCMonth() + 1).padStart(2, "0");
@@ -162,7 +174,7 @@ exports.getOverview = async (req, res) => {
       return true;
     });
 
-    // رتّب حسب الأولوية ثم الوقت
+    // ترتيب حسب الأولوية ثم الموعد
     nearestTasksRaw.sort((a, b) => {
       const ra = PRIORITY_RANK[a.priority] ?? 999;
       const rb = PRIORITY_RANK[b.priority] ?? 999;
@@ -175,19 +187,23 @@ exports.getOverview = async (req, res) => {
 
     nearestTasksRaw = nearestTasksRaw.slice(0, 10);
 
-    // جلب أسماء الخطط
-    const planIds = Array.from(new Set(
-      nearestTasksRaw.map(t => String(t.studyPlan_ID || t.studyPlanId || "")).filter(Boolean)
-    ));
+    // جلب أسماء الخطط للمهام
+    const planIds = Array.from(
+      new Set(
+        nearestTasksRaw
+          .map((t) => String(t.studyPlan_ID || t.studyPlanId || ""))
+          .filter(Boolean)
+      )
+    );
     const titlesMap = {};
     if (planIds.length) {
-      const planSnaps = await Promise.all(planIds.map(id => StudyPlansCol.doc(id).get()));
+      const planSnaps = await Promise.all(planIds.map((id) => StudyPlansCol.doc(id).get()));
       for (const s of planSnaps) {
         if (s.exists) titlesMap[s.id] = s.data()?.title || "";
       }
     }
 
-    // ✅ فقط إضافة حقول deadlineISO و completed — بدون حذف أي شيء
+    // تجهيز nearestTasks بشكل مرتب للفرونت
     const nearestTasks = nearestTasksRaw.map((x) => {
       let deadlineISO = "";
       try {
@@ -195,11 +211,15 @@ exports.getOverview = async (req, res) => {
           deadlineISO = x.deadline;
         } else if (x.deadline?.toDate) {
           const d = x.deadline.toDate();
-          const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
           deadlineISO = `${y}-${m}-${day}`;
         } else if (x.deadline?.toMillis) {
           const d = new Date(x.deadline.toMillis());
-          const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate() + 1).padStart(2, "0");
           deadlineISO = `${y}-${m}-${day}`;
         }
       } catch {}
@@ -208,15 +228,58 @@ exports.getOverview = async (req, res) => {
         id: x.id,
         title: x.title || "",
         deadline: x.deadline || "",
-        deadlineISO,                // ← إضافة 1: صيغة قياسية "YYYY-MM-DD"
-        completed: !!x.completed,   // ← إضافة 2: حالة الإنجاز
+        deadlineISO,
+        completed: !!x.completed,
         priority: x.priority || "متوسطة",
         planId: String(x.studyPlan_ID || x.studyPlanId || ""),
-        planTitle: titlesMap[String(x.studyPlan_ID || x.studyPlanId || "")] || "",
+        planTitle:
+          titlesMap[String(x.studyPlan_ID || x.studyPlanId || "")] || "",
       };
     });
 
-    res.json({ ok: true, nearestTasks, topThreePlans, _debug: { errors } });
+    /* ========== إحصائيات كل المهام (إجمالي / منجزة / متبقية + لكل خطة) ========== */
+    let totalTasks = 0;
+    let completedTasks = 0;
+    let remainingTasks = 0;
+    const perPlanStats = {}; // لكل خطة: { total, completed }
+
+    try {
+      const allTasksSnap = await TasksCol.where("ownerId", "==", ownerId).get();
+
+      totalTasks = allTasksSnap.size;
+
+      allTasksSnap.forEach((doc) => {
+        const data = doc.data();
+        const isCompleted = data.completed === true;
+        if (isCompleted) completedTasks++;
+
+        const planId = String(data.studyPlan_ID || data.studyPlanId || "");
+        if (planId) {
+          if (!perPlanStats[planId]) {
+            perPlanStats[planId] = { total: 0, completed: 0 };
+          }
+          perPlanStats[planId].total += 1;
+          if (isCompleted) perPlanStats[planId].completed += 1;
+        }
+      });
+
+      remainingTasks = Math.max(totalTasks - completedTasks, 0);
+    } catch (e) {
+      console.warn("tasks stats error:", e.code, e.message);
+    }
+
+    res.json({
+      ok: true,
+      nearestTasks,
+      topThreePlans,
+      taskStats: {
+        totalTasks,
+        completedTasks,
+        remainingTasks,
+      },
+      plansStats: perPlanStats, // لكل خطة
+      _debug: { errors },
+    });
   } catch (err) {
     console.error("❌ getOverview fatal error:", err);
     res.status(500).json({

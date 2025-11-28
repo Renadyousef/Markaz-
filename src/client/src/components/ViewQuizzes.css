@@ -1,95 +1,311 @@
-.viewQuizzes {
-  padding: 30px;
-  /* Remove custom background to keep default app background */
+/* الخط العام */
+.viewQuizzes,
+.viewQuizzes * {
+  font-family: "Cairo", "Helvetica Neue", sans-serif;
+}
+
+.viewQuizzes.modern-dashboard {
   min-height: 100vh;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.viewQuizzes h1 {
-  text-align: center;
-  color: #ff6600;
-  margin-bottom: 30px;
-  font-size: 2rem;
-}
-
-.quizGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-}
-
-.quizCard {
-  background: #fff; /* white cards stand out on default background */
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 6px 20px rgba(255, 102, 0, 0.2);
-  transition: transform 0.2s, box-shadow 0.2s;
+/* تنسيق عام للصفحة */
+.progress-wrap {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  gap: 26px;
+  padding: 30px 20px 60px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.quizCard:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 25px rgba(255, 102, 0, 0.3);
+/* محتوى تحت الهيدر */
+.quizzes-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
-.quizHeader h2 {
-  color: #ff6600;
-  font-size: 1.3rem;
-  margin-bottom: 12px;
-}
-
-.quizBody p {
-  font-size: 1.1rem;
-  margin-bottom: 15px;
-  font-weight: 500;
-}
-
-.quizBody p span {
-  font-weight: 700;
-  color: #ff6600;
-}
-
-.downloadBtn {
-  padding: 10px 18px;
-  border: none;
-  border-radius: 8px;
-  background: linear-gradient(45deg, #ff9933, #ff6600);
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s, transform 0.2s;
-}
-
-.downloadBtn:hover {
-  background: linear-gradient(45deg, #ff6600, #ff9933);
-  transform: translateY(-2px);
-}
-.viewQuizzes h1 {
-  text-align: center;
-  color: #000; /* black */
-  margin-bottom: 30px;
-  font-size: 2rem;
-}
-.viewHeader {
+/* HEADER */
+.fc-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e5e7eb;
+  gap: 16px;
 }
 
-.newQuizBtn {
-  background-color: #f59e0b; /* system orange color */
-  color: white;
-  font-weight: 700;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 6px;
+.title-block {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+  gap: 4px;
+}
+
+.title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #1f2937;
+}
+
+.page-subtitle {
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+/* زر الهيدر */
+.modern-action-btn {
+  padding: 10px 22px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #ffdbbf;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ff8c42;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-.newQuizBtn:hover {
-  background-color: #d97706; /* darker orange on hover */
+.modern-action-btn:hover {
+  background: #ffdbbf;
+  border-color: #ff8c42;
+}
+
+.modern-primary-btn {
+  background: #ff8c42;
+  color: white;
+  border-color: #ff8c42;
+}
+
+.modern-primary-btn:hover {
+  background: #e57e3f;
+}
+
+/* ERROR BOX */
+.modern-alert-error {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.alert-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* LOADING TEXT */
+.statusText {
+  margin: 5px 0 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+/* EMPTY STATE */
+.empty-state-card {
+  background: #fff7ed;
+  border-radius: 14px;
+  border: 1px dashed #ffdbbf;
+  text-align: center;
+  padding: 30px 24px;
+  width: 100%;
+}
+
+.empty-title {
+  font-weight: 800;
+  color: #7a3f00;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
+.empty-subtitle {
+  margin: 0 0 14px;
+  font-size: 0.9rem;
+  color: #7c2d12;
+}
+
+/* GRID */
+.quizzes-grid {
+  margin-top: 8px;
+}
+
+/* ===== الكارد ===== */
+.quiz-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 18px 20px 16px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
+  transition: 0.2s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quiz-card:hover {
+  transform: translateY(-3px);
+  border-color: #ffdbbf;
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.1);
+}
+
+/* رأس الكارد: الأيقونة القديمة + النص */
+.quiz-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quiz-icon-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #fffaf5;          /* برتقالي فاتح جداً */
+  border: 1px solid #ffdbbf;    /* نفس الحدود القديمة */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff8c42;
+}
+
+.quiz-icon-circle svg {
+  stroke-width: 2.2;
+  color: #ff8c42;
+}
+
+.quiz-header-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #374151;
+}
+
+/* خط فاصل */
+.quiz-divider {
+  height: 1px;
+  background: #f3f4f6;
+  margin: 6px 0 4px;
+}
+
+/* صفوف المعلومات */
+.quiz-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.quiz-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #6b7280;
+}
+
+.quiz-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* اسم الملف */
+.quiz-filename {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* الدرجة */
+.quiz-score-wrapper {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.quiz-score-main {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #ff8c42;
+}
+
+.quiz-score-outof {
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+/* PAGINATION */
+.pagination-bar {
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pagination-info {
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.btn-group {
+  display: flex;
+  gap: 8px;
+}
+
+/* زر التالي (برتقالي) */
+.btn-orange {
+  background-color: #ff8c42;
+  border: 1px solid #ff8c42;
+  color: #fff;
+  border-radius: 999px;
+  font-weight: 700;
+  padding: 6px 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-orange:hover {
+  background-color: #e57e3f;
+  border-color: #e57e3f;
+}
+
+/* زر السابق (أوتلاين) */
+.btn-outline-orange {
+  border-radius: 999px;
+  border: 1px solid #ffdbbf;
+  color: #0b0b0c;
+  background-color: #fff;
+  font-weight: 600;
+  padding: 6px 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-orange:hover {
+  background-color: #fff7ed;
+  border-color: #ff8c42;
+  color: #ff8c42;
+}
+
+/* موبايل */
+@media (max-width: 768px) {
+  .fc-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .modern-action-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
