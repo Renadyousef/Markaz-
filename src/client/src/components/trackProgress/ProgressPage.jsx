@@ -421,7 +421,7 @@ export default function ProgressPage() {
 
         {/* الرسم البياني */}
         <div className="weekly-section">
-          <h4 className="weekly-title"> التقدم الاسبوعي  </h4>
+          <h4 className="weekly-title"> ملخص التقدم  </h4>
 
           {history.length > 0 ? (
             <div className="chart-card">

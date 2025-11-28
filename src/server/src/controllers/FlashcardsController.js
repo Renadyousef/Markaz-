@@ -4,7 +4,6 @@ const { z } = require("zod");
 const { v4: uuidv4 } = require("uuid");
 console.log("🔑 Current key in server:", process.env.OPENAI_API_KEY?.slice(0, 8));
 
-// Firebase Admin مُهيأ مسبقاً مثل uploadController
 require("../config/firebase-config");
 const admin = require("firebase-admin");
 const db = admin.firestore();
@@ -13,7 +12,6 @@ const db = admin.firestore();
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.FLASHCARDS_MODEL || "gpt-4o-mini";
 
-/* ========== نفس أسلوب الرفع: نلقط الهوية من req.user ========== */
 function resolveUser(req) {
   const u = req.user || {};
   const uid = u.id || u._id || u.uid || req.userId || null;
@@ -22,7 +20,6 @@ function resolveUser(req) {
   return { uid, email, role };
 }
 
-/* ========== Schemas ========== */
 const FromTextSchema = z.object({
   text: z.string().min(10),
   language: z.string().optional().default("ar"),
@@ -74,9 +71,7 @@ function normalizeModelCards(cards) {
     .filter((c) => c.question && c.answer);
 }
 
-/* ========== Controllers ========== */
 
-// (1) توليد من نص حر (بدون حفظ)
 exports.generateFromText = async (req, res) => {
   const parsed = FromTextSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -147,13 +142,11 @@ Text:
   }
 };
 
-// (2) توليد من pdfId (بدون حفظ) — طلب واحد فقط + قص النص
 exports.generateFromPdfId = async (req, res) => {
   try {
     const pdfId = req.params.pdfId || req.body.pdfId;
     const language = "ar";
 
-    // limit من الكويري/البودي لكن ما نتجاوز 10
     const rawLimit = Number(req.query.limit || req.body.limit || 10);
     const limit =
       Number.isFinite(rawLimit) && rawLimit > 0
@@ -171,7 +164,7 @@ exports.generateFromPdfId = async (req, res) => {
         .json({ ok: false, error: "No extracted text for this pdfId" });
     }
 
-    const MAX_ANALYSIS = 3000;
+    const MAX_ANALYSIS = 7000;
 
     const limitedText = text.slice(0, MAX_ANALYSIS);
 
@@ -212,7 +205,6 @@ PDF TEXT:
       ],
     });
 
-    // 🔥 3) Parse JSON safely
     let raw = completion.choices?.[0]?.message?.content ?? "{}";
     let json;
 
@@ -227,7 +219,6 @@ PDF TEXT:
       });
     }
 
-    // 🔥 4) Normalize + respect limit
     const cards = normalizeModelCards(json.cards).slice(0, limit);
 
     if (cards.length === 0) {
@@ -243,12 +234,11 @@ PDF TEXT:
       language,
       count: cards.length,
       cards,
-      chunkCount: 1, // بس تشانك واحد (أول 7000 حرف)
+      chunkCount: 1, 
     });
   } catch (err) {
     console.error("generateFromPdfId err:", err);
 
-    // 429 من OpenAI = كوتا/ريت ليمت مو من حجم النص
     if (err.status === 429) {
       return res.status(429).json({
         ok: false,
@@ -263,7 +253,6 @@ PDF TEXT:
   }
 };
 
-// (3) حفظ الديك — نحفظ ownerId بنفس منطق الرفع + Fallback من مستند الـ PDF
 exports.saveDeck = async (req, res) => {
   const parsed = SaveDeckSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -333,7 +322,6 @@ exports.saveDeck = async (req, res) => {
   }
 };
 
-// (4) قراءة ديك محفوظ — نسمح فقط للمالك إذا كان ownerId موجود
 exports.getDeckCards = async (req, res) => {
   const { uid, role } = resolveUser(req);
 
@@ -358,7 +346,6 @@ exports.getDeckCards = async (req, res) => {
   }
 };
 
-// (5) (اختياري) لستة ديكات المستخدم الحالي
 exports.listMyDecks = async (req, res) => {
   const { uid } = resolveUser(req);
   if (!uid) return res.status(401).json({ ok: false, error: "Unauthorized" });
