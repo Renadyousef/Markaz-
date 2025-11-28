@@ -88,87 +88,106 @@ export default function SignUp({ setToken }) {
   };
 
   return (
-    <form className="sign-up-container" onSubmit={handleSubmit}>
-      <label htmlFor="first_name" className="required">الاسم الاول</label>
-      <input
-        required
-        type="text"
-        name="first_name"
-        id="first_name"
-        onFocus={() => handleFocus("first_name")}
-        onBlur={(e) => handleBlur("first_name", e.target.value)}
-        onChange={() => setFieldMessage("")}
-      />
-      {fieldMessage.first_name && <div style={{ color: "gray" }}>{fieldMessage.first_name}</div>}
+    <section className="auth-dual">
+      <form className="auth-panel auth-panel--form" onSubmit={handleSubmit}>
+        <div className="auth-panel__head">
+          <h2>إنشاء حساب</h2>
+          <p>أدخل بياناتك الشخصية لبدء رحلتك مع مركز.</p>
+        </div>
 
-      <label htmlFor="last_name" className="required">اسم العائلة</label>
-      <input
-        required
-        type="text"
-        name="last_name"
-        id="last_name"
-        onFocus={() => handleFocus("last_name")}
-        onBlur={(e) => handleBlur("last_name", e.target.value)}
-        onChange={() => setFieldMessage("")}
-      />
-      {fieldMessage.last_name && <div style={{ color: "gray" }}>{fieldMessage.last_name}</div>}
+        <div className="auth-grid">
+          <div className="auth-field">
+            <label htmlFor="first_name" className="required">الاسم الأول</label>
+            <div className="auth-input-shell">
+              <input
+                required
+                type="text"
+                name="first_name"
+                id="first_name"
+                placeholder="مثال: اريج"
+                onFocus={() => handleFocus("first_name")}
+                onBlur={(e) => handleBlur("first_name", e.target.value)}
+                onChange={() => setFieldMessage("")}
+              />
+            </div>
+            {fieldMessage.first_name && <small className="field-hint">{fieldMessage.first_name}</small>}
+          </div>
 
-      <label htmlFor="email" className="required">البريد الإلكتروني</label>
-      <input
-        required
-        type="email"
-        name="email"
-        id="email"
-        onFocus={() => handleFocus("email")}
-        onBlur={(e) => handleBlur("email", e.target.value)}
-        onChange={() => setFieldMessage("")}
-      />
-      {fieldMessage.email && <div style={{ color: "gray" }}>{fieldMessage.email}</div>}
+          <div className="auth-field">
+            <label htmlFor="last_name" className="required">اسم العائلة</label>
+            <div className="auth-input-shell">
+              <input
+                required
+                type="text"
+                name="last_name"
+                id="last_name"
+                placeholder="مثال: عبدالرحمن"
+                onFocus={() => handleFocus("last_name")}
+                onBlur={(e) => handleBlur("last_name", e.target.value)}
+                onChange={() => setFieldMessage("")}
+              />
+            </div>
+            {fieldMessage.last_name && <small className="field-hint">{fieldMessage.last_name}</small>}
+          </div>
+        </div>
 
-      <label htmlFor="password" className="required">كلمة المرور</label>
-      <div className="password-wrapper" style={{ position: "relative" }}>
-        <input
-          required
-          type={showPassword ? "text" : "password"}
-          name="password"
-          id="password"
-          onFocus={() => handleFocus("password")}
-          onBlur={(e) => handleBlur("password", e.target.value)}
-          onChange={() => setFieldMessage("")}
-        />
-        <button
-          type="button"
-          onClick={() => setShowPassword(!showPassword)}
-          style={{
-            position: "absolute",
-            right: "8px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: "#555",
-            fontSize: "1rem",
-            padding: 0
-          }}
-        >
-          <i className={showPassword ? "fa-solid fa-eye" : "fa-solid fa-eye-slash"}></i>
-        </button>
-      </div>
-      {fieldMessage.password && <div style={{ color: "gray" }}>{fieldMessage.password}</div>}
+        <div className="auth-field">
+          <label htmlFor="email" className="required">البريد الإلكتروني</label>
+          <div className="auth-input-shell">
+            <span className="auth-input-icon" aria-hidden="true">
+              <i className="fa-regular fa-envelope" />
+            </span>
+            <input
+              required
+              type="email"
+              name="email"
+              id="email"
+              placeholder="example@email.com"
+              onFocus={() => handleFocus("email")}
+              onBlur={(e) => handleBlur("email", e.target.value)}
+              onChange={() => setFieldMessage("")}
+            />
+          </div>
+          {fieldMessage.email && <small className="field-hint">{fieldMessage.email}</small>}
+        </div>
 
-      {errorMessage && <div style={{ color: "red", fontWeight: "bold" }}>{errorMessage}</div>}
+        <div className="auth-field">
+          <label htmlFor="password" className="required">كلمة المرور</label>
+          <div className="auth-input-shell">
+            <span className="auth-input-icon" aria-hidden="true">
+              <i className="fa-solid fa-lock" />
+            </span>
+            <input
+              required
+              type={showPassword ? "text" : "password"}
+              name="password"
+              id="password"
+              placeholder="••••••••"
+              onFocus={() => handleFocus("password")}
+              onBlur={(e) => handleBlur("password", e.target.value)}
+              onChange={() => setFieldMessage("")}
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+            >
+              <i className={showPassword ? "fa-solid fa-eye" : "fa-solid fa-eye-slash"}></i>
+            </button>
+          </div>
+          {fieldMessage.password && <small className="field-hint">{fieldMessage.password}</small>}
+        </div>
 
-      <input   style={{
-    backgroundColor: "orange",
-    color: "white",
-    border: "none",
-    padding: "10px 20px",
-    fontSize: "1rem",
-    borderRadius: "5px",
-    cursor: "pointer"
-  }}
-   type="submit" value="إنشاء حساب" />
-    </form>
+        {errorMessage && (
+          <div className="auth-alert error">
+            <i className="fa-solid fa-circle-exclamation" aria-hidden="true" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
+        <button type="submit" className="auth-primary-btn">إنشاء حساب</button>
+      </form>
+    </section>
   );
 }

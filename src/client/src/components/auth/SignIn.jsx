@@ -35,67 +35,68 @@ export default function SignIn({ setToken , goTo }) {
   };
 
   return (
-    <form className="sign-up-container" onSubmit={handleSubmit}>
-      <label htmlFor="email" className="required">البريد الإلكتروني</label>
-      <input required type="email" name="email" id="email" />
+    <section className="auth-dual">
+      <form className="auth-panel auth-panel--form" onSubmit={handleSubmit}>
+        <div className="auth-panel__head">
+          <h2>تسجيل الدخول</h2>
+          <p>استخدم بريدك وكلمة المرور للدخول إلى حسابك.</p>
+        </div>
 
-      <label htmlFor="password" className="required">كلمة المرور</label>
-      <div className="password-wrapper">
-        <input
-          required
-          type={showPassword ? "text" : "password"}
-          name="password"
-          id="password"
-        />
-        <button
-          type="button"
-          onClick={() => setShowPassword(!showPassword)}
-          style={{
-            position: "absolute",
-            right: "8px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: "#555",
-            fontSize: "1rem",
-            padding: 0
-          }}
-        >
-          <i className={showPassword ?  "fa-solid fa-eye":"fa-solid fa-eye-slash"}></i>
-        </button>
-      </div>
+        <div className="auth-field">
+          <label htmlFor="email" className="required">البريد الإلكتروني</label>
+          <div className="auth-input-shell">
+            <span className="auth-input-icon" aria-hidden="true">
+              <i className="fa-regular fa-envelope" />
+            </span>
+            <input
+              required
+              type="email"
+              name="email"
+              id="email"
+              placeholder="example@email.com"
+            />
+          </div>
+        </div>
 
-      {errorMessage && <div style={{ color: "red", fontWeight: "bold" }}>{errorMessage}</div>}
-<button
-  type="button"
-  onClick={() => goTo("forgot")}
-  style={{
-    background: "none",
-    border: "none",
-    padding: 0,
-    textAlign: "right",
-    marginTop: "8px",
-    marginBottom: "12px",
-    fontWeight: "bold",
-    fontSize: "0.9rem",
-    color: "gray",
-    cursor: "pointer"
-  }}
->
-  هل نسيت كلمة المرور؟
-</button>
+        <div className="auth-field">
+          <label htmlFor="password" className="required">كلمة المرور</label>
+          <div className="auth-input-shell">
+            <span className="auth-input-icon" aria-hidden="true">
+              <i className="fa-solid fa-lock" />
+            </span>
+            <input
+              required
+              type={showPassword ? "text" : "password"}
+              name="password"
+              id="password"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+            >
+              <i className={showPassword ? "fa-solid fa-eye" : "fa-solid fa-eye-slash"} />
+            </button>
+          </div>
+        </div>
 
-      <input   style={{
-    backgroundColor: "orange",
-    color: "white",
-    border: "none",
-    padding: "10px 20px",
-    fontSize: "1rem",
-    borderRadius: "5px",
-    cursor: "pointer"
-  }} type="submit" value="تسجيل الدخول" />
-    </form>
+        {errorMessage && (
+          <div className="auth-alert error">
+            <i className="fa-solid fa-circle-exclamation" aria-hidden="true" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
+        <div className="auth-actions">
+          <button type="button" className="text-link" onClick={() => goTo("forgot")}>
+            هل نسيت البريد أو كلمة المرور؟
+          </button>
+        </div>
+
+        <button type="submit" className="auth-primary-btn">تسجيل الدخول</button>
+      </form>
+    </section>
   );
 }
