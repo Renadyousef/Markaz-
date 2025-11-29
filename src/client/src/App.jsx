@@ -1,6 +1,6 @@
 // src/App.jsx
-import { useEffect, useState, useCallback } from "react";
-import { Routes, Route } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import "./App.css";
 
 /* الصفحات الرئيسية / الميزات */
@@ -41,7 +41,7 @@ import Sidebar from "./components/Header_Footer/Sidebar";
 import Footer from "./components/Header_Footer/Footer";
 
 const TOKEN_KEY = "token";
-const PAGE_KEY = "app:page";
+const PAGE_KEY = "app:page";       // باقي معرف، حتى لو ما نستخدمه بعد التحويل للراوتر
 const AUTH_TAB_KEY = "app:authTab";
 
 export default function App() {
@@ -54,13 +54,7 @@ export default function App() {
   /* ===== حالة التوكن ===== */
   const [token, setToken] = useState(localStorage.getItem(TOKEN_KEY) || null);
 
-  /* ===== الصفحة المنطقية (قبل الدخول فقط) ===== */
-  const [page, setPageState] = useState(() => {
-    const hasToken = !!localStorage.getItem(TOKEN_KEY);
-    if (!hasToken) return "landing";
-    return localStorage.getItem(PAGE_KEY) || "home";
-  });
-
+  /* تبويب صفحة الأوث (تسجيل الدخول / إنشاء حساب) */
   const [authTab, setAuthTab] = useState(
     localStorage.getItem(AUTH_TAB_KEY) || "signin"
   );
@@ -68,41 +62,35 @@ export default function App() {
   /* ===== السايدبار ===== */
   const [open, setOpen] = useState(false);
 
-  const setPage = useCallback((next) => {
-    setPageState(next);
-    localStorage.setItem(PAGE_KEY, next);
-  }, []);
+  const navigate = useNavigate();
 
-  /* لما يتغير التوكن نضبط وضع البداية */
-  useEffect(() => {
-    if (token) {
-      if (page === "landing" || page === "auth") {
-        setPage("home");
-      }
-    } else {
-      if (page !== "landing") {
-        setPage("landing");
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
-
-  /* تنقل قبل الدخول (landing/auth/forgot/reset) */
+  /* ===== دالة تنقّل عامة قبل تسجيل الدخول (landing/auth/forgot/reset) ===== */
   const goTo = (p, tab = "signin") => {
     if (p === "auth") {
+      // نحدد التاب الافتراضي داخل صفحة الأوث
       setAuthTab(tab);
       localStorage.setItem(AUTH_TAB_KEY, tab);
-      setPage("auth");
+      navigate("/auth");
+    } else if (p === "landing") {
+      navigate("/");
+    } else if (p === "forgot") {
+      navigate("/forgot");
+    } else if (p === "reset") {
+      navigate("/reset");
     } else {
-      setPage(p);
+      // أي قيمة أخرى نمررها مباشرة للمسار
+      navigate(p);
     }
   };
 
   /* عند تسجيل الدخول */
   const handleLogin = (newToken) => {
-    if (newToken) localStorage.setItem(TOKEN_KEY, newToken);
-    setToken(newToken);
-    setPage("home");
+    if (newToken) {
+      localStorage.setItem(TOKEN_KEY, newToken);
+      setToken(newToken);
+    }
+    // بعد تسجيل الدخول نرجع للهوم (نفس المسار الرئيسي)
+    navigate("/", { replace: true });
   };
 
   /* تسجيل الخروج */
@@ -110,13 +98,14 @@ export default function App() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.setItem(PAGE_KEY, "landing");
     setToken(null);
-    setPage("landing");
+    // نرجع للاندنق
+    navigate("/", { replace: true });
   };
 
   /* ===================================================================
      ======================= بعد تسجيل الدخول ===========================
      =================================================================== */
-  if (token && page !== "landing" && page !== "auth") {
+  if (token) {
     return (
       <div className="app-shell">
         {/* الهيدر */}
@@ -130,14 +119,14 @@ export default function App() {
           <Sidebar
             open={open}
             onClose={() => setOpen(false)}
-            onProfile={() => setPage("profile")} // ما يؤثر على العرض الآن، بس نخليه لو تحتاجينه منطقياً
+            onProfile={() => navigate("/profile")}
             onLogout={handleLogout}
           />
 
           {/* المحتوى: الآن كل الصفحات تشتغل عن طريق Routes فقط */}
           <main className="content-area">
             <Routes>
-              {/* الصفحة الرئيسية */}
+              {/* الصفحة الرئيسية (الهوم) - فيها Routes داخلية خاصة فيها مثل upload وغيرها */}
               <Route path="/" element={<HomePage token={token} />} />
               <Route path="/home/*" element={<HomePage token={token} />} />
 
@@ -159,7 +148,8 @@ export default function App() {
               <Route path="/cards" element={<FlashcardsPage />} />
               <Route path="/flashcards" element={<FlashCardView />} />
               <Route path="/cards/deck/:deckId" element={<DeckView />} />
-              {/* <Route path="/cards-raw" element={<FlashCards />} /> لو احتجتيه لاحقاً */}
+              {/* لو احتجتيه لاحقاً */}
+              <Route path="/cards-raw" element={<FlashCards />} />
 
               {/* جلسات المذاكرة */}
               <Route path="/sessions" element={<SessionsPage />} />
@@ -195,21 +185,35 @@ export default function App() {
      =================================================================== */
   return (
     <>
-      {page === "landing" && <LandingPage goTo={goTo} />}
-
-      {page === "auth" && (
-        <AuthPage initialTab={authTab} setToken={handleLogin} goTo={goTo} />
-      )}
-
-      {page === "forgot" && <ForgotPassword goTo={goTo} />}
-
-      {page === "reset" && <ResetPassword goTo={goTo} />}
-
-      {/* Routes لصفحات الفوتر قبل الدخول */}
       <Routes>
+        {/* صفحة اللاندنق */}
+        <Route path="/" element={<LandingPage goTo={goTo} />} />
+
+        {/* صفحة الأوث (تسجيل الدخول / إنشاء حساب) */}
+        <Route
+          path="/auth"
+          element={
+            <AuthPage
+              initialTab={authTab}
+              setToken={handleLogin}
+              goTo={goTo}
+            />
+          }
+        />
+
+        {/* نسيت كلمة المرور */}
+        <Route path="/forgot" element={<ForgotPassword goTo={goTo} />} />
+
+        {/* إعادة تعيين كلمة المرور */}
+        <Route path="/reset" element={<ResetPassword goTo={goTo} />} />
+
+        {/* صفحات الفوتر قبل الدخول */}
         <Route path="/about" element={<About />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/contact" element={<Contact />} />
+
+        {/* أي مسار غريب قبل الدخول → يرجع للّاندنق */}
+        <Route path="*" element={<LandingPage goTo={goTo} />} />
       </Routes>
 
       <Footer />
