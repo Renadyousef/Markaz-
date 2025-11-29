@@ -1,3 +1,3 @@
 export default function FlashcardsPage() {
-  return <h1> هنا صفحة البطاقات التعليمية</h1>;
+  return <h1>    </h1>;
 }
