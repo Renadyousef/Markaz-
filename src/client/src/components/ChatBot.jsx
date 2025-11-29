@@ -1,23 +1,36 @@
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Loader2,
+  MessageCircle,
+  SendHorizontal,
+  Upload,
+} from "lucide-react";
 
 export default function ChatBot() {
   const [messages, setMessages] = useState([
-    { sender: "bot", text: "👋 أهلاً! يمكنك رفع ملف PDF أو البدء بالمحادثة أدناه." },
+    { sender: "bot", text: " أهلاً! يمكنك رفع ملف PDF أو البدء بالمحادثة أدناه." },
   ]);
   const [input, setInput] = useState("");
   const [pdf, setPdf] = useState(null);
   const [pdfId, setPdfId] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(""); // feedback message
-  const chatEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
   const fileRef = useRef(null);
-const [botTyping, setBotTyping] = useState(false); //bot thinking wait
+  const [botTyping, setBotTyping] = useState(false); //bot thinking wait
 
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [messages]);
 
   // === رفع ملف PDF وحفظ الـ ID فقط ===
@@ -39,9 +52,9 @@ const [botTyping, setBotTyping] = useState(false); //bot thinking wait
 
       if (res.data?.ok && res.data.savedId) {
         setPdfId(res.data.savedId);
-        setUploadStatus("✅ تم رفع الملف بنجاح!");
+        setUploadStatus(" تم رفع الملف بنجاح!");
       } else {
-        setUploadStatus("⚠️ حدث خطأ أثناء رفع الملف، حاول مرة أخرى.");
+        setUploadStatus(" حدث خطأ أثناء رفع الملف، حاول مرة أخرى.");
       }
     } catch (err) {
       console.error("Error uploading PDF:", err);
@@ -75,7 +88,7 @@ const [botTyping, setBotTyping] = useState(false); //bot thinking wait
   } catch (err) {
     setMessages((prev) => [
       ...prev,
-      { sender: "bot", text: "⚠️ خطأ في الخادم، حاول لاحقًا." },
+      { sender: "bot", text: " خطأ في الخادم، حاول لاحقًا." },
     ]);
   } finally {
     setBotTyping(false);
@@ -91,44 +104,45 @@ const [botTyping, setBotTyping] = useState(false); //bot thinking wait
   };
 
   return (
-    <div
-      dir="rtl"
-      className="d-flex justify-content-center align-items-center py-5"
-      style={{ minHeight: "80vh" }}
-    >
+    <>
+      <div dir="rtl" className="d-flex justify-content-center align-items-center py-5">
       <div
         className="p-4 rounded-4"
         style={{
           maxWidth: "800px",
           width: "100%",
           background: "#ffffff",
-          boxShadow: "0 8px 24px rgba(245,158,11,0.15)",
-          border: "1px solid rgba(245,158,11,0.2)",
+          boxShadow: "0 14px 32px rgba(255,145,77,0.16)",
+          border: "1px solid rgba(255,145,77,0.25)",
         }}
       >
         {/*  رأس الشات  */}
         <div
           className="text-center mb-4 p-3 fw-bold rounded-4"
           style={{
-            background: "linear-gradient(90deg, #ffa726, #ffcc80)",
+            background: "linear-gradient(135deg, #ff914d, #ffb476)",
             color: "white",
             fontSize: "1.2rem",
-            boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+            boxShadow: "0 10px 28px rgba(255,145,77,0.35)",
           }}
         >
-          💬 المساعد الذكي
+          <div className="d-flex align-items-center justify-content-center gap-2">
+            <MessageCircle size={22} />
+            <span>المساعد الذكي</span>
+          </div>
         </div>
 
         {/* صندوق المحادثة  */}
         <div
+          ref={chatContainerRef}
           className="p-4 mb-3"
           style={{
             height: "55vh",
             overflowY: "auto",
             background: "#fff8f0",
             borderRadius: "16px",
-            border: "1px solid rgba(245,158,11,0.2)",
-            boxShadow: "inset 0 0 10px rgba(245,158,11,0.05)",
+            border: "1px solid rgba(255,145,77,0.2)",
+            boxShadow: "inset 0 0 16px rgba(255,186,140,0.25)",
           }}
         >
           {messages.map((msg, i) => (
@@ -141,16 +155,18 @@ const [botTyping, setBotTyping] = useState(false); //bot thinking wait
               <div
                 className={`p-3 rounded-4 ${
                   msg.sender === "user"
-                    ? "bg-warning text-dark"
+                    ? ""
                     : "bg-white border border-0"
                 }`}
                 style={{
                   maxWidth: "70%",
                   lineHeight: "1.6",
-                  boxShadow:
-                    msg.sender === "user"
-                      ? "0 4px 12px rgba(255,145,77,0.15)"
-                      : "0 4px 14px rgba(0,0,0,0.05)",
+                  background: msg.sender === "user"
+                    ? "linear-gradient(135deg, #fffdfbff, #ffffffff)"
+                    : "#fff",
+                  color: msg.sender === "user" ? "#0b0202ff" : "#1f1f1f",
+                  border: msg.sender === "user" ? "none" : "1px solid rgba(255, 255, 255, 0.9)",
+                  animation: "fadeSlide 0.35s ease both",
                 }}
               >
                 {msg.text}
@@ -161,20 +177,21 @@ const [botTyping, setBotTyping] = useState(false); //bot thinking wait
   {botTyping && (
     <div className="d-flex mb-3 justify-content-start">
       <div
-        className="p-3 rounded-4 bg-white border border-0"
+        className="p-3 rounded-4 bg-white border border-0 d-flex align-items-center gap-2"
         style={{
           maxWidth: "70%",
           lineHeight: "1.6",
           boxShadow: "0 4px 14px rgba(0,0,0,0.05)",
           fontStyle: "italic",
           color: "#555",
+          animation: "fadeSlide 0.35s ease both",
         }}
       >
-        🤖 جاري التفكير...
+        <Loader2 size={18} />
+        جاري التفكير...
       </div>
     </div>
   )}
-          <div ref={chatEndRef} />
         </div>
 
         {/* رفع الملف  */}
@@ -188,10 +205,16 @@ const [botTyping, setBotTyping] = useState(false); //bot thinking wait
               style={{ display: "none" }}
             />
             <button
-              className="btn btn-outline-warning fw-bold rounded-4 px-4"
+              className="btn fw-bold rounded-4 px-4 d-flex align-items-center gap-2"
               onClick={() => fileRef.current.click()}
               disabled={uploading}
+              style={{
+                background: "rgba(255,145,77,0.12)",
+                border: "1px solid rgba(255,145,77,0.5)",
+                color: "#ff7a1f",
+              }}
             >
+              <Upload size={18} />
               {uploading
                 ? "جارٍ الرفع..."
                 : pdf
@@ -203,13 +226,18 @@ const [botTyping, setBotTyping] = useState(false); //bot thinking wait
           {/*  رسالة نجاح أو فشل الرفع */}
           {uploadStatus && (
             <div
-              className={`small fw-bold ${
-                uploadStatus.includes("✅")
+              className={`small fw-bold d-flex align-items-center gap-2 ${
+                uploadStatus.includes("نجاح")
                   ? "text-success"
                   : "text-danger"
               }`}
             >
-              {uploadStatus}
+              {uploadStatus.includes("نجاح") ? (
+                <CheckCircle2 size={16} />
+              ) : (
+                <AlertTriangle size={16} />
+              )}
+              <span>{uploadStatus}</span>
             </div>
           )}
         </div>
@@ -226,13 +254,33 @@ const [botTyping, setBotTyping] = useState(false); //bot thinking wait
           />
           <button
             type="submit"
-            className="btn btn-warning px-4 rounded-4 fw-bold text-white"
+            className="btn rounded-4 fw-bold text-white d-flex align-items-center justify-content-center gap-2"
             disabled={uploading}
+            style={{
+              background: "linear-gradient(135deg, #ff914d, #ffb476)",
+              border: "none",
+            }}
           >
+            <SendHorizontal size={18} />
             إرسال
           </button>
         </form>
       </div>
-    </div>
+      </div>
+      <style>
+        {`
+          @keyframes fadeSlide {
+            from {
+              opacity: 0;
+              transform: translateY(10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        `}
+      </style>
+    </>
   );
 }
