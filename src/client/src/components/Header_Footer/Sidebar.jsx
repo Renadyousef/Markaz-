@@ -5,9 +5,9 @@ import { NavLink, useNavigate } from "react-router-dom";
 export default function Sidebar({
   open,
   onClose,
-  active,     // اختياري: احتفظنا به كـ fallback لو ما كان فيه Router
-  onSelect,   // اختياري: fallback
-  onProfile,  // اختياري: fallback
+  active,
+  onSelect,
+  onProfile,
   onLogout,
 }) {
   const [firstName, setFirstName] = useState("");
@@ -47,7 +47,6 @@ export default function Sidebar({
     navigate("/", { replace: true });
   };
 
-  // امنع تمرير الخلفية عند الفتح + إغلاق بـ ESC
   useEffect(() => {
     if (open) document.body.classList.add("body--noscroll");
     else document.body.classList.remove("body--noscroll");
@@ -60,7 +59,6 @@ export default function Sidebar({
     };
   }, [open, onClose]);
 
-  // تعريف العناصر ومساراتها
   const items = [
     { key: "home",     label: "الشاشة الرئيسية",       icon: DashboardIcon, path: "/home" },
     { key: "plans",    label: "الخطط الدراسية",        icon: PlanIcon,      path: "/plans" },
@@ -84,7 +82,6 @@ export default function Sidebar({
         role="dialog"
         aria-label="القائمة الجانبية"
       >
-        {/* رأس السايدبار */}
         <div className="sideHead">
           <div className="sideTitle">
             <div className="titleLogo">
@@ -99,7 +96,6 @@ export default function Sidebar({
           </button>
         </div>
 
-        {/* القائمة */}
         <nav className="list" aria-label="القائمة">
           {items.map(({ key, label, icon: Icon, path }) => (
             <NavLink
@@ -109,9 +105,7 @@ export default function Sidebar({
                 `item ${isActive || active === key ? "active" : ""}`
               }
               onClick={() => {
-                // إغلاق القائمة بعد التنقل
                 onClose?.();
-                // دعم fallback لو في مكان تستخدمين onSelect
                 onSelect?.(key);
               }}
               end
@@ -122,12 +116,10 @@ export default function Sidebar({
           ))}
         </nav>
 
-        {/* أسفل الشريط */}
         <div className="profileFooter">
           <div
             className="profileInfo"
             onClick={() => {
-              // التنقل للملف الشخصي
               navigate("/profile");
               onProfile?.();
               onClose?.();
@@ -167,7 +159,6 @@ export default function Sidebar({
         </div>
       </aside>
 
-      {/* تأكيد الخروج */}
       {confirmOpen && (
         <div className="confirmOverlay">
           <div className="confirmBox">
@@ -183,6 +174,14 @@ export default function Sidebar({
           </div>
         </div>
       )}
+
+      {/* ===== خط Cairo للسايدبار فقط ===== */}
+      <style>{`
+        .sidebar,
+        .sidebar * {
+          font-family: "Cairo", "Helvetica Neue", sans-serif !important;
+        }
+      `}</style>
     </>
   );
 }

@@ -1,4 +1,3 @@
-
 import "./page-section.css";
 
 export default function PrivacyPolicy() {
@@ -13,31 +12,32 @@ export default function PrivacyPolicy() {
         <h1 className="about-title reveal text-center">سياسة الخصوصية</h1>
 
         <div className="about-content">
+
           <p className="about-text reveal delay-1">
-            في مركز نهتم بخصوصية بياناتك بشكل كبير. توضح هذه السياسة كيف يتم جمع واستخدام وحماية
-            المعلومات الخاصة بك عند استخدام التطبيق.
+            في مركز نهتم بخصوصية بياناتك بشكل كبير. توضح هذه السياسة كيفية جمع، استخدام،
+            ومعالجة المعلومات الخاصة بك عند استخدامك للتطبيق.
           </p>
 
           <h2 className="about-subtitle reveal delay-2">المعلومات التي نجمعها</h2>
           <ul className="about-list reveal delay-2">
             <li>المعلومات الأساسية مثل الاسم والبريد الإلكتروني عند التسجيل.</li>
-            <li>بيانات الاستخدام داخل التطبيق والإعدادات المفضلة.</li>
+            <li>إعداداتك المفضلة داخل التطبيق وبيانات الاستخدام العامة.</li>
           </ul>
 
           <h2 className="about-subtitle reveal delay-3">كيفية استخدام المعلومات</h2>
           <ul className="about-list reveal delay-3">
-            <li>تحسين تجربة المستخدم وتخصيص المحتوى.</li>
-            <li>تقديم الدعم الفني والتواصل عند الحاجة.</li>
+            <li>تحسين تجربتك داخل التطبيق وتخصيص المحتوى وفق احتياجاتك.</li>
+            <li>تقديم الدعم الفني والتواصل معك عند الضرورة.</li>
           </ul>
 
           <h2 className="about-subtitle reveal delay-3">حماية البيانات</h2>
           <p className="about-text reveal delay-3">
-            نستخدم أحدث تقنيات الأمان لحماية بياناتك، ولا نشارك معلوماتك مع أي طرف ثالث إلا في
-            الحالات التي يفرضها القانون.
+            نلتزم بحماية بياناتك باستخدام أحدث تقنيات الأمان، ولا تتم مشاركة معلوماتك مع أي طرف
+            ثالث إلا في الحالات التي ينص عليها القانون.
           </p>
+
         </div>
       </div>
     </section>
   );
 }
-
