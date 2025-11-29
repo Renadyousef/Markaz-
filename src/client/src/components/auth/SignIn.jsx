@@ -91,7 +91,7 @@ export default function SignIn({ setToken , goTo }) {
 
         <div className="auth-actions">
           <button type="button" className="text-link" onClick={() => goTo("forgot")}>
-            هل نسيت البريد أو كلمة المرور؟
+            هل نسيت كلمة المرور؟
           </button>
         </div>
 
