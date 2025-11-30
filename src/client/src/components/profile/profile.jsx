@@ -74,7 +74,7 @@ export default function Profile() {
     const beforeUnload = (e) => {
       if (!isDirty) return;
       e.preventDefault();
-      e.returnValue = "لديك تعديلات غير محفوظة. هل تريدين المغادرة دون حفظ؟";
+      e.returnValue = "لديك تعديلات غير محفوظة. هل تريد المغادرة دون حفظ؟";
     };
     window.addEventListener("beforeunload", beforeUnload);
     return () => window.removeEventListener("beforeunload", beforeUnload);
@@ -140,7 +140,7 @@ export default function Profile() {
       return;
     }
 
-    const ok = window.confirm("هل تريدين حفظ التغييرات؟");
+    const ok = window.confirm("هل تريد حفظ التغييرات؟");
     if (!ok) return;
 
     try {
