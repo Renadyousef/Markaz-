@@ -5,7 +5,6 @@ import "./Session.css";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const SESSIONS_API = `${API_BASE}/sessions`;
-const ACCENT = "#FF914D";
 const PRESETS = [
   { minutes: 5, valueLabel: "5", unitLabel: "دقائق" },
   { minutes: 10, valueLabel: "10", unitLabel: "دقائق" },
@@ -192,7 +191,15 @@ export default function StudySessionSetup() {
   };
 
   return (
-    <div className="session-setup-screen">
+    <div className="session-setup-screen" dir="rtl" lang="ar">
+      <section className="session-hero">
+        <div className="session-title-block">
+          <h1 className="session-title">إعداد جلسة الدراسة</h1>
+          <p className="session-subtitle">
+            صمّم جلستك بالطريقة التي تناسبك لتحافظ على طاقتك وتركيزك لتصل لأفضل أداء.
+          </p>
+        </div>
+      </section>
       <section className="session-panel">
         <input
           className="session-name-field"
