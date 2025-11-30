@@ -130,6 +130,16 @@ export default function AllStudyPlans() {
   // تتبّع عمليات الحذف لتعطيل زر X أثناء التنفيذ
   const [deletingIds, setDeletingIds] = useState(new Set());
 
+  // مودال الحذف
+  const [modal, setModal] = useState({
+    open: false,
+    title: "",
+    body: "",
+    primaryLabel: "",
+    secondaryLabel: "",
+  });
+  const [planToDelete, setPlanToDelete] = useState(null);
+
   const styles = `
     .plansRoot,
     .plansRoot * {
@@ -495,7 +505,103 @@ export default function AllStudyPlans() {
       color: #6b7280;
       font-weight: 500;
     }
+
+    /* ===== مودال تأكيد الحذف ===== */
+    .custom-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1050;
+    }
+
+    .custom-modal-card {
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 24px 28px 20px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 24px 60px rgba(15,23,42,0.22);
+      text-align: center;
+    }
+
+    .modal-title-text {
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: #111827;
+    }
+
+    .modal-body-text {
+      font-size: 0.95rem;
+      color: #6b7280;
+      margin-bottom: 18px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .modal-btn-primary {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 22px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      background-color: ${PRIMARY_COLOR};
+      color: #fff;
+    }
+
+    .modal-btn-primary:hover {
+      background-color: #e57e3f;
+    }
+
+    .modal-btn-outline {
+      border-radius: 999px;
+      padding: 8px 22px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      color: #111827;
+    }
+
+    .modal-btn-outline:hover {
+      border-color: ${PRIMARY_COLOR};
+      color: ${PRIMARY_COLOR};
+    }
   `;
+
+  // دوال المودال
+  const openDeleteModal = (plan) => {
+    setPlanToDelete(plan);
+    setModal({
+      open: true,
+      title: "حذف الخطة الدراسية؟",
+      body: `هل تريد حذف الخطة «${plan.title}»؟ سيتم حذفها نهائيًا.`,
+      primaryLabel: "نعم، حذف الخطة",
+      secondaryLabel: "إلغاء",
+    });
+  };
+
+  const closeModal = () => {
+    setModal((m) => ({ ...m, open: false }));
+    setPlanToDelete(null);
+  };
+
+  const handleModalPrimary = () => {
+    if (planToDelete) {
+      confirmDeletePlan(planToDelete);
+    }
+  };
+
+  const handleModalSecondary = () => {
+    closeModal();
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -532,21 +638,17 @@ export default function AllStudyPlans() {
     })();
   }, []);
 
-  // حذف خطة مع تأكيد
-  const handleDeletePlan = async (plan) => {
+  // الحذف الفعلي (نفس منطقك القديم لكن بدون window.confirm)
+  const confirmDeletePlan = async (plan) => {
     const token = localStorage.getItem("token");
     if (!token) {
       setErr({
         title: "لا يوجد توكن",
         message: "يرجى تسجيل الدخول أولاً.",
       });
+      closeModal();
       return;
     }
-
-    const ok = window.confirm(
-      `هل تريد حذف الخطة «${plan.title}»؟\nسيتم حذفها نهائيًا.`
-    );
-    if (!ok) return;
 
     setDeletingIds((prev) => new Set(prev).add(plan.id));
 
@@ -569,7 +671,13 @@ export default function AllStudyPlans() {
         n.delete(plan.id);
         return n;
       });
+      closeModal();
     }
+  };
+
+  // هذه الدالة الآن فقط تفتح المودال بدل window.confirm
+  const handleDeletePlan = (plan) => {
+    openDeleteModal(plan);
   };
 
   const filtered = useMemo(() => {
@@ -650,6 +758,38 @@ export default function AllStudyPlans() {
   return (
     <div dir="rtl" lang="ar" className="plansRoot">
       <style>{styles}</style>
+
+      {/* مودال تأكيد الحذف */}
+      {modal.open && (
+        <div className="custom-modal-backdrop">
+          <div className="custom-modal-card" dir="rtl">
+            {modal.title && (
+              <h5 className="modal-title-text">{modal.title}</h5>
+            )}
+            {modal.body && (
+              <p className="modal-body-text">{modal.body}</p>
+            )}
+            <div className="modal-actions">
+              {modal.secondaryLabel && (
+                <button
+                  type="button"
+                  className="modal-btn-outline"
+                  onClick={handleModalSecondary}
+                >
+                  {modal.secondaryLabel}
+                </button>
+              )}
+              <button
+                type="button"
+                className="modal-btn-primary"
+                onClick={handleModalPrimary}
+              >
+                {modal.primaryLabel || "حسناً"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <section className="progress-wrap">
         {/* الهيدر */}
