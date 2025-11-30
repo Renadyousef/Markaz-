@@ -253,6 +253,33 @@ export default function CreateStudyPlan() {
       display: none;
     }
 
+    /* حقل مستوى الأولوية بسهم مخصص */
+    .priority-select-wrap {
+      position: relative;
+      width: 100%;
+    }
+
+    .priority-select {
+      padding-right: 44px !important;     /* مساحة للسهم المخصص */
+      background-image: none !important;  /* إلغاء سهم Bootstrap */
+      background-position: right center !important;
+      background-repeat: no-repeat !important;
+    }
+
+    .priority-arrow {
+      position: absolute;
+      top: 50%;
+      right: 16px;
+      transform: translateY(-50%);
+      font-size: 1.1rem;
+      color: #6b7280;
+      pointer-events: none;
+    }
+
+    .priority-select:focus + .priority-arrow {
+      color: ${PRIMARY_COLOR};
+    }
+
     .date-display {
       width: 100%;
       text-align: right;
@@ -442,14 +469,39 @@ export default function CreateStudyPlan() {
     }
   `;
 
+  // ترتيب المهام
   const sortedTasks = useMemo(() => {
+    const priorityRank = {
+      "عالية": 3,
+      "متوسطة": 2,
+      "منخفضة": 1,
+    };
+
     const arr = [...tasks];
+
     arr.sort((a, b) => {
+      const pa = priorityRank[a.priority] || 0;
+      const pb = priorityRank[b.priority] || 0;
+
+      if (pa !== pb) {
+        return pb - pa;
+      }
+
       const da = a.deadline || "";
       const db = b.deadline || "";
-      if (da !== db) return String(da).localeCompare(String(db));
-      return String(a.title || "").localeCompare(String(b.title || ""), "ar");
+
+      if (da && !db) return -1;
+      if (!da && db) return 1;
+
+      if (da !== db) {
+        return String(da).localeCompare(String(db));
+      }
+
+      const oa = a.createdAt || 0;
+      const ob = b.createdAt || 0;
+      return oa - ob;
     });
+
     return arr;
   }, [tasks]);
 
@@ -467,10 +519,6 @@ export default function CreateStudyPlan() {
     }
   };
 
-  // إضافة مهمة:
-  // - ولا حقل معبأ => رسالة
-  // - حقول ناقصة => رسالة
-  // - تاريخ أقدم من اليوم => رسالة
   const addTask = () => {
     if (!taskTitle.trim() && !taskDeadline && !taskPriority) {
       openModal({
@@ -500,12 +548,16 @@ export default function CreateStudyPlan() {
       return;
     }
 
+    const now = Date.now();
+
     const newTask = {
-      id: Date.now().toString(),
+      id: now.toString(),
+      createdAt: now,
       title: taskTitle.trim(),
       deadline: taskDeadline || "",
       priority: taskPriority || "",
     };
+
     setTasks((prev) => [...prev, newTask]);
     setTaskTitle("");
     setTaskDeadline("");
@@ -516,7 +568,6 @@ export default function CreateStudyPlan() {
     setTasks((prev) => prev.filter((t) => t.id !== id));
   };
 
-  // رجوع من الهيدر: لو ما في تغييرات يرجع مباشرة بدون رسالة
   const handleBack = () => {
     if (!hasChanges) {
       navigate("/plans");
@@ -531,7 +582,6 @@ export default function CreateStudyPlan() {
     });
   };
 
-  // زر إلغاء: لو ما في تغييرات يرجع مباشرة بدون رسالة
   const handleCancel = () => {
     if (!hasChanges) {
       navigate("/plans");
@@ -599,7 +649,6 @@ export default function CreateStudyPlan() {
     <div dir="rtl" className="createPlanRoot">
       <style>{styles}</style>
 
-      {/* مودال موحّد للرسائل */}
       {modal.open && (
         <div className="custom-modal-backdrop">
           <div className="custom-modal-card" dir="rtl">
@@ -731,16 +780,19 @@ export default function CreateStudyPlan() {
 
             <div className="col-12 col-md-6">
               <label className="form-label fw-semibold">مستوى الأولوية</label>
-              <select
-                className="form-select modern-select"
-                value={taskPriority}
-                onChange={(e) => setTaskPriority(e.target.value)}
-              >
-                <option value="">اختر مستوى الأولوية</option>
-                <option value="عالية">عالية</option>
-                <option value="متوسطة">متوسطة</option>
-                <option value="منخفضة">منخفضة</option>
-              </select>
+              <div className="priority-select-wrap">
+                <select
+                  className="form-select modern-select priority-select"
+                  value={taskPriority}
+                  onChange={(e) => setTaskPriority(e.target.value)}
+                >
+                  <option value="">اختر مستوى الأولوية</option>
+                  <option value="عالية">عالية</option>
+                  <option value="متوسطة">متوسطة</option>
+                  <option value="منخفضة">منخفضة</option>
+                </select>
+                <span className="priority-arrow">⌄</span>
+              </div>
             </div>
           </div>
 
@@ -768,50 +820,50 @@ export default function CreateStudyPlan() {
             </h2>
           </div>
 
-          {sortedTasks.length === 0 ? (
-            <div className="empty-state-card">
-              لم يتم إضافة مهام حتى الآن.
-            </div>
-          ) : (
-            <div className="tasks-list">
-              {sortedTasks.map((task) => {
-                const priorityClass =
-                  task.priority === "عالية"
-                    ? "p-high"
-                    : task.priority === "متوسطة"
-                    ? "p-mid"
-                    : "p-low";
+        {sortedTasks.length === 0 ? (
+          <div className="empty-state-card">
+            لم يتم إضافة مهام حتى الآن.
+          </div>
+        ) : (
+          <div className="tasks-list">
+            {sortedTasks.map((task) => {
+              const priorityClass =
+                task.priority === "عالية"
+                  ? "p-high"
+                  : task.priority === "متوسطة"
+                  ? "p-mid"
+                  : "p-low";
 
-                return (
-                  <div key={task.id} className="task-item">
-                    <div className="d-flex justify-content-between align-items-start gap-2">
-                      <div className="flex-grow-1">
-                        <div className="task-title">{task.title}</div>
-                        <div className="task-meta mt-1">
-                          <span className="task-meta-item">
-                            الموعد:{" "}
-                            {task.deadline ? prettyDate(task.deadline) : "—"}
-                          </span>
-                          <span className={`priority-badge ${priorityClass}`}>
-                            {task.priority || "—"}
-                          </span>
-                        </div>
+              return (
+                <div key={task.id} className="task-item">
+                  <div className="d-flex justify-content-between align-items-start gap-2">
+                    <div className="flex-grow-1">
+                      <div className="task-title">{task.title}</div>
+                      <div className="task-meta mt-1">
+                        <span className="task-meta-item">
+                          الموعد:{" "}
+                          {task.deadline ? prettyDate(task.deadline) : "—"}
+                        </span>
+                        <span className={`priority-badge ${priorityClass}`}>
+                          {task.priority || "—"}
+                        </span>
                       </div>
-
-                      <button
-                        className="btn btn-sm btn-link text-danger p-0"
-                        onClick={() => removeTask(task.id)}
-                        title="حذف المهمة من الخطة"
-                        style={{ whiteSpace: "nowrap" }}
-                      >
-                        <TrashIcon />
-                      </button>
                     </div>
+
+                    <button
+                      className="btn btn-sm btn-link text-danger p-0"
+                      onClick={() => removeTask(task.id)}
+                      title="حذف المهمة من الخطة"
+                      style={{ whiteSpace: "nowrap" }}
+                    >
+                      <TrashIcon />
+                    </button>
                   </div>
-                );
-              })}
-            </div>
-          )}
+                </div>
+              );
+            })}
+          </div>
+        )}
         </div>
 
         {/* الأزرار أسفل الصفحة */}
