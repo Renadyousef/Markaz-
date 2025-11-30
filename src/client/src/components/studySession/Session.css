@@ -227,9 +227,11 @@
 .session-timer-page {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: clamp(12px, 5vh, 36px) 16px;
+  gap: 32px;
+  padding: clamp(40px, 8vh, 80px) 24px;
   width: 100%;
   box-sizing: border-box;
   font-family: "Cairo", "Helvetica Neue", sans-serif;
@@ -243,23 +245,28 @@
 }
 
 .timer-surface {
-  width: min(420px, 92vw);
-  border-radius: 36px;
-  padding: 28px 24px 40px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.14);
+  width: clamp(320px, 75vw, 640px);
+  border-radius: 28px;
+  padding: clamp(20px, 3.5vw, 32px);
+  box-shadow: 0 14px 32px rgba(255, 145, 77, 0.16);
   text-align: center;
   background: #fff;
   color: inherit;
+  border: 1px solid rgba(255, 145, 77, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: center;
 }
 .session-timer-page.break .timer-surface {
   animation: break-enter 0.9s ease;
 }
 
 .timer-page-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-bottom: 10px;
-  color: inherit;
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 0;
+  color: var(--session-text);
   font-family: "Cairo", "Helvetica Neue", sans-serif;
 }
 
@@ -276,7 +283,7 @@
 }
 .timer-circle__bg {
   fill: none;
-  stroke: rgba(0, 0, 0, 0.12);
+  stroke: var(--session-border);
   stroke-width: 8;
 }
 .timer-circle__progress {
@@ -293,8 +300,8 @@
   align-items: center;
   justify-content: center;
   font-size: 32px;
-  font-weight: 700;
-  color: inherit;
+  font-weight: 500;
+  color: var(--session-text);
   letter-spacing: 1px;
 }
 
@@ -302,26 +309,39 @@
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 12px;
-  color: inherit;
+  color: var(--session-text);
   direction: rtl;
   font-family: "Cairo", "Helvetica Neue", sans-serif;
 }
 .timer-icon-wrap {
-  width: 66px;
+  width: 72px;
+  height: 72px;
   margin: 0 auto 18px;
-  color: inherit;
+  color: var(--session-primary);
+  border-radius: 20px;
+  background: var(--session-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 24px rgba(255, 140, 66, 0.18);
 }
 .timer-icon-wrap svg {
-  width: 100%;
-  height: 100%;
+  width: 56px;
+  height: 56px;
+}
+.session-timer-page.break .timer-icon-wrap {
+  background: #ecfdf5;
+  color: #047857;
+  box-shadow: 0 10px 24px rgba(52, 211, 153, 0.2);
 }
 
 .timer-controls {
   display: flex;
   justify-content: center;
   gap: 28px;
-  margin-top: 18px;
+  margin-top: 10px;
   flex-wrap: wrap;
+  width: 100%;
 }
 .timer-controls,
 .control-label,
@@ -346,15 +366,16 @@
   gap: 10px;
 }
 .control-btn {
-  width: 78px;
-  height: 78px;
+  width: 82px;
+  height: 82px;
   border-radius: 50%;
-  border: none;
+  border: 1px solid var(--session-border);
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 .control-btn.main svg,
 .control-btn.finish svg {
@@ -363,24 +384,40 @@
   fill: currentColor;
 }
 .control-btn.main {
-  background: #e8f0eb;
-  color: #1f3d2b;
+  background: var(--session-primary);
+  border-color: var(--session-primary);
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(255, 140, 66, 0.25);
+}
+.control-btn.main.break {
+  background: #ecfdf5;
+  border-color: #34d399;
+  color: #047857;
+  box-shadow: 0 12px 30px rgba(52, 211, 153, 0.2);
 }
 .control-btn.main.paused {
   background: #fff;
+  color: var(--session-primary);
+  border-color: var(--session-primary);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
 }
+.control-btn.main.break.paused {
+  border-color: #34d399;
+  color: #047857;
+}
 .control-btn.finish {
-  background: #ffe7dc;
-  color: #c2410c;
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  background: #fff;
+  border-color: var(--session-primary);
+  color: var(--session-primary);
+  box-shadow: 0 10px 24px rgba(255, 140, 66, 0.15);
 }
 .control-btn:hover {
   transform: translateY(-2px);
+  filter: brightness(1.02);
 }
 .control-label {
   font-size: 0.95rem;
-  color: inherit;
+  color: var(--session-text);
   font-weight: 500;
 }
 

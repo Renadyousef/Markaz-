@@ -82,21 +82,36 @@ export default function StudySessionTimer() {
       el.webkitRequestFullscreen ||
       el.mozRequestFullScreen ||
       el.msRequestFullscreen;
-    if (request) {
+
+    function tryFullscreen() {
+      if (!request || document.fullscreenElement) return;
       try {
         const maybePromise = request.call(el);
         if (maybePromise && typeof maybePromise.then === "function") {
-          maybePromise.then(() => {
-            fullscreenRef.current = true;
-          }).catch(() => {});
+          maybePromise
+            .then(() => {
+              fullscreenRef.current = true;
+              document.removeEventListener("pointerdown", handleUserGesture);
+            })
+            .catch(() => {});
         } else {
           fullscreenRef.current = true;
+          document.removeEventListener("pointerdown", handleUserGesture);
         }
       } catch {
         fullscreenRef.current = false;
       }
     }
+
+    function handleUserGesture() {
+      tryFullscreen();
+    }
+
+    tryFullscreen();
+    document.addEventListener("pointerdown", handleUserGesture, { once: true });
+
     return () => {
+      document.removeEventListener("pointerdown", handleUserGesture);
       const exit =
         document.exitFullscreen ||
         document.webkitExitFullscreen ||
@@ -202,7 +217,11 @@ export default function StudySessionTimer() {
   };
 
   return (
-    <div className={`session-timer-page ${isBreakMode ? "break" : "study"}`}>
+    <div
+      className={`session-timer-page ${isBreakMode ? "break" : "study"}`}
+      dir="rtl"
+      lang="ar"
+    >
       <div className="timer-surface">
         <p className="timer-page-title">{sessionTitle}</p>
 
