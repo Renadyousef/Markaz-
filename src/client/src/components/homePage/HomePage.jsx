@@ -408,8 +408,8 @@ export default function HomePage() {
                       {loadingName
                         ? "جاري التحميل…"
                         : errorMsg
-                        ? "مرحباً بعودتك!"
-                        : `مرحباً بعودتك ${firstName ? firstName : "صديقي"}!`}
+                        ? "مرحباً !"
+                        : `مرحباً  ${firstName ? firstName : "صديقي"}!`}
                     </h1>
                     <p>هل أنت مستعد لمتابعة رحلتك الدراسية؟</p>
                     {errorMsg && <div className="heroError">{errorMsg}</div>}
