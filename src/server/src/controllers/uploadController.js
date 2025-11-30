@@ -10,7 +10,7 @@ const admin = require("firebase-admin");
 const db = admin.firestore();
 
 const MODEL_API = process.env.MODEL_API || "http://localhost:6001/generate-from-text";
-const MAX_SIZE_MB = 20;
+const MAX_SIZE_MB = 6;
 const GS_TIMEOUT = 120000;
 const AV_TIMEOUT = 120000;
 const MODEL_TIMEOUT = 120000;

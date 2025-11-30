@@ -3,12 +3,6 @@ import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
-/** يسمح فقط بـ:
- * - الحروف العربية U+0600–U+06FF (تشمل التشكيل والهمزات)
- * - التطويل U+0640
- * - الأرقام العربية U+0660–U+0669
- * - المسافة
- */
 const ARABIC_ONLY = /[^\u0600-\u06FF\u0640\u0660-\u0669\s]/g;
 
 function sanitizeArabic(input) {
@@ -24,30 +18,22 @@ function validateArabicName(s) {
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
-
   const [errorMessage, setErrorMessage] = useState("");
   const [okMessage, setOkMessage] = useState("");
-
   const [firstName, setFirstName] = useState("");
-  const [lastName,  setLastName]  = useState("");
-  const [email,     setEmail]     = useState("");
-  const [loading,   setLoading]   = useState(true);
-
-  // أخطاء الحقول
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(true);
   const [firstNameError, setFirstNameError] = useState("");
   const [lastNameError, setLastNameError] = useState("");
-
-  // القيم الأصلية + تتبّع التغييرات
   const initialRef = useRef({ firstName: "", lastName: "" });
   const [isDirty, setIsDirty] = useState(false);
 
-  // هيدر التوثيق من localStorage
   function getAuthHeaders() {
     const token = localStorage.getItem("token");
     return { headers: { Authorization: `Bearer ${token}` } };
   }
 
-  // جلب بيانات المستخدم
   useEffect(() => {
     (async () => {
       const token = localStorage.getItem("token");
@@ -56,17 +42,17 @@ export default function Profile() {
         setLoading(false);
         return;
       }
-
       try {
-        const res = await axios.get("http://localhost:5000/profile/me", getAuthHeaders());
+        const res = await axios.get(
+          "http://localhost:5000/profile/me",
+          getAuthHeaders()
+        );
         const fn = sanitizeArabic(res.data.firstName || "");
-        const ln = sanitizeArabic(res.data.lastName  || "");
+        const ln = sanitizeArabic(res.data.lastName || "");
         const em = res.data.email || "";
-
         setFirstName(fn);
         setLastName(ln);
         setEmail(em);
-
         initialRef.current = { firstName: fn, lastName: ln };
       } catch (e) {
         setErrorMessage(e.response?.data?.msg || "تعذّر جلب البيانات.");
@@ -76,16 +62,14 @@ export default function Profile() {
     })();
   }, []);
 
-  // حساب التغييرات ببساطة
   useEffect(() => {
     const nowFn = sanitizeArabic(firstName).trim();
     const nowLn = sanitizeArabic(lastName).trim();
     const initFn = (initialRef.current.firstName || "").trim();
-    const initLn = (initialRef.current.lastName  || "").trim();
+    const initLn = (initialRef.current.lastName || "").trim();
     setIsDirty(nowFn !== initFn || nowLn !== initLn);
   }, [firstName, lastName]);
 
-  // تحذير عند الإغلاق مع وجود تعديلات
   useEffect(() => {
     const beforeUnload = (e) => {
       if (!isDirty) return;
@@ -96,7 +80,6 @@ export default function Profile() {
     return () => window.removeEventListener("beforeunload", beforeUnload);
   }, [isDirty]);
 
-  // Handlers
   function handleFirstNameChange(value) {
     const clean = sanitizeArabic(value);
     setFirstName(value);
@@ -151,7 +134,9 @@ export default function Profile() {
     const ln = sanitizeArabic(lastName);
 
     if (!validateArabicName(fn) || !validateArabicName(ln)) {
-      setErrorMessage("الاسم الأول واسم العائلة يجب أن يكونا بالعربية فقط وبطول لا يقل عن حرفين.");
+      setErrorMessage(
+        "الاسم الأول واسم العائلة يجب أن يكونا بالعربية فقط وبطول لا يقل عن حرفين."
+      );
       return;
     }
 
@@ -168,7 +153,6 @@ export default function Profile() {
       initialRef.current = { firstName: fn, lastName: ln };
       setOkMessage("تم حفظ التغييرات بنجاح ✅");
 
-      // تختفي بعد 4 ثوانٍ
       setTimeout(() => {
         setOkMessage("");
         setIsEditing(false);
@@ -178,234 +162,376 @@ export default function Profile() {
     }
   };
 
-  const handleBackClick = () => {
-    if (isEditing && isDirty) {
-      const choice = confirm("لديك تعديلات غير محفوظة. هل تريدين حفظها قبل الرجوع؟");
-      if (choice) {
-        handleSave();
-        return;
-      }
-    }
-    window.history.back();
-  };
-
   if (loading) {
     return (
-      <div className="min-vh-100 d-flex flex-column gap-3 align-items-center justify-content-center" dir="rtl">
-        <div className="spinner-border" role="status" aria-label="جارٍ التحميل" />
-        <div>...تحميل</div>
+      <div
+        className="min-vh-100 d-flex flex-column gap-3 align-items-center justify-content-center"
+        dir="rtl"
+      >
+        <div
+          className="spinner-border text-primary"
+          role="status"
+          aria-label="جارٍ التحميل"
+        />
+        <div className="text-secondary">...تحميل</div>
       </div>
     );
   }
 
-  const saveDisabled = !isEditing || !!firstNameError || !!lastNameError;
+  const saveDisabled =
+    !isEditing || !!firstNameError || !!lastNameError || !isDirty;
 
   return (
-    <div className="profile-onepage" dir="rtl">
-      {/* رأس الصفحة */}
-      <header className="hero">
-        
-
-        <svg className="wave" viewBox="0 0 1440 140" preserveAspectRatio="none" aria-hidden="true">
-          <defs>
-            <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-  <stop offset="0%"   stopColor="#FFD8A8" />
-  <stop offset="55%"  stopColor="#FDBA74" />
-              <stop offset="100%" stopColor="#F59E0B" />
-</linearGradient>
-          </defs>
-          <path d="M0,64 C240,100 480,40 720,64 C960,88 1200,76 1440,60 L1440,160 L0,160 Z" fill="url(#waveGrad)"/>
-        </svg>
-      </header>
-
-      {/* المحتوى */}
-      <main className="orange-area">
-        <div className="avatar-wrap">
+    <div className="profile-page-modern-v5" dir="rtl">
+      <main className="profile-shell-v5">
+        {/* رأس البطاقة: الصورة والاسم والبريد */}
+        <header className="profile-info-header-v5">
           <img
-            className="avatar"
+            className="profile-avatar-v5"
             src="/profile.png"
             alt="صورة المستخدم"
           />
-        </div>
+          <div className="user-text-details-v5">
+            <h2 className="user-name-v5">
+              {`${sanitizeArabic(firstName)} ${sanitizeArabic(lastName)}`.trim() ||
+                "غير مُحدّد"}
+            </h2>
+            <p className="user-email-v5">{email}</p>
+          </div>
+        </header>
 
-        <h3 className="p-name">{`${sanitizeArabic(firstName)} ${sanitizeArabic(lastName)}`.trim()}</h3>
-        <div className="p-email">{email}</div>
+        <section className="profile-content-v5">
+          <div className="profile-header-text-v5">
+            <h3 className="profile-title-v5">إدارة الملف الشخصي</h3>
+            <p className="profile-subtitle-v5">
+              تحديث بياناتك الشخصية الأساسية.
+            </p>
+          </div>
 
-        <div className="container px-3 px-md-4">
-          <div className="card-area stack">
-            {errorMessage && <div className="alert alert-danger text-center m-0 mb-2">{errorMessage}</div>}
-            {okMessage && <div className="alert alert-success text-center m-0 mb-2">{okMessage}</div>}
+          <div className="profile-fields-card-v5">
+            {errorMessage && (
+              <div className="alert alert-danger text-center m-0 mb-3 modern-alert-error-v5">
+                {errorMessage}
+              </div>
+            )}
+            {okMessage && (
+              <div className="alert alert-success text-center m-0 mb-3 modern-alert-success-v5">
+                {okMessage}
+              </div>
+            )}
 
-            {/* فورم عرض+تعديل */}
             <form className="row g-3" onSubmit={handleSave}>
               <div className="col-12 col-md-6">
-                <label className="form-label">
+                <label className="form-label text-secondary fw-semibold">
                   الاسم الأول <span className="text-danger">*</span>
                 </label>
                 <input
-                  className={`form-control ${firstNameError ? "is-invalid" : ""}`}
+                  className={`form-control modern-input-v5 ${
+                    firstNameError ? "is-invalid" : ""
+                  }`}
                   value={firstName}
                   disabled={!isEditing}
-                  onChange={(e)=> handleFirstNameChange(e.target.value)}
+                  onChange={(e) => handleFirstNameChange(e.target.value)}
                   placeholder="مثال: أفنان"
                   required
                 />
                 {firstNameError && (
-                  <div className="invalid-feedback d-block">{firstNameError}</div>
+                  <div className="invalid-feedback d-block">
+                    {firstNameError}
+                  </div>
                 )}
               </div>
 
               <div className="col-12 col-md-6">
-                <label className="form-label">
+                <label className="form-label text-secondary fw-semibold">
                   اسم العائلة <span className="text-danger">*</span>
                 </label>
                 <input
-                  className={`form-control ${lastNameError ? "is-invalid" : ""}`}
+                  className={`form-control modern-input-v5 ${
+                    lastNameError ? "is-invalid" : ""
+                  }`}
                   value={lastName}
                   disabled={!isEditing}
-                  onChange={(e)=> handleLastNameChange(e.target.value)}
+                  onChange={(e) => handleLastNameChange(e.target.value)}
                   placeholder="مثال: السبيعي"
                   required
                 />
                 {lastNameError && (
-                  <div className="invalid-feedback d-block">{lastNameError}</div>
+                  <div className="invalid-feedback d-block">
+                    {lastNameError}
+                  </div>
                 )}
               </div>
 
               <div className="col-12">
-                <label className="form-label">البريد الإلكتروني</label>
-                <input className="form-control" value={email} disabled readOnly />
-                <div className="form-text"></div>
+                <label className="form-label text-secondary fw-semibold">
+                  البريد الإلكتروني
+                </label>
+                <input
+                  className="form-control modern-input-v5 bg-light-subtle"
+                  value={email}
+                  disabled
+                  readOnly
+                />
               </div>
 
-              <div className="col-12 d-flex flex-wrap gap-2 justify-content-end mt-2">
+              <div className="col-12 d-flex flex-wrap gap-2 justify-content-end mt-4">
                 {!isEditing ? (
                   <button
                     type="button"
-                    className="btn btn-light border d-flex align-items-center gap-2"
+                    className="btn btn-light border d-flex align-items-center gap-2 modern-btn-outline-v5"
                     onClick={enterEdit}
                     aria-label="تعديل"
                   >
-                    {/* قلم برتقالي */}
-                    <span className="icon-pen" aria-hidden>
+                    <span className="icon-edit-v5" aria-hidden>
                       <svg viewBox="0 0 24 24" width="18" height="18">
-                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41L18.37 3.29a1 1 0 0 0-1.41 0L15.12 5.12l3.75 3.75 1.84-1.83z" fill="currentColor"/>
+                        <path
+                          d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41L18.37 3.29a1 1 0 0 0-1.41 0L15.12 5.12l3.75 3.75 1.84-1.83z"
+                          fill="currentColor"
+                        />
                       </svg>
                     </span>
-                    تعديل
+                    تعديل البيانات
                   </button>
                 ) : (
                   <>
-                    <button type="button" className="btn btn-outline-secondary" onClick={cancelEdit}>
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary modern-btn-secondary-v5"
+                      onClick={cancelEdit}
+                    >
                       إلغاء
                     </button>
-                    <button type="submit" className="btn btn-primary px-4" disabled={saveDisabled}>
-                      حفظ
+                    <button
+                      type="submit"
+                      className="btn btn-primary px-4 modern-btn-primary-v5"
+                      disabled={saveDisabled}
+                    >
+                      حفظ التغييرات
                     </button>
                   </>
                 )}
               </div>
             </form>
           </div>
-        </div>
+        </section>
       </main>
 
-      {/* أنماط الصفحة */}
       <style>{`
-        :root{
-          --orange:#FDA838;
-          --bg:#ffffff;
+        /* ---------------------------------- */
+        /* تصميم عصري نهائي: Profile V5       */
+        /* ---------------------------------- */
 
-          /* قيم ريسبونسف */
-          --hero-h: clamp(96px, 14vh, 160px);
-          --avatar-size: clamp(96px, 14vw, 140px);
-          --wave-h: clamp(80px, 10vh, 140px);
-          --name-fz: clamp(18px, 2.2vw, 26px);
-          --email-fz: clamp(12px, 1.6vw, 15px);
+        .profile-page-modern-v5,
+        .profile-page-modern-v5 * {
+          font-family: "Cairo", "Helvetica Neue", sans-serif;
+          box-sizing: border-box;
         }
 
-        .profile-onepage{ min-height:100vh; background:transparent; position:relative; color:#111; }
-        html, body, #root { margin:0; padding:0; min-height:100%; }
-        body{ position:relative; }
-        body::before {
-          content:"";
-          position:fixed; inset:0; z-index:-1; pointer-events:none;
-          background: linear-gradient(180deg, #fff7ed 0%, #fff 20%, #fff5eb 60%, #fff 100%);
-          background-repeat:no-repeat; background-attachment:fixed;
+        /* خلفية الصفحة الأساسية (Body/Page) */
+        .profile-page-modern-v5 {
+          min-height: 100vh;
+          padding: 30px 15px 40px;
+          display: flex;
+          justify-content: center;
+          /* بدون لون خلفية، تاخذ خلفية الصفحة الأساسية */
+          background-color: transparent;
         }
 
-        .hero {
-          height: var(--hero-h);
-          background:#fff;
-          border-top-left-radius:18px; border-top-right-radius:18px;
-          position:relative;
+        /* البطاقة الرئيسية (Shell) */
+        .profile-shell-v5 {
+          width: 100%;
+          max-width: 700px;
+          background-color: #fff;
+          border-radius: 20px;
+          box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+          overflow: hidden;
         }
 
-        .round-icon-btn{
-          position:absolute; top:12px; left:12px; z-index:2; width:40px; height:40px;
-          background:#fff; border:2px solid var(--orange); color:var(--orange);
-          border-radius:50%; display:flex; align-items:center; justify-content:center;
-          cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.08);
-        }
-        .round-icon-btn:hover{ background:#fff7ec; }
-
-        .wave{ position:absolute; bottom:-1px; left:0; right:0; width:100%; height: var(--wave-h); }
-        .wave path{ filter: drop-shadow(0 -2px 6px rgba(0,0,0,.06)); }
-
-        .orange-area{
-          min-height:72vh;
-          padding: calc(var(--avatar-size) / 2 + 28px) 12px 36px;
-          display:flex; flex-direction:column; align-items:center; text-align:center;
+        /* رأس البطاقة: الصورة والاسم والبريد */
+        .profile-info-header-v5 {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          padding: 30px;
+          background: linear-gradient(135deg, #fce0c7, #fcd7b9);
+          border-bottom: 1px solid #f0e7dc;
         }
 
-        .avatar-wrap{
-          position:absolute;
-          top: calc(var(--hero-h) - var(--avatar-size) / 2);
-          left:50%;
-          transform:translateX(-50%);
-          width: var(--avatar-size);
-          height: var(--avatar-size);
+        .profile-avatar-v5 {
+          width: 90px;
+          height: 90px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 4px solid #fff;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          flex-shrink: 0;
         }
 
-        .avatar{
-          width:100%; height:100%; border-radius:50%;
-          border:6px solid #fff; object-fit:cover; box-shadow:0 6px 18px rgba(0,0,0,.18);
-          background:#eee;
+        .user-text-details-v5 {
+          text-align: right;
         }
 
-        .p-name{ font-weight:800; font-size: var(--name-fz); margin:10px 0 2px; }
-        .p-email{ opacity:.85; font-size: var(--email-fz); margin-bottom:16px; }
-
-        .stack{ width: min(900px, 100%); }
-        .card-area{
-          text-align:start; background:#fff; border-radius:14px; padding:16px;
-          box-shadow:0 6px 16px rgba(0,0,0,.08); margin:14px auto;
+        .user-name-v5 {
+          font-weight: 800;
+          font-size: clamp(20px, 2.5vw, 28px);
+          margin-bottom: 4px;
+          color: #2c3e50;
         }
 
-        .icon-pen{
-          width:28px; height:28px; border-radius:50%;
-          display:grid; place-items:center; color:var(--orange);
-          background:#fff; border:2px solid var(--orange);
+        .user-email-v5 {
+          font-size: clamp(14px, 1.8vw, 16px);
+          color: #7f8c8d;
+          margin: 0;
         }
 
-        /* تحسينات للشاشات الصغيرة */
-        @media (max-width: 575.98px){
-          .card-area{ padding:14px; }
-          .form-label{ font-size:14px; }
-          .form-control{ font-size:14px; }
-          .round-icon-btn{ width:36px; height:36px; top:10px; left:10px; }
+        .profile-content-v5 {
+          padding: 30px;
+          text-align: center;
         }
 
-        /* شاشات متوسطة فأعلى */
-        @media (min-width:768px){
-          .orange-area{ padding-top: calc(var(--avatar-size) / 2 + 36px); }
-          .card-area{ padding:24px; }
+        .profile-header-text-v5 {
+          margin-bottom: 25px;
         }
 
-        /* احترام تفضيل تقليل الحركة */
-        @media (prefers-reduced-motion: no-preference){
-          .avatar{ transition: transform .2s ease; }
-          .avatar:hover{ transform: translateY(-2px); }
+        .profile-title-v5 {
+          font-size: 1.6rem;
+          font-weight: 700;
+          color: #2c3e50;
+          margin-bottom: 6px;
+        }
+
+        .profile-subtitle-v5 {
+          font-size: 0.95rem;
+          color: #7f8c8d;
+          margin: 0;
+        }
+        
+        .profile-fields-card-v5 {
+          background: #ffffff;
+          border-radius: 16px;
+          padding: 25px;
+          text-align: start;
+        }
+
+        /* حقول الإدخال */
+        .modern-input-v5 {
+          border-radius: 10px;
+          border-color: #e0e7ee;
+          padding-inline: 14px;
+          padding-block: 10px;
+        }
+        .modern-input-v5:focus {
+          border-color: #f97316;
+          box-shadow: 0 0 0 0.15rem rgba(249, 115, 22, 0.25);
+        }
+
+        /* تنبيهات الأخطاء والنجاح */
+        .modern-alert-error-v5 {
+          border-radius: 10px;
+          background-color: #fee2e2;
+          color: #b91c1c;
+          border-color: #fca5a5;
+          font-weight: 600;
+        }
+        .modern-alert-success-v5 {
+          border-radius: 10px;
+          background-color: #d1fae5;
+          color: #065f46;
+          border-color: #a7f3d0;
+          font-weight: 600;
+        }
+
+        /* أيقونة زر التعديل */
+        .icon-edit-v5 {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          display: grid;
+          place-items: center;
+          color: #f97316;
+          background: #fff7ed;
+          border: 1px solid #fed7aa;
+        }
+
+        /* زر التعديل */
+        .modern-btn-outline-v5 {
+          border-radius: 999px;
+          padding-inline: 18px;
+          font-weight: 600;
+          color: #f97316;
+          border-color: #fed7aa;
+          background: #fff;
+          transition: all 0.2s ease;
+        }
+        .modern-btn-outline-v5:hover {
+          background: #fff7ed;
+          border-color: #f97316;
+          transform: translateY(-1px);
+        }
+
+        /* زر الإلغاء */
+        .modern-btn-secondary-v5 {
+          border-radius: 999px;
+          font-weight: 600;
+          border-color: #dce1e6;
+          color: #555;
+          transition: all 0.2s ease;
+        }
+        .modern-btn-secondary-v5:hover {
+          background-color: #f0f4f8;
+          border-color: #c9d2de;
+          color: #333;
+        }
+
+        /* زر الحفظ */
+        .modern-btn-primary-v5 {
+          border-radius: 999px;
+          font-weight: 700;
+          background: #f97316;
+          border-color: #f97316;
+          transition: all 0.2s ease;
+        }
+        .modern-btn-primary-v5:hover:not(:disabled) {
+          background: #ea580c;
+          border-color: #ea580c;
+        }
+        /* هنا التعديل: لما يكون معطّل يكون رمادي مو أزرق */
+        .modern-btn-primary-v5:disabled {
+          background-color: #d1d5db;
+          border-color: #d1d5db;
+          color: #4b5563;
+          opacity: 1;
+          cursor: not-allowed;
+        }
+
+        /* ---------------------------------- */
+        /* تنسيقات الاستجابة        */
+        /* ---------------------------------- */
+
+        @media (max-width: 575.98px) {
+          .profile-page-modern-v5 {
+            padding-inline: 10px;
+          }
+          .profile-shell-v5 {
+            box-shadow: none;
+            border-radius: 0;
+          }
+          .profile-info-header-v5 {
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
+            gap: 10px;
+          }
+          .user-text-details-v5 {
+            text-align: center;
+          }
+          .profile-content-v5 {
+            padding: 20px;
+          }
+          .profile-fields-card-v5 {
+            padding: 20px;
+          }
         }
       `}</style>
     </div>

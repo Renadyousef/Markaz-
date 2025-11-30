@@ -1,8 +1,9 @@
+// src/client/src/components/auth/AuthPage.jsx
 import { useState, useEffect } from "react";
 import SignUp from "./SignUp";
 import SignIn from "./SignIn";
-import Footer from '../Header_Footer/Footer'
-import LandingHeader from "./AuthHeader";
+import Footer from "../Header_Footer/Footer";
+import LandingHeader from "../landingPage/LandingHeader"; // تأكدي من المسار الصحيح
 
 export default function AuthPage({ setToken, initialTab = "signin", goTo }) {
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -14,7 +15,9 @@ export default function AuthPage({ setToken, initialTab = "signin", goTo }) {
 
   return (
     <div className="after_footer">
+      {/* ما عاد نرسل goTo هنا */}
       <LandingHeader />
+
       <div className="auth-container" style={{ marginTop: "120px" }}>
         <div className="auth-shell">
           <section
@@ -25,8 +28,10 @@ export default function AuthPage({ setToken, initialTab = "signin", goTo }) {
               مرحباً بك في <span>مركز</span>
             </h1>
             <p className="auth-hero__subtitle">
-             هنا تبدأ رحلتك نحو الإبداع بثقة. كل فكرة لها فرصة، وكل خطوة تقرّبك من التميز.
-أنشئ حسابك الآن وابدأ رحلتك، أو سجّل دخولك لتكمل طريقك نحو النجاح بسهولة وسلاسة.
+              هنا تبدأ رحلتك نحو الإبداع بثقة. كل فكرة لها فرصة، وكل خطوة
+              تقرّبك من التميز.
+              أنشئ حسابك الآن وابدأ رحلتك، أو سجّل دخولك لتكمل طريقك نحو
+              النجاح بسهولة وسلاسة.
             </p>
             <button
               type="button"

@@ -1,4 +1,3 @@
-
 import "./page-section.css";
 
 export default function About() {
@@ -13,9 +12,8 @@ export default function About() {
         <h1 className="about-title reveal">عن المشروع</h1>
 
         <p className="about-text reveal delay-1">
-         <p></p>هو منصة تعليمية ذكية تهدف إلى مساعدة الطلاب في تنظيم 
-    
-          وقتهم وتحسين أسلوب مذاكرتهم من خلال أدوات مبتكرة مثل الخطط الدراسية التفاعلية،
+          هو منصة تعليمية ذكية تهدف إلى مساعدة الطلاب في تنظيم وقتهم
+          وتحسين أسلوب مذاكرتهم من خلال أدوات مبتكرة مثل الخطط الدراسية التفاعلية،
           الاختبارات القصيرة، والدردشة الذكية لشرح الدروس وحل الأسئلة.
         </p>
 
@@ -32,5 +30,3 @@ export default function About() {
     </section>
   );
 }
-
-

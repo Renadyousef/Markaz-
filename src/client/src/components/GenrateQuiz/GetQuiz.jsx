@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import TTSControls from "./TTSControls";
 import FontSettings from "./FontSettings";
+import "./GetQuiz.css";
 
 const A11Y_KEY = "quiz_a11y_settings";
 const DEFAULT_A11Y = { baseSize: 18, lineHeight: 1.6, letterSpacing: 0.0 };
@@ -253,63 +254,195 @@ export default function GetQuiz() {
   }
 
   // Level selection (apply a11y to header)
-  if (!quiz) {
-    return (
-      <div style={{ display: "grid", placeItems: "center", padding: 24 }}>
-        <div
-          style={{
-            width: "min(400px, 96%)",
-            background: "#fff",
-            borderRadius: 14,
-            padding: 24,
-            boxShadow: "0 10px 30px rgba(2,6,23,0.06)",
-            border: "1px solid #eef2f7",
-            textAlign: "center",
-          }}
-        >
+if (!quiz) {
+  const PRIMARY_COLOR = "#ff8c42";
+
+  const levelOptions = [
+    {
+      id: "easy",
+      label: "سهل",
+      desc: "أسئلة مباشرة للمراجعة السريعة",
+    },
+    {
+      id: "medium",
+      label: "متوسط",
+      desc: "مستوى متوازن لاختبار فهمك",
+    },
+    {
+      id: "hard",
+      label: "صعب",
+      desc: "تحدٍّ عالٍ لقياس إتقانك",
+    },
+  ];
+
+  const getIcon = () => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      style={{ display: "block" }}
+    >
+      <rect
+        x="3"
+        y="3"
+        width="18"
+        height="18"
+        rx="6"
+        fill="none"
+        stroke={PRIMARY_COLOR}
+        strokeWidth="1.5"
+      />
+      <path
+        d="M9 12.5l2 2.2 4-4.4"
+        fill="none"
+        stroke={PRIMARY_COLOR}
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+
+  return (
+    <div
+      style={{
+        minHeight: "60vh",
+        display: "grid",
+        placeItems: "center",
+        padding: "32px 16px",
+      }}
+    >
+      <div
+        style={{
+          width: "min(460px, 100%)",
+          background: "#ffffff",
+          borderRadius: 20,
+          padding: 28,
+          boxShadow: "0 18px 40px rgba(15,23,42,0.08)",
+          border: "1px solid #e5e7eb",
+          textAlign: "center",
+        }}
+      >
+        {/* العنوان + الديسكربشن */}
+        <div style={{ marginBottom: 20 }}>
           <h2
             style={{
               fontWeight: 800,
-              marginBottom: 20,
-              fontSize: `${a11y.baseSize}px`,
+              marginBottom: 8,
+              fontSize: `${a11y.baseSize + 2}px`,
               lineHeight: a11y.lineHeight,
+              color: "#111827",
             }}
           >
             اختر مستوى الاختبار
           </h2>
-          <div
+          <p
             style={{
-              display: "flex",
-              gap: 12,
-              justifyContent: "center",
-              marginBottom: 20,
+              margin: 0,
+              fontSize: `${a11y.baseSize - 2}px`,
+              color: "#6b7280",
             }}
           >
-            {["سهل", "متوسط", "صعب"].map((lvl) => (
+            اختر المستوى الأنسب لك لبدء الاختبار.
+          </p>
+        </div>
+
+        {/* الأزرار */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {levelOptions.map((opt) => {
+            const isActive = level === opt.label;
+            return (
               <button
-                key={lvl}
-                onClick={() => setLevel(lvl)}
+                key={opt.id}
+                onClick={() => setLevel(opt.label)}
+                className="quiz-level-btn"
                 style={{
-                  padding: "10px 16px",
-                  borderRadius: 12,
-                  border: level === lvl ? "2px solid #f59e0b" : "1px solid #d1d5db",
-                  background: level === lvl ? "#fff7ed" : "#fff",
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: 14,
+                  border: isActive
+                    ? `2px solid ${PRIMARY_COLOR}`
+                    : "1px solid #e5e7eb",
+                  background: isActive ? "rgba(255,140,66,0.06)" : "#ffffff",
                   cursor: "pointer",
-                  fontWeight: 600,
-                  transition: "0.2s",
-                  fontSize: `${Math.max(14, a11y.baseSize - 2)}px`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                  gap: 12,
+                  transition: "all 0.18s ease",
                 }}
               >
-                {lvl}
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: "999px",
+                    border: `1px solid ${PRIMARY_COLOR}`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: isActive
+                      ? "rgba(255,140,66,0.09)"
+                      : "#fff",
+                  }}
+                >
+                  {getIcon()}
+                </div>
+
+                <div style={{ textAlign: "right" }}>
+                  <div
+                    style={{
+                      fontWeight: 700,
+                      fontSize: `${a11y.baseSize - 1}px`,
+                      color: "#111827",
+                    }}
+                  >
+                    {opt.label}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: `${a11y.baseSize - 3}px`,
+                      color: "#6b7280",
+                    }}
+                  >
+                    {opt.desc}
+                  </div>
+                </div>
               </button>
-            ))}
-          </div>
-          {loading && <p>جاري تحميل الاختبار...</p>}
-          {error && <p style={{ color: "red" }}>{error}</p>}
+            );
+          })}
+        </div>
+
+        {/* حالة التحميل / الخطأ – نفس لوجيكك */}
+        <div style={{ marginTop: 18, minHeight: 24 }}>
+          {loading && (
+            <p
+              style={{
+                margin: 0,
+                fontSize: `${a11y.baseSize - 3}px`,
+                color: PRIMARY_COLOR,
+              }}
+            >
+              جاري تحميل الاختبار...
+            </p>
+          )}
+          {error && !loading && (
+            <p
+              style={{
+                margin: 0,
+                fontSize: `${a11y.baseSize - 3}px`,
+                color: "#ef4444",
+              }}
+            >
+              {error}
+            </p>
+          )}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   // Final score screen (use a11y for text)
   if (score !== null) {
