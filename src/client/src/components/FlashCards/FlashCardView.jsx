@@ -1,6 +1,6 @@
-// client/src/components/Pages/FlashCardView.jsx
+// client/src/components/FlashCards/FlashCardView.jsx
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 /* ===== API ===== */
@@ -12,17 +12,11 @@ const API_RETR  = `${API_ROOT}/retrive`;
 const API_BASE_ROOT = import.meta.env.VITE_API_BASE || ""; // اتركها "" لو نفس دومين الفرونت
 const TTS_URL       = API_BASE_ROOT ? `${API_BASE_ROOT}/tts` : "/tts";
 
-/* ===== أصوات متاحة ===== */
-const VOICES = [
-  { id: "Hala", label: "الصوت الأول" },
-  { id: "Zayd", label: "الصوت الثاني" },
-];
-
 /* ===== هوك TTS (تشغيل/إيقاف + كاش محلّي) ===== */
 function useTTS(initialVoice = "Hala") {
   const audioRef = useRef(null);
   const cacheRef = useRef(new Map());
-  const [voice, setVoice] = useState(initialVoice);
+  const [voice] = useState(initialVoice); // نثبت صوت Hala فقط
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
@@ -75,7 +69,7 @@ function useTTS(initialVoice = "Hala") {
     setIsPlaying(false);
   }
 
-  return { voice, setVoice, isPlaying, speak, stop };
+  return { isPlaying, speak, stop };
 }
 
 /* ===== Styles ===== */
@@ -101,27 +95,23 @@ const local = `
   border-radius:16px;
   border:2px solid transparent;
   box-sizing:border-box;
-  padding:0; /* ✅ أزلنا البادينق حتى يلتصق تمامًا بالإطار الأبيض */
+  padding:0;
 }
 
 .center{ transform:translateX(0); opacity:1; }
 .left{   transform:translateX(-100%); opacity:0; }
 .right{  transform:translateX(100%);  opacity:0; }
 
-/* Color by status */
 .slide.known{ border-color:#86efac; box-shadow:0 0 0 4px rgba(134,239,172,.25) inset; }
 .slide.unknown{ border-color:#fca5a5; box-shadow:0 0 0 4px rgba(252,165,165,.25) inset; }
 
-/* Content blocks (used inside the flip faces) */
-/* Content blocks (used inside the flip faces) */
-/* ✨ Light modern style — fixed full alignment with white border */
 .block {
-  border: 2px solid #fff;             /* clean white frame */
+  border: 2px solid #fff;
   border-radius: 16px;
-  padding: 24px;                      /* more breathing space */
+  padding: 24px;
   width: 100%;
   height: 100%;
-  box-sizing: border-box;             /* ✅ ensures white border fits perfectly */
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -131,12 +121,10 @@ const local = `
   font-size: 18px;
   line-height: 1.9;
   color: #334155;
-  background-clip: padding-box;       /* ✅ fixes white edge size */
+  background-clip: padding-box;
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.05);
 }
 
-
-/* Title + text color */
 .block h4{
   margin:0 0 8px;
   font-size:18px;
@@ -150,18 +138,15 @@ const local = `
   font-size:17px;
 }
 
-/* 🟧 Front side (definition) — soft orange background */
 .block.def{
   background:linear-gradient(145deg,#fff4e1,#ffe8bf);
   border-color:#ffffff;
 }
 
-/* 🩵 Back side (term) — soft baby blue background */
 .block.term{
   background:linear-gradient(145deg,#f3faff,#e6f3ff);
   border-color:#ffffff;
 }
-
 
 .navBtns{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
 .navBtn{
@@ -189,12 +174,6 @@ const local = `
 .alert.ok{ border-color:#c7f0d2; background:#f0fff4; }
 .alert.err{ border-color:#fcd5d5; background:#fff5f5; color:#b00020; }
 
-/* ===== شريط الصوت ===== */
-.voiceBar{ display:flex; gap:10px; align-items:center; justify-content:flex-end; flex-wrap:wrap; }
-.select{ border:1px solid #e5e7eb; border-radius:10px; padding:8px 10px; background:#fff; font-weight:700; }
-.ttsBtn{ border:1px solid var(--fx-card-ring); background:#fff; padding:10px 14px; border-radius:12px; font-weight:900; cursor:pointer; }
-.ttsBtn.playing{ background:#fee2e2; border-color:#fecaca; }
-
 /* ===== Flip Card Styles ===== */
 .flipWrap{
   width:100%; height:100%;
@@ -203,7 +182,7 @@ const local = `
 }
 .flipCard {
   position: relative;
-  width: 100%;              /* ياخذ عرض الحاوية بالكامل */
+  width: 100%;
   height: 100%;
   transition: transform .5s ease;
   transform-style: preserve-3d;
@@ -224,10 +203,310 @@ const local = `
   font-size:12px; opacity:.7; background:#fff; border:1px dashed #e5e7eb;
   padding:6px 10px; border-radius:999px; user-select:none;
 }
+
+/* ===== New Practice Layout (Version B) ===== */
+.practice-shell {
+  min-height: 100vh;
+  background: transparent;
+  padding: clamp(24px, 6vh, 60px) 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Cairo", "Helvetica Neue", sans-serif;
+}
+.practice-panel {
+  width: min(600px, 90%);
+  background: #fff;
+  border-radius: 32px;
+  padding: 20px 32px 30px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.practice-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.practice-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #111;
+  margin: 0;
+}
+.practice-stage {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  padding: 12px 0;
+}
+.card-stack {
+ width: min(500px, 70vw);
+  height: clamp(300px, 60vh, 420px);
+  position: relative;
+  margin: 0 auto;
+  perspective: 1400px;
+}
+.stack-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(320px, 80%, 520px);
+  height: 100%;
+  border-radius: 24px;
+  background: #ff914d;
+  box-shadow: 0 25px 40px rgba(255, 145, 77, 0.5);
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.stack-card.stack-card--middle {
+  transform: translate(-50%, calc(-50% + 12px));
+  opacity: 0.5;
+  pointer-events: none;
+}
+.stack-card.stack-card--back {
+  transform: translate(-50%, calc(-50% + 24px));
+  opacity: 0.25;
+  pointer-events: none;
+}
+.stack-card.front {
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+  opacity: 1;
+}
+.stack-card.front.card-enter {
+  animation: stackCardEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.stack-card.front.complete {
+  cursor: default;
+  background: #fff;
+  color: #111;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px;
+  box-shadow: 0 25px 40px rgba(0,0,0,0.15);
+}
+.stack-card.front .flipWrap {
+  width: 100%;
+  height: 100%;
+}
+.stack-card.front .flipCard {
+  width: 100%;
+  height: 100%;
+  border-radius: 24px;
+  transform-style: preserve-3d;
+  transition: transform 0.6s ease;
+}
+.stack-card.front .flipCard.isFlipped {
+  transform: rotateY(180deg);
+}
+.stack-card.front .face {
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  padding: 32px;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #fff;
+  background: #ff914d;
+}
+.stack-card.front .face.back-face {
+  transform: rotateY(180deg);
+}
+.stack-card.front .face h2 {
+  margin: 0 0 12px;
+  font-size: 24px;
+  font-weight: 800;
+}
+.stack-card.front .face p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.stack-card.front.slide-left {
+  animation: stackCardExitLeft 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.stack-card.front.slide-right {
+  animation: stackCardExitRight 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.sound-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  border: none;
+  background: rgba(255,255,255,0.9);
+  color: #ff914d;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+}
+
+.practice-card h2 {
+  font-size: 28px;
+  text-align: center;
+  margin: 0;
+  font-weight: 800;
+}
+.practice-card p {
+  margin: 12px 0 0;
+  font-size: 16px;
+  opacity: 0.85;
+}
+
+.practice-progress {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.progress-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+}
+.progress-dot.active {
+  transform: scale(1.2);
+  border-color: #111;
+}
+.progress-dot.good { background: #22c55e; }
+.progress-dot.bad { background: #ef4444; }
+
+.practice-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  margin: 10px auto 0;
+  width: min(360px, 90%);
+  direction: ltr;
+}
+
+body.flashcards-bg {
+  background:
+    radial-gradient(1000px 420px at 10% -5%, #fff7ed 0%, transparent 60%),
+    radial-gradient(1200px 520px at 90% -8%, #ffedd5 10%, transparent 58%),
+    radial-gradient(900px 360px at 50% 100%, rgba(15,23,42,.06) 0%, transparent 60%),
+    #f9fafb !important;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+.cube-btn {
+  width:  75px;
+  height: 70px;
+  border-radius: 18px;
+  border: 3px solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  cursor: pointer;
+  background: #fff;
+  transition: transform 0.2s ease;
+}
+.cube-btn:hover:not(:disabled) {
+  transform: translateY(-4px);
+}
+.cube-btn.red { color: #ef4444; }
+.cube-btn.green { color: #16a34a; }
+.cube-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.practice-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: grid;
+  place-items: center;
+  z-index: 90;
+}
+.practice-modal__body {
+  background: #fff;
+  padding: 28px;
+  border-radius: 28px;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+}
+.practice-modal__actions {
+  margin-top: 22px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.practice-modal__actions button {
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.practice-modal__actions .ghost {
+  border: 1px solid #d1d5db;
+  background: transparent;
+}
+.practice-modal__actions .solid {
+  border: none;
+  background: #ff914d;
+  color: #fff;
+}
+
+@keyframes stackCardEnter {
+  0% {
+    transform: translate(-50%, calc(-50% + 18px)) scale(0.92);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+@keyframes stackCardExitLeft {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% - 140px), -50%) scale(0.92);
+    opacity: 0;
+  }
+}
+@keyframes stackCardExitRight {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + 140px), -50%) scale(0.92);
+    opacity: 0;
+  }
+}
 `;
 
 /* ====================== Component ====================== */
 export default function FlashCardView() {
+  const navigate = useNavigate();
+
   // من صفحة الرفع (للتوليد)
   const { state } = useLocation();
   const pdfId = state?.pdfId || null;
@@ -243,27 +522,21 @@ export default function FlashCardView() {
   const [saving, setSaving] = useState(false);
   const [deckId, setDeckId] = useState(deckIdParam || null);
 
-  // meta للعرض في الهيدر عند عرض الدِك
-  const [meta, setMeta] = useState(null); // {name,count,knownCount,unknownCount}
-
   // التصنيف (يُستخدم في وضع التوليد فقط)
   const [deckName, setDeckName] = useState("");
   const [saveMsg, setSaveMsg] = useState("");
   const [saveOk, setSaveOk] = useState(null);
   const [known, setKnown] = useState(new Set());
   const [unknown, setUnknown] = useState(new Set());
-
-  // حالة القلب (flip) لكل بطاقة حسب id
-  const [flippedIds, setFlippedIds] = useState(new Set());
-
-  // سحب
-  const startXRef = useRef(null);
-  const dxRef = useRef(0);
-  const activeSlideRef = useRef(null);
-  const SWIPE_THRESHOLD = 60;
+  const [progress, setProgress] = useState([]);
+  const [flipped, setFlipped] = useState(false);
+  const [animDir, setAnimDir] = useState(null);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [namePromptOpen, setNamePromptOpen] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
 
   // ====== TTS ======
-  const { voice, setVoice, isPlaying, speak, stop } = useTTS("Hala");
+  const { isPlaying, speak, stop } = useTTS("Hala");
 
   // ====== تحميل من PDF (وضع التوليد) ======
   async function loadFromPdf() {
@@ -273,7 +546,7 @@ export default function FlashCardView() {
     try {
       const res = await axios.post(`${API_FLASH}/from-pdf/${pdfId}?limit=10`);
       if (res.data?.ok) {
-        const mapped = (res.data.cards || []).map((c, idx) => ({
+        const mapped = (res.data.cards || []).slice(0, 10).map((c, idx) => ({
           id: c.id ?? `c_${idx}`,
           q: c.question, a: c.answer, hint: c.hint ?? null,
           tags: Array.isArray(c.tags) ? c.tags : [],
@@ -282,15 +555,13 @@ export default function FlashCardView() {
         setI(0);
         setKnown(new Set());
         setUnknown(new Set());
-        setMeta(null);
-        setFlippedIds(new Set()); // إعادة الضبط
+        setProgress([]);
+        setFlipped(false);
+        setSummaryOpen(false);
+        setNamePromptOpen(false);
+        setNameDraft("");
+        setAnimDir(null);
 
-        // ✅ اقرأ أول بطاقة تلقائيًا بعد التوليد
-        const first = mapped[0];
-        if (first) {
-          const text = `${first.a}\n\n${first.q}`;
-          setTimeout(() => speak(text), 80);
-        }
       } else {
         setErr(res.data?.error || "حدث خطأ غير معروف");
       }
@@ -313,13 +584,13 @@ export default function FlashCardView() {
 
       const { data } = await axios.get(`${API_RETR}/decks/${id}/full`, {
         headers: {
-          Authorization: `Bearer ${token}`, // ✅ attach token for protected route
+          Authorization: `Bearer ${token}`,
         },
       });
       if(!data?.ok) throw new Error(data?.error || "فشل الجلب");
-      const deck = data.deck || {};
       const list = (data.cards || [])
         .sort((a,b)=>(a.order??0)-(b.order??0))
+        .slice(0, 10)
         .map((c,idx)=>({
           id: c.id || `c_${idx}`,
           q: c.question, a: c.answer, hint: c.hint ?? null,
@@ -328,16 +599,14 @@ export default function FlashCardView() {
       setCards(list);
       setI(0);
       setDeckId(id);
-      setMeta({
-        name: deck.name || "مجموعة",
-        count: deck.count || list.length,
-        knownCount: deck.knownCount ?? (deck.knownIds?.length||0),
-        unknownCount: deck.unknownCount ?? (deck.unknownIds?.length||0),
-      });
-      setKnown(new Set(deck.knownIds || []));
-      setUnknown(new Set(deck.unknownIds || []));
-      setFlippedIds(new Set()); // يبدأ بواجهة التعريف
-      // لا نشغّل الصوت تلقائيًا هنا
+      setKnown(new Set());
+      setUnknown(new Set());
+      setProgress([]);
+      setFlipped(false);
+      setSummaryOpen(false);
+      setNamePromptOpen(false);
+      setNameDraft("");
+      setAnimDir(null);
     }catch(e){
       setErr(e?.response?.data?.error || e.message);
     }finally{
@@ -352,54 +621,8 @@ export default function FlashCardView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deckIdParam, pdfId]);
 
-  // ====== سحب ======
-  function applyDragTransform(px) {
-    if (!activeSlideRef.current) return;
-    activeSlideRef.current.style.transform = `translateX(${px}px)`;
-    activeSlideRef.current.style.opacity = String(Math.max(0.3, 1 - Math.abs(px) / 300));
-  }
-  function resetTransform() {
-    if (!activeSlideRef.current) return;
-    activeSlideRef.current.style.transform = "";
-    activeSlideRef.current.style.opacity = "";
-  }
-  function onTouchStart(e) {
-    startXRef.current = e.touches?.[0]?.clientX ?? e.clientX;
-    dxRef.current = 0;
-    const el = document.querySelector(".viewer .slide.center");
-    activeSlideRef.current = el;
-  }
-  function onTouchMove(e) {
-    if (startXRef.current == null) return;
-    const x = e.touches?.[0]?.clientX ?? e.clientX;
-    dxRef.current = x - startXRef.current;
-    applyDragTransform(dxRef.current);
-  }
-  function onTouchEnd() {
-    if (Math.abs(dxRef.current) > SWIPE_THRESHOLD) {
-      const dir = dxRef.current > 0 ? "right" : "left";
-      applyDragTransform(dir === "right" ? 500 : -500);
-      setTimeout(() => {
-        resetTransform();
-        if (mode === "generate") {
-          mark(dir);        // في التوليد: يمين/يسار = عرفتها/ماعرفتها
-        } else {
-          // في العرض: فقط تنقّل بدون تصنيف
-          setI(prev => {
-            const next = prev + (dir === "right" ? 1 :  -1);
-            return Math.min(Math.max(next,0), Math.max(cards.length-1,0));
-          });
-        }
-      }, 120);
-    } else {
-      resetTransform();
-    }
-    startXRef.current = null; dxRef.current = 0; activeSlideRef.current = null;
-  }
-
   // تصنيف (للتوليد فقط) + قراءة البطاقة التالية
   function mark(direction) {
-    if (mode !== "generate") return;
     const cur = cards[i];
     if (!cur) return;
 
@@ -413,73 +636,54 @@ export default function FlashCardView() {
       setUnknown(u); setKnown(k);
     }
 
+    setProgress(prev => {
+      const next = [...prev];
+      next[i] = direction;
+      return next;
+    });
+
     setI(prev => {
       const next = Math.min(cards.length - 1, prev + 1);
-      // أوقفي أي تشغيل قبل البدء
       if (isPlaying) stop();
-      const nxtCard = cards[next];
-      // ارجاع الوجه الأمامي عند الانتقال
-      setFlippedIds((old) => {
-        const n = new Set(old);
-        n.delete(nxtCard?.id);
-        return n;
-      });
-      if (nxtCard) {
-        const txt = `${nxtCard.a}\n\n${nxtCard.q}`;
-        setTimeout(() => speak(txt), 40);
-      }
       return next;
     });
   }
 
-  // كيبورد: أسهم للتنقّل/التصنيف + مسافة لتشغيل/إيقاف الصوت
+  // كيبورد: أسهم للتنقّل/التصنيف
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === "ArrowRight") {
-        if (mode === "generate") mark("right");
-        else setI(prev=>{
-          const next = Math.min(prev+1, Math.max(cards.length-1,0));
-          // ارجاع الوجه الأمامي عند الانتقال
-          const nxt = cards[next];
-          if (nxt) setFlippedIds(f => { const s = new Set(f); s.delete(nxt.id); return s; });
-          return next;
-        });
-      }
-      if (e.key === "ArrowLeft") {
-        if (mode === "generate") mark("left");
-        else setI(prev=>{
-          const next = Math.max(prev-1, 0);
-          const nxt = cards[next];
-          if (nxt) setFlippedIds(f => { const s = new Set(f); s.delete(nxt.id); return s; });
-          return next;
-        });
-      }
-      // if (e.key === " ") {
-      //   e.preventDefault();
-      //   const cur = cards[i];
-      //   if (!cur) return;
-      //   const text = `${cur.a}\n\n${cur.q}`;
-      //   if (isPlaying) stop(); else speak(text);
-      // }
+      if (e.key === "ArrowRight") mark("right");
+      if (e.key === "ArrowLeft") mark("left");
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [i, cards, known, unknown, mode, isPlaying]);
+  }, [i, cards, known, unknown, isPlaying]);
 
-  const doneAll = cards.length > 0 && (known.size + unknown.size) === cards.length;
+  const answeredCount = progress.filter(Boolean).length;
+  const doneAll = cards.length > 0 && answeredCount === cards.length;
+
+  useEffect(() => {
+    if (!loading && !err && doneAll) {
+      setSummaryOpen(true);
+    }
+  }, [doneAll, loading, err]);
 
   // حفظ (يعمل فقط في وضع التوليد)
-  async function handleSave() {
+  async function handleSave(nameOverride) {
     if (mode !== "generate") return;
     if (!doneAll || saving) return;
     setSaving(true);
     setSaveMsg(""); setSaveOk(null);
     try {
+      const finalName = nameOverride && nameOverride.trim()
+        ? nameOverride.trim()
+        : (deckName && deckName.trim() ? deckName.trim() : "مجموعة بدون اسم");
+      setDeckName(finalName);
       const payload = {
         pdfId,
         language: "ar",
-        deckName: deckName && deckName.trim() ? deckName.trim() : "مجموعة بدون اسم",
+        deckName: finalName,
         known: Array.from(known),
         unknown: Array.from(unknown),
         cards: cards.map(c => ({
@@ -490,7 +694,8 @@ export default function FlashCardView() {
       if (data?.ok) {
         setDeckId(data.deckId);
         setSaveOk(true);
-setSaveMsg(`تم الحفظ بنجاح: "${data.name}"`);
+        setSaveMsg(`تم الحفظ بنجاح: "${data.name}"`);
+        navigate("/cards");
       } else {
         setSaveOk(false);
         setSaveMsg(`فشل الحفظ: ${data?.error || "Unknown error"}`);
@@ -504,230 +709,222 @@ setSaveMsg(`تم الحفظ بنجاح: "${data.name}"`);
   }
 
   function handleIgnore() {
-    setCards([]); setKnown(new Set()); setUnknown(new Set()); setI(0);
-    if (mode === "generate") setDeckId(null);
-    setSaveOk(null);
-    setSaveMsg("تم تجاهل هذه المجموعة.");
     if (isPlaying) stop();
+    setSummaryOpen(false);
+    setNamePromptOpen(false);
+    navigate("/cards");
   }
 
-  // قلب البطاقة الحالية (أو أي بطاقة بالنقر عليها)
-  function toggleFlip(id) {
-    setFlippedIds(prev => {
-      const s = new Set(prev);
-      if (s.has(id)) s.delete(id); else s.add(id);
-      return s;
-    });
+  const sessionComplete = doneAll;
+
+  useEffect(() => {
+    document.body.classList.add("flashcards-bg");
+    return () => document.body.classList.remove("flashcards-bg");
+  }, []);
+
+  const current = sessionComplete ? null : cards[i];
+  const totalCorrect = progress.filter((v) => v === "right").length;
+  const totalWrong = progress.filter((v) => v === "left").length;
+
+  function handlePracticeAnswer(direction) {
+    if (!current || sessionComplete) return;
+    setAnimDir(direction);
+    setTimeout(() => {
+      mark(direction);
+      setFlipped(false);
+      setAnimDir(null);
+    }, 260);
   }
 
-  // نص البطاقة الحالية (الترتيب: التعريف ثم المصطلح)
-  const current = cards[i];
-  const currentText = current ? `${current.a}\n\n${current.q}` : "";
+  function toggleFrontCard() {
+    if (!current || sessionComplete) return;
+    setFlipped((prev) => !prev);
+  }
 
   return (
-    <div className="hp">
+    <div className="practice-shell">
       <style>{local}</style>
-
-      <section className="panel fcView">
-        <div className="fcTop">
-          <h3 className="title">
-  {mode === "viewDeck"
-    ? `عرض المجموعة • ${meta?.name || "مجموعة"}`
-    : `عرض البطاقات`
-  }
-</h3>
-
-          <div className="badges">
-            <span className="badge ok">عرفتها: {known.size}</span>
-            <span className="badge no">ما عرفتها: {unknown.size}</span>
-            <Link to="/cards" className="back">رجوع</Link>
-          </div>
+      <section className="practice-panel">
+        <div className="practice-header">
+          <h3 className="practice-title">جلسة البطاقات</h3>
         </div>
 
-        {/* شريط الصوت */}
-        {!loading && !err && cards.length > 0 && (
-          <div className="voiceBar">
-            <label style={{fontWeight:900}}>الصوت:</label>
-            <select
-              className="select"
-              value={voice}
-              onChange={(e)=>{ if (isPlaying) stop(); setVoice(e.target.value); }}
-            >
-              {VOICES.map(v => <option key={v.id} value={v.id}>{v.label}</option>)}
-            </select>
-            <button
-              className={`ttsBtn ${isPlaying ? "playing" : ""}`}
-              onClick={()=>{
-                if (!currentText) return;
-                if (isPlaying) stop();
-                else speak(currentText);
-              }}
-            >
-              {isPlaying ? "إيقاف" : "استمع"}
-            </button>
-          </div>
-        )}
-
-        {loading && <div className="viewer">... جاري التحميل</div>}
+        {loading && <div className="helperBox">... جاري التحميل</div>}
 
         {!loading && err && (
           <div className="helperBox">
             <div className="alert err">خطأ: {err}</div>
             <div className="row">
-              {mode === "viewDeck" && <button className="navBtn" onClick={()=>loadDeckById(deckId)}>إعادة المحاولة</button>}
-              {mode === "generate" && (
-                <button
-                  className="navBtn"
-                  onClick={()=>{ if (isPlaying) stop(); loadFromPdf(); }}
-                >
+              {mode === "viewDeck" ? (
+                <button className="navBtn" onClick={()=>loadDeckById(deckId)} disabled={loading}>
+                  إعادة المحاولة
+                </button>
+              ) : (
+                <button className="navBtn" onClick={()=>loadFromPdf()} disabled={loading}>
                   إعادة التوليد
                 </button>
               )}
-              <Link to="/" className="navBtn">رجوع للرئيسية</Link>
+              <Link to="/" className="navBtn">الرئيسية</Link>
             </div>
-          </div>
-        )}
-
-        {!loading && !err && cards.length > 0 && (
-          <div
-            className="viewer"
-            onMouseDown={onTouchStart}
-            onMouseMove={(e) => startXRef.current != null && onTouchMove(e)}
-            onMouseUp={onTouchEnd}
-            onMouseLeave={() => startXRef.current != null && onTouchEnd()}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-          >
-            {cards.map((c, idx) => {
-              const pos = idx === i ? "center" : idx < i ? "left" : "right";
-              const flipped = flippedIds.has(c.id);
-              return (
-                <article
-                  key={c.id}
-                  className={`slide ${pos} ${known.has(c.id) ? 'known' : (unknown.has(c.id) ? 'unknown' : '')}`}
-                >
-                  <div className="flipWrap">
-                    <div
-                      className={`flipCard ${flipped ? "isFlipped" : ""}`}
-                      onClick={() => toggleFlip(c.id)}
-                      title="اضغطي لقلب البطاقة"
-                    >
-                      {/* Front: التعريف */}
-                      <div className="face front">
-                        <section className="block def">
-                          <h4>التعريف</h4>
-                          <p>{c.a}</p>
-                        </section>
-                        <div className="clickHint">انقري لقلب البطاقة لعرض المصطلح</div>
-                      </div>
-
-                      {/* Back: المصطلح */}
-                      <div className="face back">
-                        <section className="block term">
-                          <h4>المصطلح</h4>
-                          <p>{c.q}</p>
-                        </section>
-                        <div className="clickHint">انقري للعودة إلى التعريف</div>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
           </div>
         )}
 
         {!loading && !err && cards.length > 0 && (
           <>
-            <div className="navBtns">
-              {mode === "generate" ? (
-                <>
-                  <button className="navBtn" onClick={()=>mark("left")} disabled={i>=cards.length}>ما عرفتها (←)</button>
-                  <div className="dots">
-                    {cards.map((c2, idx)=>{
-                      const cls = known.has(c2.id) ? 'known' : (unknown.has(c2.id) ? 'unknown' : '');
-                      return <span key={idx} className={`dot ${cls} ${idx===i? "isActive":""}`} />
-                    })}
-                  </div>
-                  <button className="navBtn" onClick={()=>mark("right")} disabled={i>=cards.length}>عرفتها (→)</button>
-                  <button
-                    className="navBtn"
-                    onClick={()=>{ if (isPlaying) stop(); loadFromPdf(); }}
-                    disabled={loading || saving}
-                  >
-                    إعادة التوليد
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    className="navBtn"
-                    onClick={()=>{
-                      if (isPlaying) stop();
-                      setI(v=>{
-                        const next = Math.max(v-1,0);
-                        const nxt = cards[next];
-                        if (nxt) setFlippedIds(s=>{ const n=new Set(s); n.delete(nxt.id); return n; });
-                        return next;
-                      });
-                    }}
-                  >
-                    السابق
-                  </button>
-                  <div className="dots">
-                    {cards.map((c2, idx)=>{
-                      const cls = known.has(c2.id) ? 'known' : (unknown.has(c2.id) ? 'unknown' : '');
-                      return <span key={idx} className={`dot ${cls} ${idx===i? "isActive":""}`} />
-                    })}
-                  </div>
-                  <button
-                    className="navBtn"
-                    onClick={()=>{
-                      if (isPlaying) stop();
-                      setI(v=>{
-                        const next = Math.min(v+1, cards.length-1);
-                        const nxt = cards[next];
-                        if (nxt) setFlippedIds(s=>{ const n=new Set(s); n.delete(nxt.id); return n; });
-                        return next;
-                      });
-                    }}
-                  >
-                    التالي
-                  </button>
-                </>
-              )}
+            <div className="practice-stage">
+              <div className="card-stack">
+                <div className="stack-card stack-card--back" />
+                <div className="stack-card stack-card--middle" />
+                <div
+                  key={sessionComplete ? "complete" : current?.id || "empty"}
+                  className={`stack-card front ${sessionComplete ? "complete" : ""} ${
+                    animDir ? `slide-${animDir}` : "card-enter"
+                  }`}
+                  onClick={!sessionComplete ? toggleFrontCard : undefined}
+                  role={!sessionComplete ? "button" : undefined}
+                  tabIndex={!sessionComplete ? 0 : -1}
+                  onKeyDown={(e) => {
+                    if (sessionComplete) return;
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      toggleFrontCard();
+                    }
+                  }}
+                >
+                  {sessionComplete ? null : (
+                    <div className="flipWrap">
+                      <div className={`flipCard ${flipped ? "isFlipped" : ""}`}>
+                        <div className="face front-face">
+                          <button
+                            className="sound-btn"
+                            title="Tap to hear the question"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!current) return;
+                              const textToRead = `${current?.q || ""}`.trim();
+                              if (!textToRead) return;
+                              if (isPlaying) stop();
+                              else speak(textToRead);
+                            }}
+                            disabled={!current}
+                          >
+                            <svg
+                              width="26"
+                              height="26"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M5 15V9h3l4-3v12l-4-3H5Z"
+                                stroke="#FF914D"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <path
+                                d="M15.5 8c1.5 1.5 1.5 4.5 0 6"
+                                stroke="#FF914D"
+                                strokeWidth="1.6"
+                                strokeLinecap="round"
+                              />
+                              <path
+                                d="M18 5c3 3.2 3 10.8 0 14"
+                                stroke="#FF914D"
+                                strokeWidth="1.6"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          </button>
+                          <h2>{current?.q || ""}</h2>
+                          {current?.hint && (
+                            <p style={{opacity:0.85, marginTop:10}}>{current.hint}</p>
+                          )}
+                        </div>
+                        <div className="face back-face">
+                          <button
+                            className="sound-btn"
+                            title="Tap to hear the answer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!current) return;
+                              const textToRead = `${current?.a || ""}`.trim();
+                              if (!textToRead) return;
+                              if (isPlaying) stop();
+                              else speak(textToRead);
+                            }}
+                            disabled={!current}
+                          >
+                            <svg
+                              width="26"
+                              height="26"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M5 15V9h3l4-3v12l-4-3H5Z"
+                                stroke="#FF914D"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <path
+                                d="M15.5 8c1.5 1.5 1.5 4.5 0 6"
+                                stroke="#FF914D"
+                                strokeWidth="1.6"
+                                strokeLinecap="round"
+                              />
+                              <path
+                                d="M18 5c3 3.2 3 10.8 0 14"
+                                stroke="#FF914D"
+                                strokeWidth="1.6"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          </button>
+                          <h2>الإجابة</h2>
+                          {current?.a && <p style={{fontSize:"18px", marginTop:12}}>{current.a}</p>}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="practice-progress" title="Your progress">
+              {cards.map((card, idx) => {
+                const state = progress[idx];
+                const cls = state === "right" ? "good" : state === "left" ? "bad" : "";
+                return (
+                  <span
+                    key={card.id}
+                    className={`progress-dot ${cls} ${
+                      !sessionComplete && idx === i ? "active" : ""
+                    }`}
+                  />
+                );
+              })}
             </div>
 
-            {mode === "generate" && (
-              <div className="helperBox" style={{marginTop:12}}>
-                <label style={{display:"block", fontWeight:800}}>
-                  اسم المجموعة:
-                  <input
-                    type="text"
-                    placeholder="مثال: مصطلحات الفصل الثاني"
-                    value={deckName}
-                    onChange={(e)=>setDeckName(e.target.value)}
-                    style={{ width:"100%", marginTop:6, padding:"10px", border:"1px solid #e5e7eb", borderRadius:10 }}
-                  />
-                </label>
-
-                <div className="row">
-                  <button className="navBtn" onClick={handleIgnore} disabled={saving}>تجاهل</button>
-                  <button className="navBtn" onClick={handleSave} disabled={saving || !doneAll}>
-                    {saving ? "جارٍ الحفظ..." : (doneAll ? "حفظ" : "أكملي تصنيف كل البطاقات")}
-                  </button>
-                </div>
-
-                {saveMsg && (
-                  <div className={`alert ${saveOk === true ? "ok" : saveOk === false ? "err" : ""}`}>
-                    {saveMsg}
-                  </div>
-                )}
-
-                {!doneAll && <div className="alert">اسحبي كل البطاقات أولاً: يمين = عرفتها، يسار = ما عرفتها.</div>}
-              </div>
-            )}
+            <div className="practice-actions">
+              <button
+                className="cube-btn red"
+                title="I don’t know this"
+                onClick={() => handlePracticeAnswer("left")}
+                disabled={!current || doneAll}
+              >
+                ←
+              </button>
+              <button
+                className="cube-btn green"
+                title="I know this"
+                onClick={() => handlePracticeAnswer("right")}
+                disabled={!current || doneAll}
+              >
+                →
+              </button>
+            </div>
           </>
         )}
 
@@ -739,7 +936,77 @@ setSaveMsg(`تم الحفظ بنجاح: "${data.name}"`);
             }
           </div>
         )}
+
+        {saveMsg && (
+          <div className={`alert ${saveOk === true ? "ok" : saveOk === false ? "err" : ""}`}>
+            {saveMsg}
+          </div>
+        )}
       </section>
+
+      {summaryOpen && (
+        <div className="practice-modal">
+          <div className="practice-modal__body">
+            <h3>انتهت الجلسة!</h3>
+            <p style={{color:"#16a34a", fontWeight:700}}>عرفتها: {totalCorrect}</p>
+            <p style={{color:"#dc2626", fontWeight:700}}>ما عرفتها: {totalWrong}</p>
+            <div className="practice-modal__actions">
+              {mode === "generate" ? (
+                <>
+                  <button className="ghost" onClick={handleIgnore} title="Discard this round">
+                    تجاهل
+                  </button>
+                  <button
+                    className="solid"
+                    onClick={() => {
+                      setSummaryOpen(false);
+                      setNameDraft(deckName);
+                      setNamePromptOpen(true);
+                    }}
+                    title="Save this set"
+                  >
+                    حفظ البطاقات
+                  </button>
+                </>
+              ) : (
+                <button className="solid" onClick={() => navigate("/cards")} title="الانتقال لقائمة البطاقات">
+                  تم
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {namePromptOpen && (
+        <div className="practice-modal">
+          <div className="practice-modal__body">
+            <h3>احفظي المجموعة</h3>
+            <input
+              type="text"
+              value={nameDraft}
+              onChange={(e) => setNameDraft(e.target.value)}
+              placeholder="اسم المجموعة"
+              style={{width:"100%", padding:"12px", borderRadius:"12px", border:"1px solid #e5e7eb"}}
+            />
+            <div className="practice-modal__actions">
+              <button className="ghost" onClick={() => setNamePromptOpen(false)}>
+                إلغاء
+              </button>
+              <button
+                className="solid"
+                onClick={() => {
+                  setNamePromptOpen(false);
+                  handleSave(nameDraft);
+                }}
+                disabled={saving}
+              >
+                {saving ? "يتم الحفظ..." : "حفظ"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import FlashCards from "../FlashCards/FlashCards.jsx";
+
 export default function FlashcardsPage() {
-  return <h1>    </h1>;
+  return <FlashCards />;
 }
