@@ -667,24 +667,29 @@ export default function FlashCardView() {
   if (loading) return;
   if (err) return;
   if (!doneAll) return;
-  if (mode !== "viewDeck") return;
-  if (!deckId) return;
 
-  const knownIds = Array.from(known);
-  const unknownIds = Array.from(unknown);
-  const token = localStorage.getItem("token");
+  if (mode === "generate") {
+    setSummaryOpen(true);
+    return;
+  }
 
-  axios.post(
-    `${API_FLASH}/deck/${deckId}/update-progress`,
-    { knownIds, unknownIds },
-    { headers: { Authorization: `Bearer ${token}` } }
-  )
-  .then(() => console.log("Progress updated"))
-  .catch(err => console.error("Failed to update progress:", err));
+  if (mode === "viewDeck" && deckId) {
+    const knownIds = Array.from(known);
+    const unknownIds = Array.from(unknown);
+    const token = localStorage.getItem("token");
 
-  setSummaryOpen(true);
+    axios.post(
+      `${API_FLASH}/deck/${deckId}/update-progress`,
+      { knownIds, unknownIds },
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    .then(() => console.log("Progress updated"))
+    .catch(err => console.error("Failed to update progress:", err));
 
-}, [doneAll, loading, err, deckId, mode, known, unknown]);
+    setSummaryOpen(true);
+  }
+}, [doneAll, loading, err, mode, deckId, known, unknown]);
+
 
   // حفظ (يعمل فقط في وضع التوليد)
   async function handleSave(nameOverride) {
