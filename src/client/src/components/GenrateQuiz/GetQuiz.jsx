@@ -445,37 +445,155 @@ if (!quiz) {
 }
 
   // Final score screen (use a11y for text)
+  // Final score screen (modern card similar to level selection)
   if (score !== null) {
+    const PRIMARY_COLOR = "#ff8c42";
+    const passed = score > 50; // أكثر من ٥٠٪
+
+    const title = "لقد أكملت الاختبار!";
+    const subtitle = passed
+      ? "نتيجتك جيدة، حافظ على مستواك واستمر في المراجعة لتحسينها أكثر."
+      : "يمكنك إعادة المحاولة لتحسين نتيجتك والاستفادة أكثر من المحتوى.";
+
     return (
-      <div style={{ display: "grid", placeItems: "center", padding: 24 }}>
+      <div
+        style={{
+          minHeight: "60vh",
+          display: "grid",
+          placeItems: "center",
+          padding: "32px 16px",
+        }}
+      >
         <div
           style={{
-            width: "min(400px, 96%)",
-            background: "#fff",
-            borderRadius: 14,
-            padding: 24,
-            boxShadow: "0 10px 30px rgba(2,6,23,0.06)",
-            border: "1px solid #eef2f7",
+            width: "min(460px, 100%)",
+            background: "#ffffff",
+            borderRadius: 20,
+            padding: 28,
+            boxShadow: "0 18px 40px rgba(15,23,42,0.08)",
+            border: "1px solid #e5e7eb",
             textAlign: "center",
           }}
         >
-          <h2 style={{ fontWeight: 800, marginBottom: 20, fontSize: `${a11y.baseSize}px`, lineHeight: a11y.lineHeight }}>
-            لقد أكملت الاختبار!
+          {/* أيقونة دائرية في الأعلى (بدون إيموجيز) */}
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: "999px",
+              margin: "0 auto 18px",
+              border: `2px solid ${PRIMARY_COLOR}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "rgba(255,140,66,0.06)",
+            }}
+          >
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              style={{ display: "block" }}
+            >
+              <rect
+                x="3"
+                y="3"
+                width="18"
+                height="18"
+                rx="6"
+                fill="none"
+                stroke={PRIMARY_COLOR}
+                strokeWidth="1.8"
+              />
+              <path
+                d="M9 12.5l2 2.2 4-4.4"
+                fill="none"
+                stroke={PRIMARY_COLOR}
+                strokeWidth="1.9"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+
+          {/* العنوان والوصف حسب النتيجة */}
+          <h2
+            style={{
+              fontWeight: 800,
+              marginBottom: 8,
+              fontSize: `${a11y.baseSize + 2}px`,
+              lineHeight: a11y.lineHeight,
+              color: "#111827",
+            }}
+          >
+            {title}
           </h2>
-          <p style={{ fontSize: `${a11y.baseSize}px`, fontWeight: 600, marginBottom: 20 }}>
-            نتيجتك: {score}%
+          <p
+            style={{
+              margin: 0,
+              marginBottom: 16,
+              fontSize: `${a11y.baseSize - 2}px`,
+              color: "#6b7280",
+            }}
+          >
+            {subtitle}
           </p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+
+          {/* شارة النتيجة */}
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 14px",
+              borderRadius: 999,
+              background: "rgba(255,140,66,0.06)",
+              border: `1px solid ${PRIMARY_COLOR}`,
+              marginBottom: 20,
+            }}
+          >
+            <span
+              style={{
+                fontWeight: 700,
+                fontSize: `${a11y.baseSize - 2}px`,
+                color: "#111827",
+              }}
+            >
+              نتيجتك
+            </span>
+            <span
+              style={{
+                fontWeight: 800,
+                fontSize: `${a11y.baseSize}px`,
+                color: PRIMARY_COLOR,
+              }}
+            >
+              %{score}
+            </span>
+          </div>
+
+          {/* الأزرار */}
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 10,
+              justifyContent: "center",
+              marginTop: 4,
+            }}
+          >
             <button
               onClick={retakeQuiz}
               style={{
-                padding: "10px 16px",
-                borderRadius: 12,
-                border: "1px solid #f59e0b",
+                padding: "10px 18px",
+                borderRadius: 14,
+                border: `1px solid ${PRIMARY_COLOR}`,
                 background: "#fff7ed",
                 cursor: "pointer",
-                fontWeight: 600,
-                fontSize: `${Math.max(14, a11y.baseSize - 2)}px`,
+                fontWeight: 700,
+                fontSize: `${Math.max(14, a11y.baseSize - 1)}px`,
+                minWidth: 130,
               }}
             >
               إعادة الاختبار
@@ -483,13 +601,14 @@ if (!quiz) {
             <button
               onClick={exitQuiz}
               style={{
-                padding: "10px 16px",
-                borderRadius: 12,
+                padding: "10px 18px",
+                borderRadius: 14,
                 border: "1px solid #d1d5db",
-                background: "#fff",
+                background: "#ffffff",
                 cursor: "pointer",
-                fontWeight: 600,
-                fontSize: `${Math.max(14, a11y.baseSize - 2)}px`,
+                fontWeight: 700,
+                fontSize: `${Math.max(14, a11y.baseSize - 1)}px`,
+                minWidth: 110,
               }}
             >
               إنهاء
