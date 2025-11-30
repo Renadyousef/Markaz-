@@ -10,7 +10,7 @@ const admin = require("firebase-admin");
 const db = admin.firestore();
 
 const MODEL_API = process.env.MODEL_API || "http://localhost:6001/generate-from-text";
-const MAX_SIZE_MB = 6;
+const MAX_SIZE_MB = 3;
 const GS_TIMEOUT = 120000;
 const AV_TIMEOUT = 120000;
 const MODEL_TIMEOUT = 120000;
@@ -300,11 +300,19 @@ exports.uploadThenGenerate = async (req, res) => {
     stage = "magic";
     await requireMagicPDF(tmp);
 
+
     stage = "clamav";
-    await clamScanStrict(tmp);
+
+    const t_clam = Date.now();
+await clamScanStrict(tmp);// await clamScanPermissive(tmp);
+console.log("⏱ ClamAV took:", Date.now() - t_clam, "ms");
 
     stage = "ghostscript";
-    safePath = await gsSanitizeStrict(tmp);
+
+    const t_gs = Date.now();
+safePath = await gsSanitizeStrict(tmp);// await gsSanitizePermissive(tmp);
+console.log("⏱ Ghostscript took:", Date.now() - t_gs, "ms");
+
     await assertFileExists(safePath);
 
     // ===============================
@@ -325,7 +333,9 @@ exports.uploadThenGenerate = async (req, res) => {
       tryOcrAra(tmp).catch(() => null),
     ];
 
-    const results = await Promise.allSettled(jobs);
+    const t_extract = Date.now();
+const results = await Promise.allSettled(jobs);// promise.all(jobs);
+console.log("⏱ Extraction took:", Date.now() - t_extract, "ms");
     const candidates = [];
 
     results.forEach((r, i) => {

@@ -664,10 +664,27 @@ export default function FlashCardView() {
   const doneAll = cards.length > 0 && answeredCount === cards.length;
 
   useEffect(() => {
-    if (!loading && !err && doneAll) {
-      setSummaryOpen(true);
-    }
-  }, [doneAll, loading, err]);
+  if (loading) return;
+  if (err) return;
+  if (!doneAll) return;
+  if (mode !== "viewDeck") return;
+  if (!deckId) return;
+
+  const knownIds = Array.from(known);
+  const unknownIds = Array.from(unknown);
+  const token = localStorage.getItem("token");
+
+  axios.post(
+    `${API_FLASH}/deck/${deckId}/update-progress`,
+    { knownIds, unknownIds },
+    { headers: { Authorization: `Bearer ${token}` } }
+  )
+  .then(() => console.log("Progress updated"))
+  .catch(err => console.error("Failed to update progress:", err));
+
+  setSummaryOpen(true);
+
+}, [doneAll, loading, err, deckId, mode, known, unknown]);
 
   // حفظ (يعمل فقط في وضع التوليد)
   async function handleSave(nameOverride) {

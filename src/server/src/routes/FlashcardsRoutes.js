@@ -1,6 +1,7 @@
 // server/src/routes/flashcardsRoutes.js
 const express = require("express");
 const FC = require("../controllers/FlashcardsController");
+const {verifyToken} = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -13,6 +14,9 @@ router.post("/from-pdf/:pdfId", FC.generateFromPdfId);
 
 // POST /api/flashcards/save-deck
 router.post("/save-deck", FC.saveDeck);
+
+//  Update progress for saved decks
+router.post("/deck/:deckId/update-progress", verifyToken, FC.updateDeckProgress);
 
 // GET /api/flashcards/deck/:deckId
 router.get("/deck/:deckId", FC.getDeckCards);

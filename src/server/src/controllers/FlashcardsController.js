@@ -346,6 +346,51 @@ exports.getDeckCards = async (req, res) => {
   }
 };
 
+exports.updateDeckProgress = async (req, res) => {
+  try {
+    const { deckId } = req.params;
+    const { knownIds, unknownIds } = req.body;
+    const { uid } = resolveUser(req);
+
+    if (!deckId) {
+      return res.status(400).json({ ok: false, error: "deckId is required" });
+    }
+
+    const deckRef = db.collection("flash_cards").doc(deckId);
+    const deckSnap = await deckRef.get();
+
+    if (!deckSnap.exists) {
+      return res.status(404).json({ ok: false, error: "Deck not found" });
+    }
+
+    const deck = deckSnap.data();
+
+    // منع مستخدم غير المالك
+    if (deck.ownerId && deck.ownerId !== uid) {
+      return res.status(403).json({ ok: false, error: "Forbidden" });
+    }
+
+    // تحديث الدِك
+    await deckRef.update({
+      knownIds,
+      unknownIds,
+      knownCount: knownIds.length,
+      unknownCount: unknownIds.length,
+      lastTrainedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    return res.json({
+      ok: true,
+      message: "Progress updated successfully",
+    });
+
+  } catch (e) {
+    console.error("updateDeckProgress err:", e);
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+};
+
+
 exports.listMyDecks = async (req, res) => {
   const { uid } = resolveUser(req);
   if (!uid) return res.status(401).json({ ok: false, error: "Unauthorized" });
