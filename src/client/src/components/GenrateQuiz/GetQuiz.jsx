@@ -626,6 +626,37 @@ if (!quiz) {
   const isLastQuestion = currentIndex === quiz.length - 1;
   const options = isMCQ ? getOptions(question) : [];
 
+  // نص السؤال
+  const questionText = question?.question || question?.statement || "";
+
+  // أسماء ترتيبية عربية
+  const ordinals = [
+    "الأول",
+    "الثاني",
+    "الثالث",
+    "الرابع",
+    "الخامس",
+    "السادس",
+    "السابع",
+    "الثامن",
+    "التاسع",
+    "العاشر",
+  ];
+
+  // نص الخيارات للقراءة الصوتية:
+  // "الخيارات هي: الخيار الأول: ... . الخيار الثاني: ... . ..."
+  const optionsForTTS = (isMCQ ? options : ["صح", "خطأ"])
+    .map((opt, idx) => {
+      const label = ordinals[idx] || `${idx + 1}`;
+      return `الخيار ${label}: ${opt}`;
+    })
+    .join(" . ");
+
+  // النص النهائي اللي يروح لـ TTS: سؤال + "الخيارات هي" + الخيارات
+  const ttsText = optionsForTTS
+    ? `${questionText}. الخيارات هي: ${optionsForTTS}`
+    : questionText;
+
   // styles derived from a11y
   const questionStyle = {
     fontSize: `${a11y.baseSize}px`,
@@ -671,10 +702,11 @@ if (!quiz) {
         {/* Question + TTS */}
         <div style={{ marginBottom: 12 }}>
           <p style={questionStyle}>
-            {question?.question || question?.statement}
+            {questionText}
           </p>
 
-          <TTSControls key={currentIndex} text={question?.question || question?.statement || ""} />
+          {/* الآن الصوت يقرأ: السؤال ثم "الخيارات هي: ..." ثم الخيار الأول/الثاني/الثالث */}
+          <TTSControls key={currentIndex} text={ttsText} />
         </div>
 
         {/* Options */}
