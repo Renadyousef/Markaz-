@@ -13,28 +13,39 @@ export default function PrivacyPolicy() {
 
         <div className="about-content">
 
+          {/* مقدمة */}
           <p className="about-text reveal delay-1">
-            في مركز نهتم بخصوصية بياناتك بشكل كبير. توضح هذه السياسة كيفية جمع، استخدام،
-            ومعالجة المعلومات الخاصة بك عند استخدامك للتطبيق.
+            في مركز نهتم بخصوصية بياناتك، ونوضح لك هنا بشكل مبسّط كيف يتم جمعها واستخدامها وحمايتها.
           </p>
 
-          <h2 className="about-subtitle reveal delay-2">المعلومات التي نجمعها</h2>
-          <ul className="about-list reveal delay-2">
-            <li>المعلومات الأساسية مثل الاسم والبريد الإلكتروني عند التسجيل.</li>
-            <li>إعداداتك المفضلة داخل التطبيق وبيانات الاستخدام العامة.</li>
-          </ul>
+          {/* ===== صف واحد من 3 كاردز ===== */}
+          <div className="policy-row reveal delay-2">
 
-          <h2 className="about-subtitle reveal delay-3">كيفية استخدام المعلومات</h2>
-          <ul className="about-list reveal delay-3">
-            <li>تحسين تجربتك داخل التطبيق وتخصيص المحتوى وفق احتياجاتك.</li>
-            <li>تقديم الدعم الفني والتواصل معك عند الضرورة.</li>
-          </ul>
+            {/* Card 1 */}
+            <div className="policy-card">
+              <h2 className="policy-card-title">المعلومات التي نجمعها</h2>
+              <p className="policy-card-text">
+                نجمع الاسم، البريد الإلكتروني، وبعض التفضيلات لضمان تجربة استخدام أفضل.
+              </p>
+            </div>
 
-          <h2 className="about-subtitle reveal delay-3">حماية البيانات</h2>
-          <p className="about-text reveal delay-3">
-            نلتزم بحماية بياناتك باستخدام أحدث تقنيات الأمان، ولا تتم مشاركة معلوماتك مع أي طرف
-            ثالث إلا في الحالات التي ينص عليها القانون.
-          </p>
+            {/* Card 2 */}
+            <div className="policy-card">
+              <h2 className="policy-card-title">كيفية استخدام المعلومات</h2>
+              <p className="policy-card-text">
+                نستخدم بياناتك لتخصيص المحتوى، تحسين أداء التطبيق، وتقديم الدعم عند الحاجة.
+              </p>
+            </div>
+
+            {/* Card 3 */}
+            <div className="policy-card">
+              <h2 className="policy-card-title">حماية البيانات</h2>
+              <p className="policy-card-text">
+                نطبّق تقنيات أمان حديثة ولا نشارك معلوماتك إلا إذا طُلب قانونياً.
+              </p>
+            </div>
+
+          </div>
 
         </div>
       </div>

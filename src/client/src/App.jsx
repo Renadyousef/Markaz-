@@ -5,6 +5,7 @@ import "./App.css";
 
 /* الصفحات الرئيسية / الميزات */
 import LandingPage from "./components/landingPage/LandingPage";
+import LandingHeader from "./components/landingPage/LandingHeader";
 import AuthPage from "./components/auth/AuthPage";
 import HomePage from "./components/homePage/HomePage";
 import ProfilePage from "./components/profile/Profile.jsx";
@@ -207,16 +208,41 @@ export default function App() {
         {/* إعادة تعيين كلمة المرور */}
         <Route path="/reset" element={<ResetPassword goTo={goTo} />} />
 
-        {/* صفحات الفوتر قبل الدخول */}
-        <Route path="/about" element={<About />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/contact" element={<Contact />} />
+        {/* صفحات الفوتر قبل الدخول + هيدر اللاندنق */}
+        <Route
+          path="/about"
+          element={
+            <>
+              <LandingHeader />
+              <About />
+            </>
+          }
+        />
+        <Route
+          path="/privacy"
+          element={
+            <>
+              <LandingHeader />
+              <Privacy />
+            </>
+          }
+        />
+        <Route
+          path="/contact"
+          element={
+            <>
+              <LandingHeader />
+              <Contact />
+            </>
+          }
+        />
 
         {/* أي مسار غريب قبل الدخول → يرجع للّاندنق */}
         <Route path="*" element={<LandingPage goTo={goTo} />} />
       </Routes>
 
-      <Footer />
+      {/* ✅ هنا التعديل المهم: نمرر goTo للفوتر عشان زر "ابدأ" يشتغل */}
+      <Footer goTo={goTo} />
     </>
   );
 }

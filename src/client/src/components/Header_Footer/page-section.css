@@ -3,13 +3,19 @@
   --bg:#f9fafb;
   --text:#0f172a;        /* slate-900 */
   --muted:#475569;       /* slate-600 */
-  --brand:#f59e0b;       /* amber-500 */
-  --brand-ink:#b45309;   /* أغمق شوي للهوفر */
+
+  /* اللون الجديد المطلوب */
+  --brand:#ff8c42;       /* اللون الأساسي الجديد */
+  --brand-ink:#e6731f;   /* لون أغمق للهوفر */
+
+  /* الخط العام */
+  --font-stack: "Cairo", "Helvetica Neue", sans-serif;
 }
 
 /* خلفية عامة */
 html, body, #root{
   min-height:100%;
+  font-family: var(--font-stack);
   background:
     radial-gradient(900px 360px at 12% 0%, #fff7ed 0%, transparent 60%),
     radial-gradient(1100px 420px at 88% 6%, #ffedd5 8%, transparent 55%),
@@ -18,10 +24,10 @@ html, body, #root{
   background-repeat:no-repeat;
 }
 
-/* تثبيت الخط على نفس ستايل الصفحات الثانية */
+/* تثبيت الخط */
 .about-section,
 .about-section *{
-  font-family: "Cairo", "Helvetica Neue", sans-serif;
+  font-family: var(--font-stack);
 }
 
 /* ====== المقطع ====== */
@@ -45,7 +51,7 @@ html, body, #root{
   line-height: 1.2;
   color: var(--brand);
   letter-spacing: .5px;
-  text-shadow: 0 2px 12px rgba(245, 158, 11, .25);
+  text-shadow: 0 2px 12px rgba(255, 140, 66, .25);
   position: relative;
   display: inline-block;
 }
@@ -57,9 +63,9 @@ html, body, #root{
   height: 4px;
   border-radius: 999px;
   background: linear-gradient(90deg,
-    rgba(245,158,11,.0) 0%,
-    rgba(245,158,11,.7) 40%,
-    rgba(245,158,11,.0) 100%
+    rgba(255,140,66,0) 0%,
+    rgba(255,140,66,.7) 40%,
+    rgba(255,140,66,0) 100%
   );
 }
 
@@ -81,15 +87,15 @@ html, body, #root{
   display: inline;
   color: var(--brand);
   font-weight: 800;
-  text-shadow: 0 1px 4px rgba(245, 158, 11, 0.25);
+  text-shadow: 0 1px 4px rgba(255, 140, 66, 0.25);
   transition: color .3s ease, text-shadow .3s ease;
 }
 .brand:hover{
   color: var(--brand-ink);
-  text-shadow: 0 2px 8px rgba(245, 158, 11, 0.45);
+  text-shadow: 0 2px 8px rgba(255, 140, 66, 0.45);
 }
 
-/* لمنع كسر "في مركز" */
+/* منع الكسر */
 .nowrap{
   white-space: nowrap;
   display: inline;
@@ -114,7 +120,7 @@ html, body, #root{
   width: 8px; height: 8px;
   border-radius: 50%;
   background: var(--brand);
-  box-shadow: 0 0 12px rgba(245,158,11,.35);
+  box-shadow: 0 0 12px rgba(255,140,66,.35);
 }
 
 /* ====== القوائم ====== */
@@ -138,13 +144,13 @@ html, body, #root{
   color: var(--brand);
   font-weight: 700;
   text-decoration: none;
-  border-bottom: 2px solid rgba(245,158,11,.35);
+  border-bottom: 2px solid rgba(255,140,66,.35);
   padding-bottom: 1px;
   transition: border-color .2s ease, color .2s ease;
 }
 .about-link:hover{
   color: var(--brand-ink);
-  border-color: rgba(245,158,11,.65);
+  border-color: rgba(255,140,66,.65);
 }
 
 /* ====== أوربز الخلفية ====== */
@@ -175,6 +181,7 @@ html, body, #root{
   background: radial-gradient(closest-side, rgba(15,23,42,.08), transparent 70%);
   animation-delay: .6s;
 }
+
 @keyframes float{
   0%, 100% { transform: translateY(0) }
   50%      { transform: translateY(-12px) }
@@ -189,6 +196,7 @@ html, body, #root{
 .delay-1{ animation-delay: .2s; }
 .delay-2{ animation-delay: .4s; }
 .delay-3{ animation-delay: .6s; }
+
 @keyframes fadeUp {
   to{ opacity: 1; transform: translateY(0); }
 }
@@ -209,4 +217,52 @@ html, body, #root{
   .about-text{ line-height: 2; }
 }
 
+/* لمنع الكسر */
 .nowrap{ white-space: nowrap; display:inline; }
+
+/* ===== صف الكاردز ===== */
+.policy-row{
+  display: flex;
+  gap: 20px;
+  margin-top: 32px;
+  justify-content: center;
+  align-items: stretch;
+  flex-wrap: nowrap;
+}
+
+.policy-card{
+  flex: 1;
+  background: #ffffffdd;
+  border-radius: 16px;
+  padding: 22px 20px;
+  box-shadow: 0 10px 28px rgba(17,24,39,.07);
+  border: 1px solid rgba(255,140,66,.25);
+  backdrop-filter: blur(5px);
+  transition: transform .25s ease, box-shadow .25s ease;
+  text-align: center;
+}
+
+.policy-card:hover{
+  transform: translateY(-5px);
+  box-shadow: 0 14px 32px rgba(17,24,39,.12);
+}
+
+.policy-card-title{
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--brand);
+  margin-bottom: 8px;
+}
+
+.policy-card-text{
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.9;
+}
+
+/* موبايل */
+@media (max-width: 768px){
+  .policy-row{
+    flex-direction: column;
+  }
+}
