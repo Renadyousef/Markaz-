@@ -1,8 +1,22 @@
 // src/client/src/components/landingPage/LandingHeader.jsx
 import { Navbar, Container, Button } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import "./landing.css";
 
 export default function LandingHeader({ goTo }) {
+  const navigate = useNavigate();
+
+  const handleStart = () => {
+    if (goTo) {
+      // السلوك الأصلي في صفحة اللاندنق العامة
+      goTo("auth", "signin");
+    } else {
+      // الصفحات: About / Privacy / Contact
+      // 🔥 يودّي إلى صفحة التطبيق الأساسية (Landing داخل التطبيق)
+      navigate("/landing"); // عدّلي المسار حسب تطبيقك
+    }
+  };
+
   return (
     <Navbar
       fixed="top"
@@ -14,8 +28,10 @@ export default function LandingHeader({ goTo }) {
         backgroundRepeat: "no-repeat",
       }}
     >
-      <Container fluid className="d-flex justify-content-between align-items-center">
-        {/* Logo */}
+      <Container
+        fluid
+        className="d-flex justify-content-between align-items-center"
+      >
         <Navbar.Brand href="#">
           <img
             src="/logo3.svg"
@@ -24,12 +40,15 @@ export default function LandingHeader({ goTo }) {
           />
         </Navbar.Brand>
 
-        {/* Start button */}
         <Button
           variant="warning"
           className="fw-bold px-4"
-          style={{ backgroundColor: "#ff914d", border: "none", color: "#ffffff" }}
-          onClick={() => goTo?.("auth", "signin")} // ✅ use your App's goTo
+          style={{
+            backgroundColor: "#ff914d",
+            border: "none",
+            color: "#ffffff",
+          }}
+          onClick={handleStart}
         >
           ابدا الان
         </Button>
