@@ -111,7 +111,7 @@ function todayStrLocal() {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-/* ===== فحص تجاوز الديدلاين ===== */
+/* ===== فحص تجاوز الديدلاين في وضع العرض ===== */
 function isOverdue(iso) {
   if (!iso) return false;
   const endOfDay = new Date(`${iso}T23:59:59`);
@@ -137,7 +137,7 @@ const styles = `
   .progress-wrap {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 30px 20px 60px;
+    padding: 30px 20px 80px;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -205,7 +205,7 @@ const styles = `
     transform: translateY(-1px);
   }
 
-  /* ===== أزرار التعديل + العنوان في صف واحد ===== */
+  /* ===== هيدر قسم المهام ===== */
   .tasks-header-row {
     display: flex;
     justify-content: space-between;
@@ -299,6 +299,36 @@ const styles = `
     text-decoration: underline;
   }
 
+  /* ===== شريط التعديل أسفل الصفحة ===== */
+  .edit-actions-bar {
+    position: sticky;
+    bottom: 0;
+    margin-top: 18px;
+    background: #fff8f1;
+    border-radius: 16px;
+    border: 1px solid var(--border-orange);
+    padding: 10px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 -10px 24px rgba(15,23,42,0.12);
+    z-index: 5;
+  }
+
+  .edit-actions-label {
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-weight: 500;
+  }
+
+  @media (max-width: 768px) {
+    .edit-actions-bar {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+
   /* ===== الكروت / الصفوف للمهام ===== */
   .task-card {
     border-radius: 16px;
@@ -315,7 +345,7 @@ const styles = `
   }
 
   .task-row {
-    position: relative; /* عشان نحط "انتهى الموعد" بالنص */
+    position: relative;
     display: flex;
     align-items: center;
     gap: .75rem;
@@ -392,7 +422,6 @@ const styles = `
     font-size: .75rem;
   }
 
-  /* بالنص داخل الكارد (وضع العرض) */
   .badge-overdue-center {
     position: absolute;
     top: 50%;
@@ -405,7 +434,6 @@ const styles = `
     border: 1px solid #fecaca;
   }
 
-  /* نسخة داخلية لوضع التعديل */
   .badge-overdue-inline {
     align-self: flex-start;
     margin-top: 4px;
@@ -423,7 +451,7 @@ const styles = `
     border-top: 1px solid #e5e7eb;
   }
 
-  /* ===== مودال مخصص (زي جلسة الدراسة) ===== */
+  /* ===== مودال مخصص ===== */
   .custom-modal-backdrop {
     position: fixed;
     inset: 0;
@@ -709,10 +737,25 @@ export default function PlanDetailsPage() {
     setDraftTasks((ds) => ds.map((t) => (t.id === id ? { ...t, ...patch } : t)));
   };
 
+  // فحص إذا تاريخ بصيغة YYYY-MM-DD أقدم من اليوم
+  function isPastDateYMD(ymd) {
+    if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return false;
+
+    const [y, m, d] = ymd.split("-").map(Number);
+
+    const date = new Date(y, m - 1, d);
+    const today = new Date();
+
+    date.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    return date.getTime() < today.getTime();
+  }
+
   const saveEdits = async () => {
-    const today = todayStrLocal();
+    // التحقق من أن كل التواريخ ليست أقدم من اليوم
     for (const d of draftTasks) {
-      if (d.deadline && d.deadline < today) {
+      if (d.deadline && isPastDateYMD(d.deadline)) {
         openModal({
           title: "تاريخ غير صالح",
           body: "لا يمكن حفظ مهمة بتاريخ أقدم من اليوم. عدّلي التاريخ ثم أعيدي المحاولة.",
@@ -785,26 +828,31 @@ export default function PlanDetailsPage() {
     }
   };
 
-  const removeTask = async (id) => {
-    const ok = window.confirm("هل أنت متأكد من حذف هذه المهمة؟");
-    if (!ok) return;
-
-    const prev = tasks;
-    setTasks((ts) => ts.filter((t) => t.id !== id));
-    bumpCount(-1);
-    try {
-      const token = localStorage.getItem("token");
-      await fetchWithDiagnostics(
-        `http://localhost:5000/study-plans/${planId}/tasks/${id}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
+  const removeTask = (id) => {
+    openModal({
+      title: "حذف المهمة؟",
+      body: "سيتم حذف هذه المهمة نهائيًا من الخطة.",
+      primaryLabel: "نعم، حذف",
+      secondaryLabel: "إلغاء",
+      onPrimary: async () => {
+        const prev = tasks;
+        setTasks((ts) => ts.filter((t) => t.id !== id));
+        bumpCount(-1);
+        try {
+          const token = localStorage.getItem("token");
+          await fetchWithDiagnostics(
+            `http://localhost:5000/study-plans/${planId}/tasks/${id}`,
+            {
+              method: "DELETE",
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+        } catch (e) {
+          setTasks(prev);
+          bumpCount(+1);
         }
-      );
-    } catch (e) {
-      setTasks(prev);
-      bumpCount(+1);
-    }
+      },
+    });
   };
 
   const addTask = async () => {
@@ -816,8 +864,8 @@ export default function PlanDetailsPage() {
       });
       return;
     }
-    const today = todayStrLocal();
-    if (newTask.deadline < today) {
+
+    if (isPastDateYMD(newTask.deadline)) {
       openModal({
         title: "تاريخ غير صالح",
         body: "لا يمكن اختيار تاريخ أقدم من اليوم. حدّث التاريخ ثم حاول مرة أخرى.",
@@ -882,13 +930,40 @@ export default function PlanDetailsPage() {
     setDraftTasks(tasks.map((t) => ({ ...t })));
     setIsEditing(true);
   };
+
   const cancelEditing = () => {
-    setDraftTasks([]);
-    setIsEditing(false);
+    const hasChanges =
+      draftTasks.length > 0 &&
+      draftTasks.some((d) => {
+        const o = tasks.find((t) => t.id === d.id);
+        if (!o) return false;
+        return (
+          d.title !== o.title ||
+          d.priority !== o.priority ||
+          d.deadline !== o.deadline
+        );
+      });
+
+    if (hasChanges) {
+      openModal({
+        title: "إلغاء التعديل؟",
+        body: "لديك تعديلات لم يتم حفظها بعد. إذا ألغيت الآن ستفقد هذه التغييرات.",
+        primaryLabel: "نعم، إلغاء",
+        secondaryLabel: "الرجوع للتعديل",
+        onPrimary: () => {
+          setDraftTasks([]);
+          setIsEditing(false);
+        },
+      });
+    } else {
+      setDraftTasks([]);
+      setIsEditing(false);
+    }
   };
 
   const inAddMode = showAddRow;
   const inEditMode = isEditing;
+  const canToggleStatus = !inEditMode && !inAddMode;
 
   return (
     <div dir="rtl" lang="ar" className="planDetailsRoot">
@@ -968,40 +1043,25 @@ export default function PlanDetailsPage() {
               >
                 إلغاء الإضافة
               </button>
-            ) : inEditMode ? (
-              <>
-                <button
-                  type="button"
-                  className="btn-outline-orange"
-                  onClick={cancelEditing}
-                >
-                  إلغاء التعديل
-                </button>
-                <button
-                  type="button"
-                  className="btn-orange"
-                  onClick={saveEdits}
-                >
-                  حفظ التغييرات
-                </button>
-              </>
             ) : (
-              <>
-                <button
-                  type="button"
-                  className="btn-outline-orange"
-                  onClick={startEditing}
-                >
-                  تعديل المهام
-                </button>
-                <button
-                  type="button"
-                  className="btn-orange"
-                  onClick={() => setShowAddRow(true)}
-                >
-                  إضافة مهمة جديدة
-                </button>
-              </>
+              !inEditMode && (
+                <>
+                  <button
+                    type="button"
+                    className="btn-outline-orange"
+                    onClick={startEditing}
+                  >
+                    تعديل المهام
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-orange"
+                    onClick={() => setShowAddRow(true)}
+                  >
+                    إضافة مهمة جديدة
+                  </button>
+                </>
+              )
             )}
           </div>
         </div>
@@ -1160,7 +1220,6 @@ export default function PlanDetailsPage() {
 
                   return (
                     <div key={t.id} className="task-row">
-                      {/* تنبيه بالنص إذا انتهى الموعد */}
                       {t.deadline && isOverdue(t.deadline) && (
                         <span className="badge-overdue badge-overdue-center">
                           انتهى الموعد
@@ -1172,7 +1231,12 @@ export default function PlanDetailsPage() {
                           type="checkbox"
                           className="form-check-input ms-1"
                           checked={false}
-                          onChange={() => toggleComplete(t.id)}
+                          disabled={!canToggleStatus}
+                          onChange={
+                            canToggleStatus
+                              ? () => toggleComplete(t.id)
+                              : undefined
+                          }
                           aria-label="إنهاء المهمة"
                         />
                         <div className="task-title">{t.title}</div>
@@ -1197,6 +1261,31 @@ export default function PlanDetailsPage() {
             </div>
           </div>
         </div>
+
+        {/* شريط حفظ / إلغاء التعديل في أسفل الصفحة */}
+        {inEditMode && (
+          <div className="edit-actions-bar">
+            <span className="edit-actions-label">
+              أنت الآن في وضع تعديل المهام. لا تنسى حفظ التغييرات بعد الانتهاء.
+            </span>
+            <div className="d-flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="btn-outline-orange"
+                onClick={cancelEditing}
+              >
+                إلغاء التعديل
+              </button>
+              <button
+                type="button"
+                className="btn-orange"
+                onClick={saveEdits}
+              >
+                حفظ التغييرات
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* المهام المنجزة */}
         <div className="section-title-wrap">
@@ -1232,7 +1321,12 @@ export default function PlanDetailsPage() {
                             type="checkbox"
                             className="form-check-input ms-1"
                             checked={true}
-                            onChange={() => toggleComplete(t.id)}
+                            disabled={!canToggleStatus}
+                            onChange={
+                              canToggleStatus
+                                ? () => toggleComplete(t.id)
+                                : undefined
+                            }
                             aria-label="إرجاع المهمة"
                           />
                           <div className="task-title text-decoration-line-through">
@@ -1247,8 +1341,6 @@ export default function PlanDetailsPage() {
                               {t.deadline ? prettyDate(t.deadline) : "—"}
                             </span>
                           </div>
-
-                          {/* لا نظهر "انتهى الموعد" في المهام المنجزة */}
 
                           <span
                             className={`priority-badge ${priorityClass}`}
