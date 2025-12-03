@@ -6,18 +6,18 @@ const get_quiz_results = async (req, res) => {
     const userId = req.user.id;
     console.log("📥 Fetching quiz results for:", userId);
 
-    // 1️⃣ Fetch quiz results for this user
-    const quizSnap = await QuizResult.where("user_id", "==", userId).get();
+    // 1️ Fetch quiz results for this user this is des order last created shows first 
+    const quizSnap = await QuizResult.where("user_id", "==", userId).orderBy("createdAt", "desc").get();
     console.log("📊 Quiz results found:", quizSnap.size);
 
     if (quizSnap.empty) return res.status(200).json({ quizzes: [] });
 
     const quizDocs = quizSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-    // 2️⃣ Collect all unique pdfIds
+    // 2️ Collect all unique pdfIds
     const pdfIds = [...new Set(quizDocs.map(q => q.pdfId).filter(Boolean))];
 
-    // 3️⃣ Fetch PDF docs and map their names
+    // 3️ Fetch PDF docs and map their names
     const pdfMap = {};
     if (pdfIds.length > 0) {
       const pdfPromises = pdfIds.map(id => pdf.doc(id).get());
