@@ -5,6 +5,8 @@ import axios from "axios";
 import TTSControls from "./TTSControls";
 import FontSettings from "./FontSettings";
 import "./GetQuiz.css";
+import { FiX } from "react-icons/fi"; // X icon for exit
+import { FiCheck } from "react-icons/fi"; // Check icon for confirm
 
 const A11Y_KEY = "quiz_a11y_settings";
 const DEFAULT_A11Y = { baseSize: 18, lineHeight: 1.6, letterSpacing: 0.0 };
@@ -23,6 +25,7 @@ export default function GetQuiz() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showAnswer, setShowAnswer] = useState(false);
+const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   // Font popup + a11y state
   const [showFontPopup, setShowFontPopup] = useState(true);
@@ -619,6 +622,10 @@ if (!quiz) {
     );
   }
 
+
+//exit
+
+
   // Current question
   const question = quiz[currentIndex];
   const isMCQ = question?.type === "MCQ";
@@ -669,7 +676,71 @@ if (!quiz) {
   const optionFontSize = Math.max(14, a11y.baseSize - 1);
 
   return (
+
     <div style={{ display: "grid", placeItems: "center", padding: 24 }}>
+      {showExitConfirm && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.4)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 999,
+    }}
+  >
+    <div
+      style={{
+        background: "white",
+        padding: "20px",
+        borderRadius: "16px",
+        width: "min(300px,90%)",
+        textAlign: "center",
+        boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+      }}
+    >
+      <p style={{ marginBottom: 20, fontWeight: 600 }}>
+        هل تريد الخروج من الاختبار؟
+      </p>
+
+      <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+        <button
+          onClick={exitQuiz}
+          style={{
+            padding: "10px 18px",
+            borderRadius: 12,
+            background: "#ff8c42",
+            border: "none",
+            color: "white",
+            fontWeight: 700,
+            cursor: "pointer",
+            minWidth: 90,
+          }}
+        >
+          نعم
+        </button>
+
+        <button
+          onClick={() => setShowExitConfirm(false)}
+          style={{
+            padding: "10px 18px",
+            borderRadius: 12,
+            background: "#e5e7eb",
+            border: "none",
+            fontWeight: 700,
+            cursor: "pointer",
+            minWidth: 90,
+          }}
+        >
+          لا
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
       <div
         style={{
           width: "min(800px, 96%)",
@@ -678,6 +749,7 @@ if (!quiz) {
           padding: 24,
           boxShadow: "0 10px 30px rgba(2,6,23,0.06)",
           border: "1px solid #eef2f7",
+          position: "relative"
         }}
       >
         {/* Progress */}
@@ -775,6 +847,27 @@ if (!quiz) {
           >
             {isLastQuestion ? "إنهاء" : "التالي"}
           </button>
+            {/* New Exit mid test Button */}
+  <button
+    onClick={() => setShowExitConfirm(true)}
+    style={{
+      position: "absolute", // ✅ absolute inside relative parent
+      top: 2,
+      left: 1,
+ padding: "8px 16px",
+              borderRadius: 12,
+              border: "1px solid #f59e0b",
+              background: "#fff7ed",
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "0.2s",
+               gap: 6,
+      zIndex: 10,
+    }}
+    title="إنهاء الاختبار" // ← tooltip text
+  >
+     <FiX size={18} />
+  </button>
         </div>
       </div>
     </div>
