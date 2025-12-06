@@ -63,10 +63,9 @@ export default function StudySessionTimer() {
   const handleSessionEnd = useCallback(async () => {
     if (closedRef.current) return;
     closedRef.current = true;
-    await updateSessionStatus("completed");
     localStorage.removeItem("currentSession");
     navigate("/sessions");
-  }, [navigate, updateSessionStatus]);
+  }, [navigate]);
 
   useEffect(() => {
     document.body.classList.add("focus-mode");
@@ -138,15 +137,21 @@ export default function StudySessionTimer() {
 
   useEffect(() => {
     if (timeLeft !== 0) return;
-      if (mode === "study" && breakSeconds > 0) {
-        setMode("break");
-        setTimeLeft(Math.max(breakSeconds, 1));
-        setIsRunning(true);
-      } else if (!modalType) {
-        setIsRunning(false);
+
+    if (mode === "study") {
+      // Mark session as completed once study time is finished
+      updateSessionStatus("completed");
+    }
+
+    if (mode === "study" && breakSeconds > 0) {
+      setMode("break");
+      setTimeLeft(Math.max(breakSeconds, 1));
+      setIsRunning(true);
+    } else if (!modalType) {
+      setIsRunning(false);
       setModalType("finished");
     }
-  }, [timeLeft, mode, breakSeconds, modalType]);
+  }, [timeLeft, mode, breakSeconds, modalType, updateSessionStatus]);
 
   const formatTime = (s) => {
     const hours = String(Math.floor(s / 3600)).padStart(2, "0");
