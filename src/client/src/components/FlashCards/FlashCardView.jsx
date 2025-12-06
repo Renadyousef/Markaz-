@@ -204,6 +204,81 @@ const local = `
   padding:6px 10px; border-radius:999px; user-select:none;
 }
 
+.flip-icon {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+  transition: background 0.2s ease, transform 0.2s ease;
+  z-index: 50;
+  backface-visibility: hidden;
+}
+.flip-icon:hover {
+  background: #fff;
+  transform: translateY(-2px);
+}
+.flip-icon svg {
+  width: 22px;
+  height: 22px;
+  color: #ff9959ff;
+}
+
+.sound-btn::after {
+  content: "تشغيل الصوت";
+  position: absolute;
+  bottom: 50px;
+  right: 0;
+  transform: translateY(6px);
+  background: #fff;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  font-size: 12px;
+  opacity: 0;
+  white-space: nowrap;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 9999;
+  color: #111827;
+}
+.sound-btn:hover::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.flip-icon::after {
+  content: "اقلب البطاقة";
+  position: absolute;
+  bottom: 50px;
+  right: 0;
+  transform: translateY(6px);
+  background: #fff;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  font-size: 12px;
+  opacity: 0;
+  white-space: nowrap;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 9999;
+  color: #111827;
+}
+.flip-icon:hover::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* ===== New Practice Layout (Version B) ===== */
 .practice-shell {
   min-height: 100vh;
@@ -256,7 +331,7 @@ const local = `
   width: clamp(320px, 80%, 520px);
   height: 100%;
   border-radius: 24px;
-  background: #ff914d;
+  background: #ff9959ff;
   box-shadow: 0 25px 40px rgba(255, 145, 77, 0.5);
   transform: translate(-50%, -50%);
   transition: opacity 0.3s ease, transform 0.3s ease;
@@ -318,7 +393,7 @@ const local = `
   justify-content: center;
   text-align: center;
   color: #fff;
-  background: #ff914d;
+  background: #ff9959ff;
 }
 .stack-card.front .face.back-face {
   transform: rotateY(180deg);
@@ -349,7 +424,7 @@ const local = `
   border-radius: 14px;
   border: none;
   background: rgba(255,255,255,0.9);
-  color: #ff914d;
+  color: #ff9959ff;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -429,6 +504,54 @@ body.flashcards-bg {
 .cube-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.cube-btn.red::after {
+  content: "لا أعرف";
+  position: absolute;
+  bottom: 85px;
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  background: #fff;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  font-size: 12px;
+  opacity: 0;
+  white-space: nowrap;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 9999;
+  color: #111827;
+}
+.cube-btn.red:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.cube-btn.green::after {
+  content: "أعرف";
+  position: absolute;
+  bottom: 85px;
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  background: #fff;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  font-size: 12px;
+  opacity: 0;
+  white-space: nowrap;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 9999;
+  color: #111827;
+}
+.cube-btn.green:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 .practice-modal {
@@ -862,6 +985,23 @@ export default function FlashCardView() {
                           {current?.hint && (
                             <p style={{opacity:0.85, marginTop:10}}>{current.hint}</p>
                           )}
+                          <div
+                            className="flip-icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFrontCard();
+                            }}
+                          >
+                            <svg viewBox="0 0 24 24" fill="none">
+                              <path
+                                d="M4 4v6h6M20 20v-6h-6M6.76 6.76a8 8 0 0111.31 0l1.41 1.41M17.24 17.24a8 8 0 01-11.31 0l-1.41-1.41"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </div>
                         </div>
                         <div className="face back-face">
                           <button
@@ -907,6 +1047,23 @@ export default function FlashCardView() {
                           </button>
                           <h2>الإجابة</h2>
                           {current?.a && <p style={{fontSize:"18px", marginTop:12}}>{current.a}</p>}
+                          <div
+                            className="flip-icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFrontCard();
+                            }}
+                          >
+                            <svg viewBox="0 0 24 24" fill="none">
+                              <path
+                                d="M4 4v6h6M20 20v-6h-6M6.76 6.76a8 8 0 0111.31 0l1.41 1.41M17.24 17.24a8 8 0 01-11.31 0l-1.41-1.41"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -936,7 +1093,15 @@ export default function FlashCardView() {
                 onClick={() => handlePracticeAnswer("left")}
                 disabled={!current || doneAll}
               >
-                ←
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M6 6l12 12M18 6L6 18"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </button>
               <button
                 className="cube-btn green"
@@ -944,7 +1109,15 @@ export default function FlashCardView() {
                 onClick={() => handlePracticeAnswer("right")}
                 disabled={!current || doneAll}
               >
-                →
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M5 13l4 4L19 7"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </button>
             </div>
           </>
