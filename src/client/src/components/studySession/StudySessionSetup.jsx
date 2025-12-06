@@ -25,7 +25,7 @@ const buildDurationFromMinutes = (mins) => ({
 });
 
 export default function StudySessionSetup() {
-  const [title, setTitle] = useState("جلسة دراسة");
+  const [title, setTitle] = useState("");
   const [selectedTimer, setSelectedTimer] = useState("study");
   const [studyDuration, setStudyDuration] = useState({
     hours: 0,
@@ -205,7 +205,7 @@ export default function StudySessionSetup() {
           className="session-name-field"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="جلسة دراسة"
+          placeholder="مثال: جلسة مراجعة"
         />
 
         <div className="timers-stack">
@@ -213,24 +213,26 @@ export default function StudySessionSetup() {
           {renderTimerBlock("break", "وقت الاستراحة", breakDuration)}
         </div>
 
-        <button className="start-button" onClick={start} disabled={saving}>
-          {saving ? "..." : "ابدأ"}
-        </button>
-
         <div className="preset-section">
           <p className="preset-title">أوقات شائعة</p>
-          <div className="preset-grid">
-            {PRESETS.map((preset) => (
-              <button
-                key={`${preset.minutes}-${preset.unitLabel}`}
-                type="button"
-                className="preset-btn"
-                onClick={() => applyPreset(preset.minutes)}
-              >
-                <span>{preset.valueLabel}</span>
-                <small>{preset.unitLabel}</small>
-              </button>
-            ))}
+          <div className="preset-row">
+            <button className="start-button" onClick={start} disabled={saving}>
+              {saving ? "..." : "ابدأ"}
+            </button>
+
+            <div className="preset-grid">
+              {PRESETS.map((preset) => (
+                <button
+                  key={`${preset.minutes}-${preset.unitLabel}`}
+                  type="button"
+                  className="preset-btn"
+                  onClick={() => applyPreset(preset.minutes)}
+                >
+                  <span>{preset.valueLabel}</span>
+                  <small>{preset.unitLabel}</small>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </section>
