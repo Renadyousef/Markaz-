@@ -103,12 +103,53 @@ export default function ProgressPage() {
   const progressPercent = data?.progressPercent || 0;
   const improvement = data?.improvement ?? 0;
 
+// ترتيب أيام الأسبوع ثابت
+const weekDays = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+
+// نحدد بداية الأسبوع الحالي (الأحد)
+function getWeekStart(date) {
+  let d = new Date(date);
+  let jsDay = d.getDay(); // 0 = الأحد في ar-EG؟ لا… JS: الأحد=0 لكن عربي يختلف
+
+  // نصحّحها: نخلي الأحد = 0
+  jsDay = (jsDay === 0 ? 0 : jsDay);
+
+  // ننقل التاريخ لبداية الأسبوع (الأحد)
+  d.setDate(d.getDate() - jsDay);
+  return d;
+}
+
+// بداية الأسبوع
+const weekStart = getWeekStart(new Date());
+
+// نبني أسبوع كامل 7 أيام من الأحد → السبت
+const weekDates = [];
+for (let i = 0; i < 7; i++) {
+  const d = new Date(weekStart);
+  d.setDate(weekStart.getDate() + i);
+  weekDates.push({
+    iso: d.toISOString().split("T")[0],
+    day: d.toLocaleDateString("ar-EG", { weekday: "long" }),
+    date: d.toLocaleDateString("ar-EG"),
+  });
+}
+
+// جلب القيم من history
+const weeklyData = weekDates.map((wd) => {
+  const match = history.find((h) => h.date === wd.iso);
+  return match ? match.percent : 0;
+});
+
+// اللابل النهائي: اليوم فوق + التاريخ تحت
+const weeklyLabels = weekDates.map((wd) => `${wd.day}\n(${wd.date})`);
+
+
   const chartData = {
-    labels: history.map((h) => h.date),
+labels: weeklyLabels,
     datasets: [
       {
         label: "نسبة التقدم",
-        data: history.map((h) => h.percent),
+        data: weeklyData,
         borderColor: PRIMARY_COLOR,
         backgroundColor: "rgba(255, 140, 66, 0.12)",
         fill: true,
@@ -357,6 +398,60 @@ export default function ProgressPage() {
           box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
           min-height: 320px;
         }
+          .big-progress-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 24px 28px;
+  box-shadow: 0 12px 26px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: 0.25s ease;
+}
+
+.big-progress-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.big-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #374151;
+}
+
+.big-progress-value {
+  font-size: 3rem;
+  font-weight: 900;
+  color: ${PRIMARY_COLOR};
+  margin-top: 4px;
+}
+
+.big-progress-bar {
+  width: 100%;
+  height: 12px;
+  background: #f3f4f6;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.big-progress-fill {
+  height: 100%;
+  background: ${PRIMARY_COLOR};
+  border-radius: 10px;
+  transition: width 0.4s ease;
+}
+
+.big-progress-date {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-top: 4px;
+  font-weight: 600;
+}
+  
+
       `}</style>
 
       <section className="progress-wrap">
@@ -378,50 +473,70 @@ export default function ProgressPage() {
         </div>
 
         {/* كروت المؤشرات */}
-        <div className="cards-row">
-          <KpiCard
-            icon={GaugeCircle}
-            title="نسبة التقدّم الإجمالية"
-            value={`${progressPercent}%`}
-            subText="النسبة المئوية التي حققتها من أهدافك."
-            pill1={
-              data?.date
-                ? `حتى تاريخ ${formatArabicGregorianDateFromISO(data.date)}`
-                : "جاري التحديث"
-            }
-          />
+<div className="big-progress-card">
+  <div className="big-progress-top">
+    <GaugeCircle size={26} color={PRIMARY_COLOR} />
+    <div className="big-title">نسبة التقدّم الإجمالية</div>
+  </div>
 
-          <KpiCard
-            icon={CheckCircle}
-            title="المهام المنجزة"
-            value={`${data.completedTasks} / ${data.totalTasks}`}
-            subText="عدد المهام التي أنهيتها من إجمالي مهامك."
-            pill1={`منجزة: ${data.completedTasks}`}
-            pill2={`متبقية: ${Math.max(
-              (data.totalTasks || 0) - (data.completedTasks || 0),
-              0
-            )}`}
-          />
+  <div className="big-progress-value">{progressPercent}%</div>
 
-          <KpiCard
-            icon={Clock}
-            title="الجلسات الدراسية"
-            value={data.sessionsToday}
-            subText="عدد جلسات التركيز التي سجّلها النظام اليوم."
-          />
+  <div className="big-progress-bar">
+    <div
+      className="big-progress-fill"
+      style={{ width: `${progressPercent}%` }}
+    ></div>
+  </div>
 
-          <KpiCard
-            icon={TrendingUp}
-            title="تحسّن نتائج الاختبار"
-            value={improvement > 0 ? `+${improvement}` : improvement}
-            subText="تغيّر نتيجتك بين آخر اختبارين (القيمة الأعلى تعني تحسّن أكبر)."
-            pillColor={improvement > 0 ? "#10b981" : "#ef4444"}
-          />
-        </div>
+  {/* <div className="big-progress-date">
+    {data?.date
+      ? `حتى تاريخ ${formatArabicGregorianDateFromISO(data.date)}`
+      : "جاري التحديث"}
+  </div> */}
+</div>
+
+{/* كروت المؤشرات */}
+<div className="cards-row">
+
+  <KpiCard
+    icon={CheckCircle}
+    title="المهام المنجزة"
+    value={`${data.completedTasks} / ${data.totalTasks}`}
+    subText="عدد المهام التي أنهيتها من إجمالي مهامك."
+    pill1={`منجزة: ${data.completedTasks}`}
+    pill2={`متبقية: ${Math.max(
+      (data.totalTasks || 0) - (data.completedTasks || 0),
+      0
+    )}`}
+  />
+
+  <KpiCard
+    icon={Clock}
+    title="الجلسات الدراسية"
+    value={data.sessionsToday}
+    subText="عدد جلسات التركيز التي سجّلها النظام اليوم."
+  />
+
+  <KpiCard
+    icon={TrendingUp}
+    title="تحسّن نتائج الاختبار"
+    value={improvement > 0 ? `+${improvement}` : improvement}
+    subText="هذا جزء من رحلة التطور. استمرّ!"
+    pillColor={improvement > 0 ? "#10b981" : "#ef4444"}
+  />
+
+</div>
+
 
         {/* الرسم البياني */}
         <div className="weekly-section">
           <h4 className="weekly-title"> ملخص التقدم  </h4>
+          <p className="chart-description">
+  تابع رحلتك الاسبوعية بكل وضوح! 
+  هذا الرسم البياني يوضّح مستوى تقدّمك خلال الأسبوع،
+  وكل ارتفاع صغير في الخط يعكس تحسّنًا في نشاطك وإنجازك يومًا بعد يوم ✨
+</p>
+
 
           {history.length > 0 ? (
             <div className="chart-card">

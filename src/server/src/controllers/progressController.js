@@ -82,11 +82,11 @@ exports.getProgress = async (req, res) => {
     const improvement = latest - previous;
 
     /* ---- Progress % ---- */
-    const progressPercent = (
-      ((completedTasks / (totalTasks || 1)) * 40) +
-      ((sessionsToday / 5) * 30) +
-      ((latest / 100) * 30)
-    ).toFixed(1);
+const tasksWeight = (completedTasks / (totalTasks || 1)) * 40;
+const sessionsWeight = (Math.min(sessionsToday, 5) / 5) * 30;
+const quizWeight = (Math.min(latest, 100) / 100) * 30;
+const progressPercent = (tasksWeight + sessionsWeight + quizWeight).toFixed(1);
+
 
     /* ---- Save Today ---- */
     await db.collection("progress").doc(todayKey).set(

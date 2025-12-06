@@ -315,9 +315,7 @@ console.log("⏱ Ghostscript took:", Date.now() - t_gs, "ms");
 
     await assertFileExists(safePath);
 
-    // ===============================
-    //      مرحلة الاستخراج الجديدة
-    // ===============================
+
     stage = "extract";
 
     const jobs = [
@@ -364,9 +362,7 @@ console.log("⏱ Extraction took:", Date.now() - t_extract, "ms");
 
     console.log("[extract] chosen method:", methodUsed);
 
-    // ===============================
-    //              حفظ
-    // ===============================
+    
     stage = "save";
 
     const docRef = await db.collection("pdf").add({
@@ -378,9 +374,7 @@ console.log("⏱ Extraction took:", Date.now() - t_extract, "ms");
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    // ===============================
-    //              مودل
-    // ===============================
+    
     stage = "model";
 
     let modelResp = null;
@@ -394,7 +388,7 @@ console.log("⏱ Extraction took:", Date.now() - t_extract, "ms");
       );
       modelResp = data ?? null;
     } catch (e) {
-      modelError = e?.message || "تعذر الاتصال بالمودل.";
+      modelError = e?.message || "تعذر الاتصال openAI API .";
       console.error("MODEL_API error:", modelError);
     }
 
