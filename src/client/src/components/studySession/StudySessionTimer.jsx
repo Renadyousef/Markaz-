@@ -24,6 +24,7 @@ export default function StudySessionTimer() {
   const [timeLeft, setTimeLeft] = useState(studySeconds);
   const [isRunning, setIsRunning] = useState(true);
   const [modalType, setModalType] = useState(null); // 'finished' | 'quit'
+  const [showBreakBanner, setShowBreakBanner] = useState(false);
   const closedRef = useRef(false);
   const fullscreenRef = useRef(false);
 
@@ -63,10 +64,9 @@ export default function StudySessionTimer() {
   const handleSessionEnd = useCallback(async () => {
     if (closedRef.current) return;
     closedRef.current = true;
-    await updateSessionStatus("completed");
     localStorage.removeItem("currentSession");
     navigate("/sessions");
-  }, [navigate, updateSessionStatus]);
+  }, [navigate]);
 
   useEffect(() => {
     document.body.classList.add("focus-mode");
@@ -138,15 +138,28 @@ export default function StudySessionTimer() {
 
   useEffect(() => {
     if (timeLeft !== 0) return;
-      if (mode === "study" && breakSeconds > 0) {
-        setMode("break");
-        setTimeLeft(Math.max(breakSeconds, 1));
-        setIsRunning(true);
-      } else if (!modalType) {
-        setIsRunning(false);
+
+    if (mode === "study") {
+      // Mark session as completed once study time is finished
+      updateSessionStatus("completed");
+    }
+
+    if (mode === "study" && breakSeconds > 0) {
+      setMode("break");
+      setTimeLeft(Math.max(breakSeconds, 1));
+      setIsRunning(true);
+      setShowBreakBanner(true);
+    } else if (!modalType) {
+      setIsRunning(false);
       setModalType("finished");
     }
-  }, [timeLeft, mode, breakSeconds, modalType]);
+  }, [timeLeft, mode, breakSeconds, modalType, updateSessionStatus]);
+
+  useEffect(() => {
+    if (!showBreakBanner) return;
+    const id = setTimeout(() => setShowBreakBanner(false), 2500);
+    return () => clearTimeout(id);
+  }, [showBreakBanner]);
 
   const formatTime = (s) => {
     const hours = String(Math.floor(s / 3600)).padStart(2, "0");
@@ -248,29 +261,27 @@ export default function StudySessionTimer() {
         <div className="timer-icon-wrap">
           {isBreakMode ? (
             <svg viewBox="0 0 48 48">
+              <rect
+                x="12"
+                y="18"
+                width="18"
+                height="14"
+                rx="3"
+                ry="3"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+              />
               <path
-                d="M12 16h20v14a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6V16Z"
+                d="M30 20h4a4 4 0 0 1 0 8h-4"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2.2"
                 strokeLinecap="round"
-                strokeLinejoin="round"
               />
               <path
-                d="M32 20h4a4 4 0 0 1 0 8h-4"
+                d="M18 14c0 2 1 3 1 4m4-4c0 2 1 3 1 4"
                 fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-              />
-              <path
-                d="M16 10v4m8-4v4"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-              <path
-                d="M10 38h24"
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
@@ -278,22 +289,25 @@ export default function StudySessionTimer() {
             </svg>
           ) : (
             <svg viewBox="0 0 48 48">
-              <rect
-                x="8"
-                y="12"
-                width="32"
-                height="24"
-                rx="3"
-                ry="3"
+              <path
+                d="M10 12h14a4 4 0 0 1 4 4v22H14a4 4 0 0 0-4 4V12Z"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2.5"
+                strokeWidth="2.2"
+                strokeLinejoin="round"
               />
               <path
-                d="M20 36v6h8v-6"
+                d="M24 12h8a4 4 0 0 1 4 4v22h-8"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2.5"
+                strokeWidth="2.2"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M16 18h8"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
                 strokeLinecap="round"
               />
             </svg>
@@ -334,6 +348,14 @@ export default function StudySessionTimer() {
           </div>
         </div>
       </div>
+      {isBreakMode && showBreakBanner && (
+        <div className="break-start-overlay">
+          <div className="break-start-card">
+            <h3>انتهى وقت الدراسة</h3>
+            <p>حان الآن وقت الاستراحة، خذ لحظات للاسترخاء.</p>
+          </div>
+        </div>
+      )}
       {renderModal()}
     </div>
   );
