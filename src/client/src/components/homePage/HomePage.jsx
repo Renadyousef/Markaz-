@@ -130,82 +130,6 @@ function QuizFlashcardsBox() {
   );
 }
 
-/* ========== 3) لوحة الوصول ========== */
-function FeatureAccessPanel() {
-  return (
-    <section className="panel" id="feature-shortcuts">
-      <h2 className="panel__title">لوحة الوصول</h2>
-
-      <div className="featureGrid">
-        {/* الخطة الدراسية */}
-        <article className="featureCard isPlan">
-          <div className="featureIcon">
-            <Ico d="M4 6h16M4 12h12M4 18h8" />
-          </div>
-          <h4 className="featureTitle">الخطة الدراسية</h4>
-          <p className="featureDesc">نظّم جلساتك وحدّد أولوياتك بسهولة.</p>
-          <Link to="/plans" className="featureCTA">
-            <span className="arrow">↗</span>
-            <span className="label">عرض الخطة</span>
-          </Link>
-        </article>
-
-        {/* البطاقات التعليمية */}
-        <article className="featureCard isCards">
-          <div className="featureIcon">
-            <Ico d="M3 9h18v10H3z M7 13h10M7 17h6" />
-          </div>
-          <h4 className="featureTitle">البطاقات التعليمية</h4>
-          <p className="featureDesc">راجِع المفاهيم ببطاقات ذكية.</p>
-          <Link to="/cards" className="featureCTA">
-            <span className="arrow">↗</span>
-            <span className="label">ابدأ المراجعة</span>
-          </Link>
-        </article>
-
-        {/* الاختبارات */}
-        <article className="featureCard isQuiz">
-          <div className="featureIcon">
-            <Ico d="M9 9a3 3 0 116 0c0 2-3 2-3 4 M12 17h.01" />
-          </div>
-          <h4 className="featureTitle">الاختبارات</h4>
-          <p className="featureDesc">اختبر فهمك باختبارات تفاعلية.</p>
-          <Link to="/quizzes" className="featureCTA">
-            <span className="arrow">↗</span>
-            <span className="label">ابدأ الاختبار</span>
-          </Link>
-        </article>
-
-        {/* الجلسات الدراسية */}
-        <article className="featureCard isSessions">
-          <div className="featureIcon">
-            <Ico d="M12 8v5ل3 2 M21 13a8 8 0 1 1-6-7.8" />
-          </div>
-          <h4 className="featureTitle">الجلسات الدراسية</h4>
-          <p className="featureDesc">ابدأ جلسات مذاكرة وتتبع وقتك بسهولة.</p>
-          <Link to="/sessions" className="featureCTA">
-            <span className="arrow">↗</span>
-            <span className="label">ابدأ جلسة</span>
-          </Link>
-        </article>
-
-        {/* الدردشة الذكية */}
-        <article className="featureCard isChat">
-          <div className="featureIcon">
-            <Ico d="M21 15a4 4 0 01-4 4H8l-5 3 1.8-4.4A4 4 0 015 15V7a4 4 0 014-4h8a4 4 0 014 4v8z" />
-          </div>
-          <h4 className="featureTitle">الدردشة الذكية</h4>
-          <p className="featureDesc">تحدث مع المساعد لشرح الدروس وحل الأسئلة.</p>
-          <Link to="/chat" className="featureCTA">
-            <span className="arrow">↗</span>
-            <span className="label">ابدأ الدردشة</span>
-          </Link>
-        </article>
-      </div>
-    </section>
-  );
-}
-
 /* ========== 5) التقدم الأسبوعي ========== */
 function WeeklyProgress() {
   const [weekData, setWeekData] = useState([]);
@@ -338,9 +262,6 @@ function DashboardBlocks() {
     <div className="gridWrap">
       <div className="col">
         <QuizFlashcardsBox />
-        <FeatureAccessPanel />
-      </div>
-      <div className="col">
         <WeeklyProgress />
       </div>
     </div>
