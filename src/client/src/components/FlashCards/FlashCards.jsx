@@ -69,21 +69,25 @@ const local = `
 }
 
 .modern-action-btn{
-  padding:12px 24px;
-  border-radius:12px;
-  border:1px solid ${PRIMARY_LIGHT};
-  background:#fff;
-  font-weight:700;
-  color:${PRIMARY_COLOR};
+  padding:16px 34px;
+  border-radius:14px;
+  border:1px solid ${PRIMARY_COLOR};
+  background:${PRIMARY_COLOR};
+  font-weight:500;
+  font-size:1.1rem;
+  letter-spacing:0.08em;
+  color:#fff;
   display:inline-flex;
   align-items:center;
   gap:10px;
   text-decoration:none;
   transition:all .2s ease;
-  box-shadow:0 4px 10px rgba(15,23,42,0.06);
+  box-shadow:0 18px 32px rgba(255,140,66,0.25);
 }
 .modern-action-btn:hover{
-  background:${PRIMARY_LIGHT};
+  transform:translateY(-1px);
+  background:#e57e3f;
+  border-color:#e57e3f;
 }
 .modern-primary-btn{
   background:${PRIMARY_COLOR};
@@ -95,18 +99,18 @@ const local = `
   background:#e57e3f;
 }
 .btn-icon{
-  width:32px;
-  height:32px;
-  border-radius:10px;
-  background:#fff;
-  color:${PRIMARY_COLOR};
-  font-weight:900;
+  width:auto;
+  height:auto;
+  border-radius:0;
+  background:transparent;
+  color:inherit;
+  font-weight:500;
   display:inline-flex;
   align-items:center;
   justify-content:center;
 }
 .modern-primary-btn .btn-icon{
-  color:${PRIMARY_COLOR};
+  color:inherit;
 }
 
 .section-title-wrap{
@@ -175,15 +179,19 @@ const local = `
   border:1px solid ${PRIMARY_COLOR};
   background:${PRIMARY_COLOR};
   color:#fff;
-  padding:9px 18px;
-  border-radius:999px;
-  font-weight:700;
+  padding:12px 24px;
+  border-radius:14px;
+  font-weight:500;
+  font-size:0.95rem;
+  letter-spacing:0.08em;
   text-decoration:none;
-  transition:all .2s ease;
+  transition:transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  box-shadow:0 18px 32px rgba(255,140,66,0.25);
 }
 .deck-card-cta:hover{
   background:#e57e3f;
   border-color:#e57e3f;
+  transform:translateY(-1px);
 }
 
 .deck-stats{
