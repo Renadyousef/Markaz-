@@ -277,6 +277,78 @@ body{
   .uploadBox{ width: 100%; min-height: 220px; border-radius: 18px; }
   .upRow{ width: 100%; }
 }
+  /* ===== Modal Overlay ===== */
+.practice-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* ===== Modal Body ===== */
+.practice-modal__body {
+  background: #ffffff;
+  padding: 22px;
+  border-radius: 16px;
+  width: clamp(260px, 80vw, 380px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: pop 0.25s ease;
+}
+
+/* العنوان */
+.practice-modal__body h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  text-align: center;
+}
+
+/* أزرار */
+.practice-modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.practice-modal__actions button {
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+}
+
+.practice-modal__actions .ghost {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.practice-modal__actions .solid {
+  background: #ff8c42;
+  color: #fff;
+}
+
+.practice-modal__actions .ghost:hover {
+  background: #e2e8f0;
+}
+
+.practice-modal__actions .solid:hover {
+  background: #ff7a1e;
+}
+
+/* Animation */
+@keyframes pop {
+  from { transform: scale(0.9); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
 `;
 
 /* دالة لاستخراج رسالة خطأ مفهومة */
@@ -329,6 +401,12 @@ export default function Upload({ maxMB = 20 }) {
   const [status, setStatus] = useState("idle");   // idle | uploading | done | error
   const [message, setMessage] = useState("");
 
+  // ⬇️ جديد — تفعيل البوب أب + الاسم المخصص
+const [namePromptOpen, setNamePromptOpen] = useState(false);
+const [pdfName, setPdfName] = useState("");
+const [displayName, setDisplayName] = useState("");
+
+
   const [pdfId, setPdfId] = useState(null); // تخزين pdfId بعد الرفع
 
   const isUploading = status === "uploading";
@@ -353,7 +431,8 @@ export default function Upload({ maxMB = 20 }) {
     setMessage("تم إلغاء الرفع.");
   };
 
-  const startUpload = async (f) => {
+  const startUpload = async (f, customName = "") => {
+
     const err = validateFile(f, maxMB);
     if (err) {
       setStatus("error");
@@ -371,6 +450,8 @@ export default function Upload({ maxMB = 20 }) {
     try {
       const form = new FormData();
       form.append("pdf", f);
+      // ⬇️ جديد — نرسل اسم المستخدم للسيرفر
+form.append("customName", customName);
 
       const token = localStorage.getItem("token") || "";
       const source = axios.CancelToken.source();
@@ -395,6 +476,9 @@ export default function Upload({ maxMB = 20 }) {
         setStatus("done");
         // بدون إيموجي
         setMessage("تم رفع الملف بنجاح. يمكنك الآن توليد اختبار أو بطاقات مراجعة.");
+
+ 
+
       } else {
         setStatus("error");
         const msg = res.data?.msg || res.data?.error || `HTTP ${res.status}`;
@@ -411,18 +495,29 @@ export default function Upload({ maxMB = 20 }) {
     }
   };
 
-  const onInputChange = (e) => {
-    const f = e.target.files?.[0];
-    if (f) startUpload(f);
-    e.target.value = "";
-  };
+ const onInputChange = (e) => {
+  const f = e.target.files?.[0];
+  if (f) {
+    setFile(f);              // نخزن الملف
+    setNamePromptOpen(true); // نفتح البوب-أب
+  }
+  e.target.value = "";
+};
+
+
   const onDragOver = (e) => { e.preventDefault(); setDragOver(true); };
   const onDragLeave = (e) => { e.preventDefault(); setDragOver(false); };
   const onDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
     const f = e.dataTransfer.files?.[0];
-    if (f) startUpload(f);
+    if (f) {
+  setFile(f);
+setDisplayName(f.name); // ← الاسم الأساسي
+setNamePromptOpen(true);
+
+}
+
   };
 
   // تمرير pdfId عند الذهاب لصفحة الكويز
@@ -437,6 +532,21 @@ export default function Upload({ maxMB = 20 }) {
       state: { pdfId },
     });
   }
+
+  function confirmName() {
+  if (!pdfName.trim()) return;
+
+  // نحدّث اسم الملف الظاهر مباشرة
+  setDisplayName(pdfName + ".pdf");
+
+  setNamePromptOpen(false);
+
+  // نبدأ الرفع بالاسم الجديد
+  startUpload(file, pdfName);
+}
+
+
+
 
   const percentLabel =
     isUploading && progress ? `${progress.toFixed(0)}٪` : "";
@@ -555,7 +665,7 @@ export default function Upload({ maxMB = 20 }) {
         whiteSpace: "nowrap",
       }}
     >
-      {file?.name || (isError ? "فشل الرفع" : "لا يوجد ملف")}
+{displayName || (isError ? "فشل الرفع" : "لا يوجد ملف")}
     </span>
   </div>
 </div>
@@ -638,10 +748,45 @@ export default function Upload({ maxMB = 20 }) {
             </div>
           )}
         </div>
+
+
+        {namePromptOpen && (
+  <div className="practice-modal">
+    <div className="practice-modal__body">
+      <h3>اسمّي ملف الـ PDF</h3>
+
+      <input
+        type="text"
+        value={pdfName}
+        onChange={(e) => setPdfName(e.target.value)}
+        placeholder="اكتبي اسم الملف"
+        style={{
+          width:"100%",
+          padding:"12px",
+          borderRadius:"12px",
+          border:"1px solid #e5e7eb"
+        }}
+      />
+
+      <div className="practice-modal__actions">
+        <button className="ghost" onClick={() => setNamePromptOpen(false)}>
+          إلغاء
+        </button>
+
+        <button className="solid" onClick={confirmName}>
+          تأكيد
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       </section>
     </>
   );
 }
+
+
+
 
 /* أيقونة X صغيرة */
 function XIcon() {

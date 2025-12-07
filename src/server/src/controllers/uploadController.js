@@ -283,10 +283,17 @@ exports.uploadThenGenerate = async (req, res) => {
 
   try {
     if (!tmp) throw new Error("لم يُحدَّد مسار الملف المؤقت.");
-    await assertFileExists(tmp);
+     await assertFileExists(tmp);
 
-    const originalNameUtf8 = decodeNameLatin1(req.file.originalname || "file.pdf");
+    // 👇 نقرأ الاسم المخصص من البودي لو موجود
+    const customNameRaw = (req.body?.customName || "").trim();
 
+    // 👇 لو فيه اسم من البوب-أب نستخدمه، وإلا نرجع للاسم الأصلي
+    const originalNameUtf8 = customNameRaw
+      ? (customNameRaw.toLowerCase().endsWith(".pdf")
+          ? customNameRaw
+          : customNameRaw + ".pdf")
+      : decodeNameLatin1(req.file.originalname || "file.pdf");
     stage = "size/type";
     if (req.file.size > MAX_SIZE_MB * 1024 * 1024)
       throw new Error(`حجم الملف يتجاوز ${MAX_SIZE_MB}MB.`);
@@ -363,16 +370,18 @@ console.log("⏱ Extraction took:", Date.now() - t_extract, "ms");
     console.log("[extract] chosen method:", methodUsed);
 
     
-    stage = "save";
+        stage = "save";
 
     const docRef = await db.collection("pdf").add({
       userId: req.user?.id || req.user?._id || null,
-      originalName: originalNameUtf8,
+      originalName: originalNameUtf8,        // الاسم اللي رح نستخدمه بالعرض
+      customName: customNameRaw || null,     // نخزن المخصص لو حابة تستخدمينه لاحقًا
       size: req.file.size,
       text,
       methodUsed,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
+
 
     
     stage = "model";
