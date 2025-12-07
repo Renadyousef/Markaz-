@@ -38,7 +38,10 @@ export default function StudySessionSetup() {
     seconds: 0,
   });
   const [saving, setSaving] = useState(false);
-  const navigate = useNavigate(); // ✅
+  const navigate = useNavigate();
+
+  /* ✅ مودال وقت الدراسة صفر */
+  const [showZeroModal, setShowZeroModal] = useState(false);
 
   const updateDuration = (timer, unit, delta) => {
     const setter = timer === "study" ? setStudyDuration : setBreakDuration;
@@ -74,8 +77,13 @@ export default function StudySessionSetup() {
 
   const start = async () => {
     if (saving) return;
-    if (toSeconds(studyDuration) <= 0) {
-      return alert("وقت الدراسة يجب أن يكون أكبر من صفر.");
+
+    const total = toSeconds(studyDuration);
+
+    /* ✅ استبدال alert بالمودال */
+    if (total <= 0) {
+      setShowZeroModal(true);
+      return;
     }
 
     const token =
@@ -112,6 +120,7 @@ export default function StudySessionSetup() {
       if (!res.ok) {
         throw new Error(payload?.msg || payload?.error || "تعذر إنشاء الجلسة");
       }
+
       localStorage.setItem(
         "currentSession",
         JSON.stringify({
@@ -119,7 +128,8 @@ export default function StudySessionSetup() {
           sessionId: payload.id || payload.sessionId || null,
         })
       );
-      navigate("/session-timer"); // ✅ go to timer route
+
+      navigate("/session-timer");
     } catch (err) {
       console.error("FAILED TO START SESSION =>", err);
       alert(err.message || "حدث خطأ أثناء بدء الجلسة.");
@@ -159,6 +169,7 @@ export default function StudySessionSetup() {
               >
                 ▲
               </button>
+
               <input
                 type="text"
                 inputMode="numeric"
@@ -170,9 +181,13 @@ export default function StudySessionSetup() {
                   e.target.select();
                 }}
                 onClick={(e) => e.stopPropagation()}
-                onChange={(e) => handleManualInput(type, unit, e.target.value)}
+                onChange={(e) =>
+                  handleManualInput(type, unit, e.target.value)
+                }
               />
+
               <span className="timer-unit-label">{unitLabels[idx]}</span>
+
               <button
                 type="button"
                 className="timer-arrow"
@@ -191,51 +206,74 @@ export default function StudySessionSetup() {
   };
 
   return (
-    <div className="session-setup-screen" dir="rtl" lang="ar">
-      <section className="session-hero">
-        <div className="session-title-block">
-          <h1 className="session-title">إعداد جلسة الدراسة</h1>
-          <p className="session-subtitle">
-            صمّم جلستك بالطريقة التي تناسبك لتحافظ على طاقتك وتركيزك لتصل لأفضل أداء.
-          </p>
-        </div>
-      </section>
-      <section className="session-panel">
-        <input
-          className="session-name-field"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="مثال: جلسة مراجعة"
-        />
+    <>
+      <div className="session-setup-screen" dir="rtl" lang="ar">
+        <section className="session-hero">
+          <div className="session-title-block">
+            <h1 className="session-title">إعداد جلسة الدراسة</h1>
+            <p className="session-subtitle">
+              صمّم جلستك بالطريقة التي تناسبك لتحافظ على طاقتك وتركيزك لتصل لأفضل أداء.
+            </p>
+          </div>
+        </section>
 
-        <div className="timers-stack">
-          {renderTimerBlock("study", "وقت الدراسة", studyDuration)}
-          {renderTimerBlock("break", "وقت الاستراحة", breakDuration)}
-        </div>
+        <section className="session-panel">
+          <input
+            className="session-name-field"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="مثال: جلسة مراجعة"
+          />
 
-        <div className="preset-section">
-          <p className="preset-title">أوقات شائعة</p>
-          <div className="preset-row">
-            <button className="start-button" onClick={start} disabled={saving}>
-              {saving ? "..." : "ابدأ"}
-            </button>
+          <div className="timers-stack">
+            {renderTimerBlock("study", "وقت الدراسة", studyDuration)}
+            {renderTimerBlock("break", "وقت الاستراحة", breakDuration)}
+          </div>
 
-            <div className="preset-grid">
-              {PRESETS.map((preset) => (
-                <button
-                  key={`${preset.minutes}-${preset.unitLabel}`}
-                  type="button"
-                  className="preset-btn"
-                  onClick={() => applyPreset(preset.minutes)}
-                >
-                  <span>{preset.valueLabel}</span>
-                  <small>{preset.unitLabel}</small>
-                </button>
-              ))}
+          <div className="preset-section">
+            <p className="preset-title">أوقات شائعة</p>
+
+            <div className="preset-row">
+              <button className="start-button" onClick={start} disabled={saving}>
+                {saving ? "..." : "ابدأ"}
+              </button>
+
+              <div className="preset-grid">
+                {PRESETS.map((preset) => (
+                  <button
+                    key={preset.minutes}
+                    type="button"
+                    className="preset-btn"
+                    onClick={() => applyPreset(preset.minutes)}
+                  >
+                    <span>{preset.valueLabel}</span>
+                    <small>{preset.unitLabel}</small>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* ✅ مودال وقت الدراسة صفر */}
+      {showZeroModal && (
+        <div className="timer-modal">
+          <div className="timer-modal__content">
+            <h3>تنبيه</h3>
+            <p>وقت الدراسة يجب أن يكون أكبر من صفر.</p>
+
+            <div className="timer-modal__actions">
+              <button
+                className="solid"
+                onClick={() => setShowZeroModal(false)}
+              >
+                حسناً
+              </button>
             </div>
           </div>
         </div>
-      </section>
-    </div>
+      )}
+    </>
   );
 }

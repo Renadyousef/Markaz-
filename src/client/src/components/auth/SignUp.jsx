@@ -2,7 +2,7 @@ import { useState } from "react";
 import { validatePassword, validateName, validateEmail } from "./validation";
 import axios from "axios";
 
-export default function SignUp({ setToken }) {
+export default function SignUp({ setToken, onSignUpSuccess }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [fieldMessage, setFieldMessage] = useState({
     first_name: "",
@@ -55,12 +55,24 @@ export default function SignUp({ setToken }) {
       });
 
       const token = res.data.token;
+
       if (token) {
         localStorage.setItem("token", token);
-        setToken(token);
-        alert("تم إنشاء الحساب بنجاح! سيتم تحويلك إلى الصفحة الرئيسية.");
+
+        // 👇 نفس فكرة onLoginSuccess في SignIn
+        if (onSignUpSuccess) {
+          onSignUpSuccess(token);   // نخلي الأب يفتح المودال
+        } else {
+          setToken(token);          // fallback لو ما فيه مودال
+          // alert("تم إنشاء الحساب بنجاح! سيتم تحويلك إلى الصفحة الرئيسية.");
+        }
       } else {
-        alert("تم إنشاء الحساب بنجاح! الرجاء تسجيل الدخول الآن.");
+        // حالة ما فيه توكن (مثلاً النظام يطلب تسجيل دخول يدوي)
+        if (onSignUpSuccess) {
+          onSignUpSuccess(null);
+        } else {
+          alert("تم إنشاء الحساب بنجاح! الرجاء تسجيل الدخول الآن.");
+        }
       }
     } catch (error) {
       setErrorMessage(error.response?.data?.msg || "حدث خطأ أثناء إنشاء الحساب");

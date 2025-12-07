@@ -98,19 +98,20 @@ function StatCard({ label, value = 0, d, tone = "green" }) {
   );
 }
 
-// ✅ الآن نستقبل عدد الخطط وعدد الجلسات
+// ✅ عدد الخطط وعدد الجلسات
 function StatsRow({ completedPlans = 0, completedSessions = 0 }) {
   return (
     <section className="statsRow">
       <StatCard
         label="الخطط الدراسية المكتملة"
-        value={completedPlans} // العدد الحقيقي من /home/me
+        value={completedPlans}
         tone="green"
         d="M4 6h16M4 12h12M4 18h8"
       />
       <StatCard
-        label="عدد الجلسات الدراسية "
-        value={completedSessions} // العدد الحقيقي من /api/progress/me
+        label="
+         الجلسات الدراسية المكتملة "
+        value={completedSessions}
         tone="green"
         d="M21 13a8 8 0 11-3-6.3M12 8v4l3 2"
       />
@@ -121,7 +122,7 @@ function StatsRow({ completedPlans = 0, completedSessions = 0 }) {
 /* ========== 2) مولّد الكويز والبطاقات ========== */
 function QuizFlashcardsBox() {
   return (
-    <section className="panel">
+   <section className="panel quiz-box">
       <h2 className="panel__title">مُولّد الاختبارات والبطاقات</h2>
       <Link to="upload" className="uploadBox__btn">
         ابدأ الآن
@@ -130,6 +131,7 @@ function QuizFlashcardsBox() {
   );
 }
 
+/* ========== 5) التقدم الأسبوعي ========== */
 /* ========== 5) التقدم الأسبوعي ========== */
 function WeeklyProgress() {
   const [weekData, setWeekData] = useState([]);
@@ -178,14 +180,16 @@ function WeeklyProgress() {
     fetchData();
   }, []);
 
+  // نفس المتغيرات موجودة (من غير ما نكسر اللوجيك),
+  // حتى لو ما استخدمناها في الـ UI الآن
   const R = 20,
     C = 2 * Math.PI * R;
   const dash = (p) => C - (C * p) / 100;
 
   return (
-    <section className="panel wp2Soft" id="section-progress" dir="rtl">
+    <section className="panel wpBars" id="section-progress" dir="rtl">
       <div className="wp2Header">
-        <h2 className="panel__title">التقدّم الأسبوعي</h2>
+        <h2 className="panel__title">تقدمّك الأسبوعي</h2>
       </div>
 
       {loading ? (
@@ -193,60 +197,30 @@ function WeeklyProgress() {
           جاري تحميل التقدّم...
         </p>
       ) : (
-        <div className="wp2Grid">
+        <div className="wpBarsGrid">
           {weekData.map((x, i) => {
             const p = Math.round(x.percent);
-            const color =
-              p >= 80
-                ? "#22c55e"
-                : p >= 40
-                ? "#f59e0b"
-                : "#d1d5db";
 
             return (
               <div
                 key={i}
-                className="wp2Card"
+                className="wpBarCard"
                 role="group"
                 aria-label={`${x.day}: ${p}%`}
               >
-                <div className="ring sm">
-                  <svg
-                    viewBox="0 0 48 48"
-                    width="48"
-                    height="48"
-                    className="ringSvg"
-                  >
-                    <circle
-                      cx="24"
-                      cy="24"
-                      r={R}
-                      className="ringBg"
-                      stroke="#f1f5f9"
-                      strokeWidth="4"
-                    />
-                    <circle
-                      cx="24"
-                      cy="24"
-                      r={R}
-                      className="ringFg"
-                      stroke={color}
-                      strokeWidth="4"
-                      style={{
-                        strokeDasharray: `${C}px`,
-                        strokeDashoffset: `${dash(p)}px`,
-                        transition: "stroke-dashoffset 0.5s ease",
-                      }}
-                    />
-                  </svg>
-                  <div className="ringLabel" style={{ color }}>
-                    {p}%
-                  </div>
+                <div className="wpBarTop">
+                  <span className="wpBarDay">{x.day}</span>
+                  <span className="wpBarPercent">{p}%</span>
                 </div>
-                <div className="wp2Info">
-                  <div className="wp2Day">{x.day}</div>
-                  <div className="wp2Hours">نسبة التقدّم {p}%</div>
+
+                <div className="wpBarTrack">
+                  <div
+                    className="wpBarFill"
+                    style={{ "--p": `${p}%` }}
+                  ></div>
                 </div>
+
+              
               </div>
             );
           })}
@@ -256,12 +230,13 @@ function WeeklyProgress() {
   );
 }
 
+
 /* ========== 6) تجميعة الأقسام ========== */
+// الحين DashboardBlocks فيه بس التقدّم الأسبوعي
 function DashboardBlocks() {
   return (
     <div className="gridWrap">
       <div className="col">
-        <QuizFlashcardsBox />
         <WeeklyProgress />
       </div>
     </div>
@@ -293,18 +268,22 @@ export default function HomePage() {
 
         const headers = { Authorization: `Bearer ${token}` };
 
-        // نفس أسلوب ProgressPage: نجيب بيانات الهوم + التقدّم
         const [homeRes, progressRes] = await Promise.all([
           axios.get(API_HOME_ME, { headers }),
           axios.get(API_PROGRESS_ME, { headers }),
         ]);
 
-        const homeData = homeRes.data || {};
-        const progData = progressRes.data || {};
+   const homeData = homeRes.data || {};
+const progData = progressRes.data || {}; // لو تحتاجينه لأشياء ثانية خليه
 
-        setFirstName((homeData.firstName || "").toString());
-        setCompletedPlansCount(homeData.completedPlansCount ?? 0);
-        setCompletedSessionsCount(progData.sessionsToday ?? 0);
+setFirstName((homeData.firstName || "").toString());
+setCompletedPlansCount(homeData.completedPlansCount ?? 0);
+
+// 🔥 هنا نستخدم العدد اللي يرجع من /home/me
+setCompletedSessionsCount(
+  homeData.completedSessionsCount ?? 0
+);
+
       } catch (e) {
         setErrorMsg(e?.response?.data?.msg || "تعذّر جلب البيانات.");
       } finally {
@@ -322,6 +301,7 @@ export default function HomePage() {
           path="/"
           element={
             <>
+              {/* الترحيب */}
               <section className="heroBox">
                 <div className="heroRow">
                   <div className="heroText">
@@ -338,11 +318,17 @@ export default function HomePage() {
                 </div>
               </section>
 
-              {/* نفس مكان الكروت القديم، لكن الآن الأرقام حقيقية */}
+              {/* ✅ أولاً: المولّد فوق */}
+              <QuizFlashcardsBox />
+
+              {/* ✅ ثانياً: كروت الإحصاءات (نفس الشكل الحالي) */}
+              
               <StatsRow
                 completedPlans={completedPlansCount}
                 completedSessions={completedSessionsCount}
               />
+
+              {/* ✅ ثالثاً: التقدّم الأسبوعي تحتهم */}
               <DashboardBlocks />
             </>
           }

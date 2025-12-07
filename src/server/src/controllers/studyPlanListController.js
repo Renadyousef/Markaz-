@@ -13,12 +13,14 @@ const TasksCol = db.collection("tasks");
 const withId = (doc) => ({ id: doc.id, ...doc.data() });
 
 /**
- * يتحقق من حالة المهام لتحديث حالة الخطة (نشطة ← منتهية)
+ * يتحقق من حالة المهام لتحديث حالة الخطة (مكتملة / غير مكتملة)
  */
 async function autoUpdatePlanStatus(planId) {
   try {
     const tasksSnap = await TasksCol.where("studyPlan_ID", "==", planId).get();
-    if (tasksSnap.empty) return; // لا يوجد مهام للخطة
+
+    // لو ما فيه مهام ما نحدّث شي (تقدرين لاحقاً تجبرينها تكون غير مكتملة لو حبيتي)
+    if (tasksSnap.empty) return;
 
     const tasks = tasksSnap.docs.map((d) => d.data());
     const allCompleted = tasks.every((t) => t.completed === true);
@@ -112,12 +114,18 @@ exports.listAllPlans = async (req, res) => {
             )
           : 0;
 
+      // نخلي الستاتس محصورة بين "مكتملة" و "غير مكتملة"
+      const statusNormalized =
+        completionPercentage === 100 && totalTasksForPlan > 0
+          ? "مكتملة"
+          : "غير مكتملة";
+
       return {
         id: x.id,
         title: x.title || "",
         createdAt: x.createdAt || "",
         tasksCount: totalTasksForPlan,
-        status: x.status || "نشطة",
+        status: x.status ? x.status : statusNormalized, // افتراضياً غير مكتملة/مكتملة
         completionPercentage, // ✅ نفس اللي تستخدمينه في StudyPlansPage
       };
     });
@@ -129,9 +137,11 @@ exports.listAllPlans = async (req, res) => {
       const s = q.trim();
       plans = plans.filter((p) => p.title.includes(s));
     }
+
     if (status && status !== "الكل") {
       plans = plans.filter((p) => p.status === status);
     }
+
     switch (sort) {
       case "newest":
         plans.sort((a, b) =>

@@ -889,3 +889,178 @@ body::before{
     font-size: 11px;
   }
 }
+/* جعل كرت المولد نفس عرض كروت الإحصاءات */
+.panel.quiz-box {
+  max-width: 960px;
+  margin: 0 auto;  /* يتوسّط */
+}
+/* ===== Weekly Progress – Modern Bars UI ===== */
+
+.wpBars {
+  margin-top: 18px;
+}
+
+/* شبكة الكروت */
+.wpBarsGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+}
+
+/* كرت لكل يوم */
+.wpBarCard {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* الأعلى: اسم اليوم + النسبة */
+.wpBarTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wpBarDay {
+  font-weight: 800;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.wpBarPercent {
+  font-weight: 800;
+  font-size: 13px;
+  color: #f97316;
+}
+
+/* شريط التقدّم */
+.wpBarTrack {
+  width: 100%;
+  height: 9px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  overflow: hidden;
+}
+
+.wpBarFill {
+  height: 100%;
+  width: var(--p);
+  max-width: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #fbbf24, #f97316);
+  transition: width 0.4s ease;
+}
+
+/* نص صغير تحت يوضح النسبة */
+.wpBarHint {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* للجوال */
+@media (max-width: 480px) {
+  .wpBarCard {
+    padding: 10px 12px;
+  }
+  .wpBarDay {
+    font-size: 13px;
+  }
+  .wpBarPercent {
+    font-size: 12px;
+  }
+}
+/* ===== تعديل البار ===== */
+
+/* اللون الأسود لنسبة التقدم */
+.wpBarPercent {
+  color: #000 !important;
+}
+
+/* إزالة النص تحت */
+.wpBarHint {
+  display: none !important;
+}
+
+/* جعل البار بلون برتقالي واحد بدون تدرج */
+.wpBarFill {
+  background: #f59e0b !important;   /* برتقالي ثابت */
+  border-radius: 999px;
+  transition: width .4s ease;
+}
+/* ===== Hover + Animation على أيام التقدّم الأسبوعي ===== */
+
+/* تجهيز الكرت للحركة */
+.wpBarCard {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  cursor: default;
+}
+
+/* لما أحط الماوس على اليوم */
+.wpBarCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
+  border-color: #e5b96b; /* لمسة خفيفة حول الكرت */
+}
+
+/* اليوم يصير لونه أغمق شوي */
+.wpBarCard:hover .wpBarDay {
+  color: #111827;
+}
+
+/* النسبة تبقى سوداء بس نعطيها ثقل بسيط */
+.wpBarCard:hover .wpBarPercent {
+  font-weight: 900;
+}
+
+/* حركة لطيفة للـ bar عند الهوفر */
+.wpBarCard:hover .wpBarFill {
+  animation: wpBarPulse 0.6s ease-out;
+}
+
+/* تعريف الأنيميشن */
+@keyframes wpBarPulse {
+  0% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(1.03); /* تمدّد بسيط في العرض */
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+/* ===== التقدّم الأسبوعي الدائري ===== */
+
+.wpCircles {
+  margin-top: 20px;
+  padding: 20px;
+}
+
+.circleGrid {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+.circleCard {
+  text-align: center;
+  width: 100px;
+}
+
+.circleDay {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.circleSvg {
+  display: block;
+  margin: auto;
+}

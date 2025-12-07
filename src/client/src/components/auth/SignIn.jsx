@@ -2,7 +2,7 @@ import { validateEmail } from "./validation";
 import { useState } from "react";
 import axios from "axios";
 
-export default function SignIn({ setToken , goTo }) {
+export default function SignIn({ setToken , goTo, onLoginSuccess }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -27,8 +27,19 @@ export default function SignIn({ setToken , goTo }) {
       const res = await axios.post("http://localhost:5000/auth/login", { email, password });
       const token = res.data.token;
       localStorage.setItem("token", token);
-      setToken(token);
-      alert("تم تسجيل الدخول بنجاح!");
+
+      // 👇 هنا التغيير الوحيد المهم
+      if (onLoginSuccess) {
+        // نخلي الأب يفتح المودال
+        onLoginSuccess(token);
+      } else {
+        // fallback لو ما فيه مودال
+        setToken(token);
+      }
+
+      // تقدرين تحذفينه لو ما تبينه
+      // alert("تم تسجيل الدخول بنجاح!");
+
     } catch (error) {
       setErrorMessage(error.response?.data?.msg || "حدث خطأ أثناء تسجيل الدخول");//this where error rises
     }

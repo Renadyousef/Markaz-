@@ -943,3 +943,12 @@ body.focus-mode {
   margin: 0;
   min-height: 100vh;
 }
+.timer-modal__content h3 {
+  font-weight: 800;
+}
+.timer-modal__actions .solid {
+  font-weight: 700;
+}
+.timer-modal__content p {
+  font-weight: 600;
+}

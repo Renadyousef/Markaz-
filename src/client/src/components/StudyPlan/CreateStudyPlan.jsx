@@ -244,7 +244,7 @@ export default function CreateStudyPlan() {
       background-color: #ffffff !important;
       border-radius: 10px !important;
       border: 1px solid #e5e7eb !important;
-      appearance: none !important;
+      appearance: none !重要;
       -webkit-appearance: none !important;
       -moz-appearance: none !important;
     }
@@ -260,8 +260,8 @@ export default function CreateStudyPlan() {
     }
 
     .priority-select {
-      padding-right: 44px !important;     /* مساحة للسهم المخصص */
-      background-image: none !important;  /* إلغاء سهم Bootstrap */
+      padding-right: 44px !important;
+      background-image: none !important;
       background-position: right center !important;
       background-repeat: no-repeat !important;
     }
@@ -512,6 +512,8 @@ export default function CreateStudyPlan() {
     taskDeadline ||
     taskPriority;
 
+  const todayLocalStr = todayStrLocal();
+
   const openNativePicker = () => {
     if (dateInputRef.current) {
       dateInputRef.current.showPicker?.();
@@ -520,6 +522,7 @@ export default function CreateStudyPlan() {
   };
 
   const addTask = () => {
+    // 1) لا توجد أي بيانات للمهمة
     if (!taskTitle.trim() && !taskDeadline && !taskPriority) {
       openModal({
         title: "لا توجد بيانات للمهمة",
@@ -529,6 +532,17 @@ export default function CreateStudyPlan() {
       return;
     }
 
+    // 2) في بيانات للمهمة لكن عنوان الخطة فاضي
+    if (!planTitle.trim()) {
+      openModal({
+        title: "لا توجد بيانات للخطة",
+        body: "يلزم إدخال عنوان للخطة قبل إضافة المهام إليها.",
+        primaryLabel: "حسناً",
+      });
+      return;
+    }
+
+    // 3) حقول المهمة نفسها غير مكتملة
     if (!taskTitle.trim() || !taskDeadline || !taskPriority) {
       openModal({
         title: "حقول غير مكتملة",
@@ -538,8 +552,8 @@ export default function CreateStudyPlan() {
       return;
     }
 
-    const today = todayStrLocal();
-    if (taskDeadline < today) {
+    // 4) التاريخ أقدم من اليوم
+    if (taskDeadline < todayLocalStr) {
       openModal({
         title: "تاريخ غير صالح",
         body: "لا يمكن اختيار تاريخ أقدم من تاريخ اليوم. تغيير التاريخ ضروري قبل المتابعة.",
@@ -598,9 +612,20 @@ export default function CreateStudyPlan() {
 
   const savePlan = async () => {
     if (!planTitle.trim() || tasks.length === 0) {
-      setError({
+      let msg = "";
+      if (!planTitle.trim() && tasks.length === 0) {
+        msg =
+          "يلزم إدخال عنوان للخطة وإضافة مهمة واحدة على الأقل قبل إنشاء الخطة.";
+      } else if (!planTitle.trim()) {
+        msg = "يلزم إدخال عنوان للخطة قبل إنشاءها.";
+      } else {
+        msg = "يلزم إضافة مهمة واحدة على الأقل قبل إنشاء الخطة.";
+      }
+
+      openModal({
         title: "بيانات غير مكتملة",
-        message: "يلزم إدخال عنوان للخطة وإضافة مهمة واحدة على الأقل.",
+        body: msg,
+        primaryLabel: "حسناً",
       });
       return;
     }
@@ -698,7 +723,7 @@ export default function CreateStudyPlan() {
           </button>
         </div>
 
-        {/* خطأ عام إن وجد */}
+        {/* خطأ عام من السيرفر فقط */}
         {error && (
           <div className="modern-alert-error">
             <div>
@@ -774,6 +799,7 @@ export default function CreateStudyPlan() {
                   value={taskDeadline}
                   onChange={(e) => setTaskDeadline(e.target.value)}
                   aria-label="اختر تاريخ"
+                  min={todayLocalStr}
                 />
               </div>
             </div>
@@ -799,12 +825,6 @@ export default function CreateStudyPlan() {
           <button
             className="modern-action-btn modern-primary-btn w-100 mt-4"
             onClick={addTask}
-            disabled={!planTitle.trim()}
-            title={
-              !planTitle.trim()
-                ? "يلزم إدخال عنوان للخطة أولاً."
-                : undefined
-            }
             style={{ justifyContent: "center" }}
           >
             + إضافة المهمة إلى الخطة
@@ -820,50 +840,50 @@ export default function CreateStudyPlan() {
             </h2>
           </div>
 
-        {sortedTasks.length === 0 ? (
-          <div className="empty-state-card">
-            لم يتم إضافة مهام حتى الآن.
-          </div>
-        ) : (
-          <div className="tasks-list">
-            {sortedTasks.map((task) => {
-              const priorityClass =
-                task.priority === "عالية"
-                  ? "p-high"
-                  : task.priority === "متوسطة"
-                  ? "p-mid"
-                  : "p-low";
+          {sortedTasks.length === 0 ? (
+            <div className="empty-state-card">
+              لم يتم إضافة مهام حتى الآن.
+            </div>
+          ) : (
+            <div className="tasks-list">
+              {sortedTasks.map((task) => {
+                const priorityClass =
+                  task.priority === "عالية"
+                    ? "p-high"
+                    : task.priority === "متوسطة"
+                    ? "p-mid"
+                    : "p-low";
 
-              return (
-                <div key={task.id} className="task-item">
-                  <div className="d-flex justify-content-between align-items-start gap-2">
-                    <div className="flex-grow-1">
-                      <div className="task-title">{task.title}</div>
-                      <div className="task-meta mt-1">
-                        <span className="task-meta-item">
-                          الموعد:{" "}
-                          {task.deadline ? prettyDate(task.deadline) : "—"}
-                        </span>
-                        <span className={`priority-badge ${priorityClass}`}>
-                          {task.priority || "—"}
-                        </span>
+                return (
+                  <div key={task.id} className="task-item">
+                    <div className="d-flex justify-content-between align-items-start gap-2">
+                      <div className="flex-grow-1">
+                        <div className="task-title">{task.title}</div>
+                        <div className="task-meta mt-1">
+                          <span className="task-meta-item">
+                            الموعد:{" "}
+                            {task.deadline ? prettyDate(task.deadline) : "—"}
+                          </span>
+                          <span className={`priority-badge ${priorityClass}`}>
+                            {task.priority || "—"}
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    <button
-                      className="btn btn-sm btn-link text-danger p-0"
-                      onClick={() => removeTask(task.id)}
-                      title="حذف المهمة من الخطة"
-                      style={{ whiteSpace: "nowrap" }}
-                    >
-                      <TrashIcon />
-                    </button>
+                      <button
+                        className="btn btn-sm btn-link text-danger p-0"
+                        onClick={() => removeTask(task.id)}
+                        title="حذف المهمة من الخطة"
+                        style={{ whiteSpace: "nowrap" }}
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* الأزرار أسفل الصفحة */}
