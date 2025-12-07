@@ -405,6 +405,7 @@ export default function Upload({ maxMB = 20 }) {
 const [namePromptOpen, setNamePromptOpen] = useState(false);
 const [pdfName, setPdfName] = useState("");
 const [displayName, setDisplayName] = useState("");
+const [nameError, setNameError] = useState("");
 
 
   const [pdfId, setPdfId] = useState(null); // تخزين pdfId بعد الرفع
@@ -534,15 +535,35 @@ setNamePromptOpen(true);
   }
 
   function confirmName() {
-  if (!pdfName.trim()) return;
+  const name = pdfName.trim();
 
-  // نحدّث اسم الملف الظاهر مباشرة
-  setDisplayName(pdfName + ".pdf");
+  // إعادة تعيين الخطأ قبل التحقق
+  setNameError("");
 
+  if (!name) {
+    setNameError("يرجى إدخال اسم للملف.");
+    return;
+  }
+
+  if (/^[0-9]/.test(name)) {
+    setNameError("لا يمكن أن يبدأ اسم الملف برقم.");
+    return;
+  }
+
+  if (!/^[a-zA-Z\u0600-\u06FF0-9 ]+$/.test(name)) {
+    setNameError("يمكن أن يحتوي الاسم على حروف وأرقام فقط.");
+    return;
+  }
+
+  if (name.length > 20) {
+    setNameError("اسم الملف طويل جدًا. الحد الأقصى 20 حرفًا.");
+    return;
+  }
+
+  // إذا مرّت الشروط
+  setDisplayName(name + ".pdf");
   setNamePromptOpen(false);
-
-  // نبدأ الرفع بالاسم الجديد
-  startUpload(file, pdfName);
+  startUpload(file, name);
 }
 
 
@@ -758,15 +779,34 @@ setNamePromptOpen(true);
       <input
         type="text"
         value={pdfName}
-        onChange={(e) => setPdfName(e.target.value)}
+        onChange={(e) => {
+          setPdfName(e.target.value);
+          setNameError(""); // حذف الخطأ أثناء الكتابة
+        }}
         placeholder="اكتبي اسم الملف"
         style={{
-          width:"100%",
-          padding:"12px",
-          borderRadius:"12px",
-          border:"1px solid #e5e7eb"
+          width: "100%",
+          padding: "12px",
+          borderRadius: "12px",
+          border: "1px solid #e5e7eb",
         }}
       />
+
+      {/* رسالة الخطأ تحت الـ input */}
+      {nameError && (
+        <p
+          style={{
+            color: "#b91c1c",
+            margin: "0",
+            marginTop: "-4px",
+            marginBottom: "4px",
+            fontSize: "13px",
+            fontWeight: "600",
+          }}
+        >
+          {nameError}
+        </p>
+      )}
 
       <div className="practice-modal__actions">
         <button className="ghost" onClick={() => setNamePromptOpen(false)}>

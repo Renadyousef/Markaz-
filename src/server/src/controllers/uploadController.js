@@ -287,6 +287,21 @@ exports.uploadThenGenerate = async (req, res) => {
 
     // 👇 نقرأ الاسم المخصص من البودي لو موجود
     const customNameRaw = (req.body?.customName || "").trim();
+    // ===== شروط صحة اسم الملف =====
+if (customNameRaw) {
+  if (/^[0-9]/.test(customNameRaw)) {
+    throw new Error("لا يمكن أن يبدأ اسم الملف برقم.");
+  }
+
+  if (!/^[a-zA-Z\u0600-\u06FF0-9 ]+$/.test(customNameRaw)) {
+    throw new Error("اسم الملف يحتوي على رموز غير مسموحة.");
+  }
+
+  if (customNameRaw.length > 20) {
+    throw new Error("اسم الملف طويل جدًا. الحد الأقصى 20 حرفًا.");
+  }
+}
+
 
     // 👇 لو فيه اسم من البوب-أب نستخدمه، وإلا نرجع للاسم الأصلي
     const originalNameUtf8 = customNameRaw
