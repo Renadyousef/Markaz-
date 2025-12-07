@@ -1064,3 +1064,111 @@ body::before{
   display: block;
   margin: auto;
 }
+/* ====== التقدّم الأسبوعي - دوائر مودرن مصغّرة مع هوفر ====== */
+
+.wpBars {
+  margin-top: 2rem;
+  padding: 1.5rem 1.75rem;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.wp2Header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.wpBars .panel__title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* شبكة الأيام */
+.wpBarsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 1.1rem;
+}
+
+/* الكرت لكل يوم */
+.wpDayCard {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 0.7rem 0.5rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+  cursor: default;
+}
+
+/* هوفر على اليوم المحدد */
+.wpDayCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.09);
+  background-color: #fff7ed; /* برتقالي فاتح جداً */
+}
+
+.wpDayCard:hover .wpCircleFg {
+  stroke: #f97316; /* برتقالي أغمق شوي وقت الهوفر */
+}
+
+/* دائرة التقدّم */
+.wpCircleWrap svg {
+  width: 58px;
+  height: 58px;
+}
+
+.wpCircleBg {
+  stroke: #e5e7eb;
+  stroke-width: 4;
+  fill: none;
+}
+
+.wpCircleFg {
+  stroke: #ff8c42;
+  stroke-width: 4;
+  fill: none;
+  stroke-linecap: round;
+  transform-origin: 50% 50%;
+  transform: rotate(-90deg);
+  transition: stroke-dashoffset 0.35s ease, stroke 0.2s ease;
+}
+
+.wpCircleText {
+  font-size: 0.75rem;
+  font-weight: 700;
+  fill: #111827;
+}
+
+/* اليوم والتاريخ */
+.wpDayMeta {
+  text-align: center;
+}
+
+.wpDayName {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.wpDayDate {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* موبايل */
+@media (max-width: 600px) {
+  .wpBars {
+    padding: 1.2rem 1rem;
+  }
+}

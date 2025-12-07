@@ -89,12 +89,7 @@ export default function ViewQuizzes() {
               <p className="empty-subtitle">
                 يمكنك البدء برفع ملف PDF محلول لإنشاء أول اختبار لك.
               </p>
-              <button
-                className="modern-action-btn modern-primary-btn"
-                onClick={() => navigate("/upload")}
-              >
-                + إنشاء اختبار جديد
-              </button>
+            
             </div>
           )}
 

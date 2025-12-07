@@ -728,7 +728,9 @@ export default function AllStudyPlans() {
     try {
       const d = new Date(iso);
       const day = d.getDate().toLocaleString("ar-EG");
-      const year = d.getFullYear().toLocaleString("ar-EG");
+      const year = d
+        .getFullYear()
+        .toLocaleString("ar-EG", { useGrouping: false }); // <-- هنا التعديل (٢٠٢٥ بدون فاصل)
       const monthIndex = d.getMonth(); // 0-11
       const months = [
         "يناير",
@@ -797,7 +799,8 @@ export default function AllStudyPlans() {
           <div className="title-block">
             <h1 className="title">جميع الخطط الدراسية</h1>
             <div className="page-subtitle">
-              يمكن استعراض جميع الخطط الدراسية مع إمكانية البحث والترتيب حسب الحالة وعدد المهام.
+              يمكن استعراض جميع الخطط الدراسية مع إمكانية البحث والترتيب حسب
+              الحالة وعدد المهام.
             </div>
           </div>
           <button

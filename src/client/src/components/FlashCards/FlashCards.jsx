@@ -344,10 +344,19 @@ export default function FlashCards() {
               استعرض أحدث مجموعات البطاقات لتبدأ جلسة مراجعة سريعة في أي وقت.
             </p>
           </div>
-          <Link to="/upload" className="modern-action-btn modern-primary-btn">
-            <span className="btn-icon">+</span>
-            <span>إنشاء بطاقات جديدة</span>
-          </Link>
+       <button
+  className="modern-action-btn modern-primary-btn"
+  onClick={() => navigate("/upload")}
+  style={{
+    padding: "10px 22px",   // أصغر من الأصل
+    fontSize: "0.95rem",
+    borderRadius: "10px",
+    boxShadow: "0 10px 22px rgba(255,140,66,0.22)",
+  }}
+>
+  + إنشاء بطاقات جديدة
+</button>
+
         </div>
 
         {loading && (

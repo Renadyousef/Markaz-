@@ -1,6 +1,6 @@
 // client/src/components/Pages/PlanDetailsPage.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useSearchParams, Link } from "react-router-dom";
+import { useParams, useSearchParams, Link, useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 /* ===== ألوان موحدة ===== */
@@ -346,9 +346,6 @@ const styles = `
 
   .task-row {
     position: relative;
-    display: flex;
-    align-items: center;
-    gap: .75rem;
     padding: .85rem 1rem;
     border-bottom: 1px solid #e5e7eb;
   }
@@ -366,29 +363,40 @@ const styles = `
     min-width: 170px;
   }
 
+  /* ===== ألوان الأولوية ===== */
   .priority-badge {
     display: inline-block;
     border-radius: 999px;
-    padding: .25rem .7rem;
+    padding: .2rem .7rem;
     font-weight: 700;
-    font-size: .8rem;
-    border: 1.5px solid transparent;
-    background: #fff;
+    font-size: .75rem;
+    border: 1px solid transparent;
   }
+
   .p-high {
     color: #B91C1C;
-    border-color: #FCA5A5;
     background: #FEF2F2;
+    border-color: #FCA5A5;
   }
+
   .p-mid {
-    color: #854D0E;
-    border-color: #FACC15;
-    background: #FEFCE8;
+    color: #92400E;
+    background: #FFFBEB;
+    border-color: #FCD34D;
   }
+
   .p-low {
-    color: #166534;
-    border-color: #BBF7D0;
-    background: #F0FDF4;
+    color: #065F46;
+    background: #ECFDF5;
+    border-color: #A7F3D0;
+  }
+
+  /* تمركز الأولوية في وسط الكرت في وضع العرض فقط */
+  .priority-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
   }
 
   .date-display {
@@ -422,20 +430,9 @@ const styles = `
     font-size: .75rem;
   }
 
-  .badge-overdue-center {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    background: #fff7f7;
-    padding: 4px 12px;
-    border-radius: 999px;
-    border: 1px solid #fecaca;
-  }
-
   .badge-overdue-inline {
-    align-self: flex-start;
+    display: block;
+    text-align: center;
     margin-top: 4px;
   }
 
@@ -526,6 +523,9 @@ export default function PlanDetailsPage() {
   const [searchParams] = useSearchParams();
   const planIdFromQuery = searchParams.get("planId");
   const planId = planIdFromParams || planIdFromQuery;
+  const navigate = useNavigate();
+
+  const today = todayStrLocal();
 
   const [planTitle, setPlanTitle] = useState("...");
   const [planStats, setPlanStats] = useState({ tasksCount: 0 });
@@ -604,12 +604,18 @@ export default function PlanDetailsPage() {
 
   const activeTasks = useMemo(
     () =>
-      tasks.filter((t) => !t.completed).slice().sort(compareByPriorityThenDeadline),
+      tasks
+        .filter((t) => !t.completed)
+        .slice()
+        .sort(compareByPriorityThenDeadline),
     [tasks]
   );
   const doneTasks = useMemo(
     () =>
-      tasks.filter((t) => t.completed).slice().sort(compareByPriorityThenDeadline),
+      tasks
+        .filter((t) => t.completed)
+        .slice()
+        .sort(compareByPriorityThenDeadline),
     [tasks]
   );
 
@@ -707,10 +713,18 @@ export default function PlanDetailsPage() {
 
   const toggleComplete = async (id) => {
     const current = tasks.find((t) => t.id === id);
-    const newVal = !current?.completed;
+    if (!current) return;
+
+    if (current.completed && current.deadline && isOverdue(current.deadline)) {
+      return;
+    }
+
+    const newVal = !current.completed;
+
     setTasks((ts) =>
       ts.map((t) => (t.id === id ? { ...t, completed: newVal } : t))
     );
+
     try {
       const token = localStorage.getItem("token");
       await fetchWithDiagnostics(
@@ -727,7 +741,7 @@ export default function PlanDetailsPage() {
     } catch (e) {
       setTasks((ts) =>
         ts.map((t) =>
-          t.id === id ? { ...t, completed: current?.completed } : t
+          t.id === id ? { ...t, completed: current.completed } : t
         )
       );
     }
@@ -737,96 +751,111 @@ export default function PlanDetailsPage() {
     setDraftTasks((ds) => ds.map((t) => (t.id === id ? { ...t, ...patch } : t)));
   };
 
-  // فحص إذا تاريخ بصيغة YYYY-MM-DD أقدم من اليوم
   function isPastDateYMD(ymd) {
     if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return false;
 
     const [y, m, d] = ymd.split("-").map(Number);
 
     const date = new Date(y, m - 1, d);
-    const today = new Date();
+    const todayDate = new Date();
 
     date.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
+    todayDate.setHours(0, 0, 0, 0);
 
-    return date.getTime() < today.getTime();
+    return date.getTime() < todayDate.getTime();
+  }
+const saveEdits = async () => {
+  // 1) التحقق فقط من المهام اللي تغيّر تاريخها
+  for (const d of draftTasks) {
+    const o = tasks.find((t) => t.id === d.id);
+    if (!o) continue;
+
+    const deadlineChanged = d.deadline !== o.deadline;
+
+    // لو المستخدم غيّر التاريخ إلى تاريخ أقدم من اليوم -> نمنع الحفظ
+    if (deadlineChanged && d.deadline && isPastDateYMD(d.deadline)) {
+      openModal({
+        title: "تاريخ غير صالح",
+        body: "لا يمكن حفظ مهمة بتاريخ أقدم من اليوم. عدّلي التاريخ ثم أعيدي المحاولة.",
+        primaryLabel: "حسناً",
+      });
+      return;
+    }
   }
 
-  const saveEdits = async () => {
-    // التحقق من أن كل التواريخ ليست أقدم من اليوم
-    for (const d of draftTasks) {
-      if (d.deadline && isPastDateYMD(d.deadline)) {
-        openModal({
-          title: "تاريخ غير صالح",
-          body: "لا يمكن حفظ مهمة بتاريخ أقدم من اليوم. عدّلي التاريخ ثم أعيدي المحاولة.",
-          primaryLabel: "حسناً",
-        });
-        return;
-      }
-    }
+  // 2) استخراج الفروقات فقط (العنوان / الأولوية / التاريخ إذا تغيّر)
+  const diffs = [];
+  for (const d of draftTasks) {
+    const o = tasks.find((t) => t.id === d.id);
+    if (!o) continue;
 
-    const diffs = [];
-    for (const d of draftTasks) {
-      const o = tasks.find((t) => t.id === d.id);
-      if (!o) continue;
-      const patch = {};
-      if (d.title !== o.title) patch.title = d.title;
-      if (d.priority !== o.priority) patch.priority = d.priority;
-      if (d.deadline !== o.deadline) patch.deadline = d.deadline;
-      if (Object.keys(patch).length) diffs.push({ id: d.id, patch });
-    }
+    const patch = {};
+    const deadlineChanged = d.deadline !== o.deadline;
 
-    if (diffs.length) {
-      setTasks((ts) =>
-        ts.map((t) => {
-          const found = diffs.find((x) => x.id === t.id);
-          return found ? { ...t, ...found.patch } : t;
-        })
-      );
-    }
+    if (d.title !== o.title) patch.title = d.title;
+    if (d.priority !== o.priority) patch.priority = d.priority;
+    if (deadlineChanged) patch.deadline = d.deadline;
 
+    if (Object.keys(patch).length) {
+      diffs.push({ id: d.id, patch });
+    }
+  }
+
+  // 3) تحديث الحالة محلياً بشكل تفاؤلي
+  if (diffs.length) {
+    setTasks((ts) =>
+      ts.map((t) => {
+        const found = diffs.find((x) => x.id === t.id);
+        return found ? { ...t, ...found.patch } : t;
+      })
+    );
+  }
+
+  // 4) إرسال التعديلات للباك إند
+  try {
+    const token = localStorage.getItem("token");
+    await Promise.all(
+      diffs.map((d) =>
+        fetchWithDiagnostics(
+          `http://localhost:5000/study-plans/${planId}/tasks/${d.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(d.patch),
+          }
+        )
+      )
+    );
+  } catch (e) {
+    // لو صار خطأ نرجع نجيب المهام من جديد من السيرفر
     try {
       const token = localStorage.getItem("token");
-      await Promise.all(
-        diffs.map((d) =>
-          fetchWithDiagnostics(
-            `http://localhost:5000/study-plans/${planId}/tasks/${d.id}`,
-            {
-              method: "PATCH",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify(d.patch),
-            }
-          )
-        )
+      const data = await fetchWithDiagnostics(
+        `http://localhost:5000/study-plans/${planId}/tasks`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
-    } catch (e) {
-      try {
-        const token = localStorage.getItem("token");
-        const data = await fetchWithDiagnostics(
-          `http://localhost:5000/study-plans/${planId}/tasks`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const list = Array.isArray(data?.tasks) ? data.tasks : [];
-        setTasks(
-          list.map((t) => ({
-            id: t.id,
-            title: t.title,
-            priority: t.priority || "متوسطة",
-            deadline: t.deadline || "",
-            completed: !!t.completed,
-          }))
-        );
-      } catch {}
-    } finally {
-      setIsEditing(false);
-      setDraftTasks([]);
-    }
-  };
+      const list = Array.isArray(data?.tasks) ? data.tasks : [];
+      setTasks(
+        list.map((t) => ({
+          id: t.id,
+          title: t.title,
+          priority: t.priority || "متوسطة",
+          deadline: t.deadline || "",
+          completed: !!t.completed,
+        }))
+      );
+    } catch {}
+  } finally {
+    setIsEditing(false);
+    setDraftTasks([]);
+  }
+};
+
 
   const removeTask = (id) => {
     openModal({
@@ -918,6 +947,26 @@ export default function PlanDetailsPage() {
     }
   };
 
+  const hasDraftUnsavedChanges = () => {
+    if (!isEditing || draftTasks.length === 0) return false;
+    return draftTasks.some((d) => {
+      const o = tasks.find((t) => t.id === d.id);
+      if (!o) return false;
+      return (
+        d.title !== o.title ||
+        d.priority !== o.priority ||
+        d.deadline !== o.deadline
+      );
+    });
+  };
+
+  const isNewTaskDirty = () =>
+    !!(
+      newTask.title.trim() !== "" ||
+      newTask.priority !== "" ||
+      newTask.deadline !== ""
+    );
+
   const startEditing = () => {
     if (activeTasks.length === 0) {
       openModal({
@@ -932,17 +981,7 @@ export default function PlanDetailsPage() {
   };
 
   const cancelEditing = () => {
-    const hasChanges =
-      draftTasks.length > 0 &&
-      draftTasks.some((d) => {
-        const o = tasks.find((t) => t.id === d.id);
-        if (!o) return false;
-        return (
-          d.title !== o.title ||
-          d.priority !== o.priority ||
-          d.deadline !== o.deadline
-        );
-      });
+    const hasChanges = hasDraftUnsavedChanges();
 
     if (hasChanges) {
       openModal({
@@ -961,6 +1000,24 @@ export default function PlanDetailsPage() {
     }
   };
 
+  const handleBackClick = (e) => {
+    const newDirty = isNewTaskDirty();
+    const editDirty = hasDraftUnsavedChanges();
+
+    if (newDirty || editDirty) {
+      e.preventDefault();
+      openModal({
+        title: "مغادرة الصفحة؟",
+        body: "لديك بيانات أو تعديلات غير محفوظة. إذا رجعت الآن ستفقد هذه التغييرات.",
+        primaryLabel: "نعم، رجوع",
+        secondaryLabel: "البقاء",
+        onPrimary: () => {
+          navigate("/plans/all");
+        },
+      });
+    }
+  };
+
   const inAddMode = showAddRow;
   const inEditMode = isEditing;
   const canToggleStatus = !inEditMode && !inAddMode;
@@ -969,16 +1026,13 @@ export default function PlanDetailsPage() {
     <div dir="rtl" lang="ar" className="planDetailsRoot">
       <style>{styles}</style>
 
-      {/* مودال مخصص */}
       {modal.open && (
         <div className="custom-modal-backdrop">
           <div className="custom-modal-card" dir="rtl">
             {modal.title && (
               <h5 className="modal-title-text">{modal.title}</h5>
             )}
-            {modal.body && (
-              <p className="modal-body-text">{modal.body}</p>
-            )}
+            {modal.body && <p className="modal-body-text">{modal.body}</p>}
             <div className="modal-actions">
               {modal.secondaryLabel && (
                 <button
@@ -1016,7 +1070,11 @@ export default function PlanDetailsPage() {
             </div>
           </div>
 
-          <Link to="/plans/all" className="modern-action-btn">
+          <Link
+            to="/plans/all"
+            className="modern-action-btn"
+            onClick={handleBackClick}
+          >
             رجوع للخطط
           </Link>
         </div>
@@ -1028,7 +1086,12 @@ export default function PlanDetailsPage() {
               <button
                 type="button"
                 className="btn-outline-orange"
-                onClick={() =>
+                onClick={() => {
+                  if (!isNewTaskDirty()) {
+                    setNewTask({ title: "", priority: "", deadline: "" });
+                    setShowAddRow(false);
+                    return;
+                  }
                   openModal({
                     title: "إلغاء إضافة المهمة؟",
                     body: "سيتم حذف البيانات التي أدخلتها في هذه المهمة.",
@@ -1038,8 +1101,8 @@ export default function PlanDetailsPage() {
                       setNewTask({ title: "", priority: "", deadline: "" });
                       setShowAddRow(false);
                     },
-                  })
-                }
+                  });
+                }}
               >
                 إلغاء الإضافة
               </button>
@@ -1113,6 +1176,7 @@ export default function PlanDetailsPage() {
                     type="date"
                     className="real-date-input"
                     value={newTask.deadline}
+                    min={today}
                     onChange={(e) =>
                       setNewTask((v) => ({ ...v, deadline: e.target.value }))
                     }
@@ -1146,66 +1210,73 @@ export default function PlanDetailsPage() {
                   .sort(compareByPriorityThenDeadline)
                   .map((t) => (
                     <div key={t.id} className="task-row">
-                      <div className="flex-grow-1 d-flex align-items-center gap-2">
-                        <input
-                          type="checkbox"
-                          className="form-check-input ms-1"
-                          checked={false}
-                          disabled
-                          aria-label="إنهاء المهمة"
-                        />
-                        <input
-                          type="text"
-                          className="form-control"
-                          value={t.title}
-                          onChange={(e) =>
-                            editDraftField(t.id, { title: e.target.value })
-                          }
-                        />
-                      </div>
+                      <div className="row g-3 align-items-center">
+                        {/* التاريخ */}
+                    {/* التاريخ */}
+<div className="col-12 col-lg-3">
+  <div className="d-flex align-items-center gap-2">
+    <IconCalendar />
+    <input
+      type="date"
+      className="form-control"
+      value={t.deadline || today}
+      min={today}
+      onChange={(e) =>
+        editDraftField(t.id, {
+          deadline: e.target.value,
+        })
+      }
+    />
+  </div>
+</div>
 
-                      <div className="field-inline d-flex flex-column align-items-start gap-1">
-                        <div className="d-flex align-items-center gap-2">
-                          <IconCalendar />
+
+                        {/* العنوان */}
+                        <div className="col-12 col-lg-5">
                           <input
-                            type="date"
+                            type="text"
                             className="form-control"
-                            value={t.deadline}
+                            value={t.title}
                             onChange={(e) =>
-                              editDraftField(t.id, {
-                                deadline: e.target.value,
-                              })
+                              editDraftField(t.id, { title: e.target.value })
                             }
+                            placeholder="عنوان المهمة"
                           />
                         </div>
 
-                        {t.deadline && isOverdue(t.deadline) && (
-                          <span className="badge-overdue badge-overdue-inline">
-                            انتهى الموعد
-                          </span>
-                        )}
+                        {/* الأولوية */}
+                        <div className="col-6 col-lg-2">
+                          <select
+                            className="form-select"
+                            value={t.priority}
+                            onChange={(e) =>
+                              editDraftField(t.id, {
+                                priority: e.target.value,
+                              })
+                            }
+                          >
+                            <option value="عالية">عالية</option>
+                            <option value="متوسطة">متوسطة</option>
+                            <option value="منخفضة">منخفضة</option>
+                          </select>
+                        </div>
 
-                        <select
-                          className="form-select"
-                          value={t.priority}
-                          onChange={(e) =>
-                            editDraftField(t.id, { priority: e.target.value })
-                          }
-                          style={{ maxWidth: "160px" }}
-                        >
-                          <option value="عالية">عالية</option>
-                          <option value="متوسطة">متوسطة</option>
-                          <option value="منخفضة">منخفضة</option>
-                        </select>
+                        {/* حذف */}
+                  {/* حذف + انتهى الموعد جنب التراش */}
+<div className="col-6 col-lg-2 d-flex justify-content-end align-items-center gap-2">
+  {t.deadline && isOverdue(t.deadline) && (
+    <span className="badge-overdue">انتهى الموعد</span>
+  )}
+  <button
+    type="button"
+    className="btn btn-link text-danger p-0"
+    onClick={() => removeTask(t.id)}
+    title="حذف المهمة"
+  >
+    <IconTrash />
+  </button>
+</div>
 
-                        <button
-                          type="button"
-                          className="btn btn-link text-danger p-0 mt-1"
-                          onClick={() => removeTask(t.id)}
-                          title="حذف المهمة"
-                        >
-                          <IconTrash />
-                        </button>
                       </div>
                     </div>
                   ))
@@ -1219,12 +1290,12 @@ export default function PlanDetailsPage() {
                       : "p-low";
 
                   return (
-                    <div key={t.id} className="task-row">
-                      {t.deadline && isOverdue(t.deadline) && (
-                        <span className="badge-overdue badge-overdue-center">
-                          انتهى الموعد
-                        </span>
-                      )}
+                    <div key={t.id} className="task-row d-flex align-items-center gap-2">
+                      <span
+                        className={`priority-badge ${priorityClass} priority-center`}
+                      >
+                        {t.priority}
+                      </span>
 
                       <div className="flex-grow-1 d-flex align-items-center gap-2">
                         <input
@@ -1242,7 +1313,7 @@ export default function PlanDetailsPage() {
                         <div className="task-title">{t.title}</div>
                       </div>
 
-                      <div className="field-inline d-flex flex-column align-items-start gap-1">
+                      <div className="field-inline d-flex flex-column align-items-center gap-1">
                         <div className="d-flex align-items-center gap-2">
                           <IconCalendar />
                           <span className="small">
@@ -1250,9 +1321,11 @@ export default function PlanDetailsPage() {
                           </span>
                         </div>
 
-                        <span className={`priority-badge ${priorityClass}`}>
-                          {t.priority}
-                        </span>
+                        {t.deadline && isOverdue(t.deadline) && (
+                          <span className="badge-overdue badge-overdue-inline">
+                            انتهى الموعد
+                          </span>
+                        )}
                       </div>
                     </div>
                   );
@@ -1310,20 +1383,29 @@ export default function PlanDetailsPage() {
                         ? "p-mid"
                         : "p-low";
 
+                    const isLate = t.deadline && isOverdue(t.deadline);
+                    const canUncomplete = canToggleStatus && !isLate;
+
                     return (
                       <div
                         key={t.id}
-                        className="task-row"
+                        className="task-row d-flex align-items-center gap-2"
                         style={{ opacity: 0.85 }}
                       >
+                        <span
+                          className={`priority-badge ${priorityClass} priority-center`}
+                        >
+                          {t.priority}
+                        </span>
+
                         <div className="flex-grow-1 d-flex align-items-center gap-2">
                           <input
                             type="checkbox"
                             className="form-check-input ms-1"
                             checked={true}
-                            disabled={!canToggleStatus}
+                            disabled={!canUncomplete}
                             onChange={
-                              canToggleStatus
+                              canUncomplete
                                 ? () => toggleComplete(t.id)
                                 : undefined
                             }
@@ -1334,7 +1416,7 @@ export default function PlanDetailsPage() {
                           </div>
                         </div>
 
-                        <div className="field-inline d-flex flex-column align-items-start gap-1">
+                        <div className="field-inline d-flex flex-column align-items-center gap-1">
                           <div className="d-flex align-items-center gap-2">
                             <IconCalendar />
                             <span className="small">
@@ -1342,11 +1424,11 @@ export default function PlanDetailsPage() {
                             </span>
                           </div>
 
-                          <span
-                            className={`priority-badge ${priorityClass}`}
-                          >
-                            {t.priority}
-                          </span>
+                          {t.deadline && isOverdue(t.deadline) && (
+                            <span className="badge-overdue badge-overdue-inline">
+                              انتهى الموعد
+                            </span>
+                          )}
                         </div>
                       </div>
                     );

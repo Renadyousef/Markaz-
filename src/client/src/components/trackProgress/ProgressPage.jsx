@@ -103,49 +103,45 @@ export default function ProgressPage() {
   const progressPercent = data?.progressPercent || 0;
   const improvement = data?.improvement ?? 0;
 
-// ترتيب أيام الأسبوع ثابت
-const weekDays = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+  // ترتيب أيام الأسبوع ثابت
+  const weekDays = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
 
-// نحدد بداية الأسبوع الحالي (الأحد)
-function getWeekStart(date) {
-  let d = new Date(date);
-  let jsDay = d.getDay(); // 0 = الأحد في ar-EG؟ لا… JS: الأحد=0 لكن عربي يختلف
+  // نحدد بداية الأسبوع الحالي (الأحد)
+  function getWeekStart(date) {
+    let d = new Date(date);
+    let jsDay = d.getDay(); // 0 الأحد في JS
 
-  // نصحّحها: نخلي الأحد = 0
-  jsDay = (jsDay === 0 ? 0 : jsDay);
+    jsDay = (jsDay === 0 ? 0 : jsDay);
+    d.setDate(d.getDate() - jsDay);
+    return d;
+  }
 
-  // ننقل التاريخ لبداية الأسبوع (الأحد)
-  d.setDate(d.getDate() - jsDay);
-  return d;
-}
+  // بداية الأسبوع
+  const weekStart = getWeekStart(new Date());
 
-// بداية الأسبوع
-const weekStart = getWeekStart(new Date());
+  // نبني أسبوع كامل 7 أيام من الأحد → السبت
+  const weekDates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    weekDates.push({
+      iso: d.toISOString().split("T")[0],
+      day: d.toLocaleDateString("ar-EG", { weekday: "long" }),
+      date: d.toLocaleDateString("ar-EG"),
+    });
+  }
 
-// نبني أسبوع كامل 7 أيام من الأحد → السبت
-const weekDates = [];
-for (let i = 0; i < 7; i++) {
-  const d = new Date(weekStart);
-  d.setDate(weekStart.getDate() + i);
-  weekDates.push({
-    iso: d.toISOString().split("T")[0],
-    day: d.toLocaleDateString("ar-EG", { weekday: "long" }),
-    date: d.toLocaleDateString("ar-EG"),
+  // جلب القيم من history
+  const weeklyData = weekDates.map((wd) => {
+    const match = history.find((h) => h.date === wd.iso);
+    return match ? match.percent : 0;
   });
-}
 
-// جلب القيم من history
-const weeklyData = weekDates.map((wd) => {
-  const match = history.find((h) => h.date === wd.iso);
-  return match ? match.percent : 0;
-});
-
-// اللابل النهائي: اليوم فوق + التاريخ تحت
-const weeklyLabels = weekDates.map((wd) => `${wd.day}\n(${wd.date})`);
-
+  // اللابل النهائي: اليوم فوق + التاريخ تحت
+  const weeklyLabels = weekDates.map((wd) => `${wd.day}\n(${wd.date})`);
 
   const chartData = {
-labels: weeklyLabels,
+    labels: weeklyLabels,
     datasets: [
       {
         label: "نسبة التقدم",
@@ -228,7 +224,7 @@ labels: weeklyLabels,
         .progress-wrap {
           display: flex;
           flex-direction: column;
-          gap: 28px;
+          gap: 24px;
           padding: 30px 20px 60px;
           max-width: 1200px;
           margin: 0 auto;
@@ -323,7 +319,7 @@ labels: weeklyLabels,
           background: #fff;
           border: 1px solid #e5e7eb;
           border-radius: 12px;
-          padding: 18px 20px;
+          padding: 16px 18px;
           box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
           transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
@@ -338,7 +334,7 @@ labels: weeklyLabels,
           display: flex;
           align-items: center;
           gap: 10px;
-          margin-bottom: 10px;
+          margin-bottom: 8px;
         }
 
         .card-title {
@@ -348,10 +344,10 @@ labels: weeklyLabels,
         }
 
         .kpi-value {
-          font-size: 2rem;
+          font-size: 1.8rem;
           font-weight: 800;
-          margin-bottom: 6px;
-          line-height: 1;
+          margin-bottom: 4px;
+          line-height: 1.1;
         }
 
         .kpi-sub {
@@ -365,12 +361,12 @@ labels: weeklyLabels,
           display: flex;
           gap: 8px;
           flex-wrap: wrap;
-          margin-top: 6px;
+          margin-top: 4px;
         }
         .modern-pill {
           background: #f3f4f6;
           border-radius: 6px;
-          padding: 4px 10px;
+          padding: 3px 9px;
           font-size: 0.8rem;
           font-weight: 600;
           color: #4b5563;
@@ -384,10 +380,16 @@ labels: weeklyLabels,
           font-size: 1.4rem;
           font-weight: 800;
           color: #1f2937;
-          margin-bottom: 10px;
+          margin-bottom: 8px;
           border-right: 4px solid ${PRIMARY_COLOR};
           padding-right: 8px;
           display: inline-block;
+        }
+
+        .chart-description {
+          font-size: 0.9rem;
+          color: #6b7280;
+          margin-bottom: 12px;
         }
 
         .chart-card {
@@ -398,59 +400,69 @@ labels: weeklyLabels,
           box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
           min-height: 320px;
         }
-          .big-progress-card {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  padding: 24px 28px;
-  box-shadow: 0 12px 26px rgba(0,0,0,0.06);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  transition: 0.25s ease;
-}
 
-.big-progress-top {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+        /* ===== نسبة التقدّم الإجمالية (فوق – نسخة مصغّرة) ===== */
+        .big-progress-card {
+          background: #fff;
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          padding: 14px 18px;
+          box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          transition: 0.25s ease;
+          max-width: 420px;
+        }
 
-.big-title {
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: #374151;
-}
+        .big-progress-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 14px 26px rgba(0,0,0,0.08);
+          border-color: ${PRIMARY_LIGHT};
+        }
 
-.big-progress-value {
-  font-size: 3rem;
-  font-weight: 900;
-  color: ${PRIMARY_COLOR};
-  margin-top: 4px;
-}
+        .big-progress-top {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
 
-.big-progress-bar {
-  width: 100%;
-  height: 12px;
-  background: #f3f4f6;
-  border-radius: 10px;
-  overflow: hidden;
-}
+        .big-title {
+          font-size: 0.95rem;
+          font-weight: 800;
+          color: #374151;
+        }
 
-.big-progress-fill {
-  height: 100%;
-  background: ${PRIMARY_COLOR};
-  border-radius: 10px;
-  transition: width 0.4s ease;
-}
+        .big-progress-value {
+          font-size: 2rem;
+          font-weight: 900;
+          color: ${PRIMARY_COLOR};
+          margin-top: 2px;
+          line-height: 1.1;
+        }
 
-.big-progress-date {
-  font-size: 0.9rem;
-  color: #6b7280;
-  margin-top: 4px;
-  font-weight: 600;
-}
-  
+        .big-progress-bar {
+          width: 100%;
+          height: 8px;
+          background: #f3f4f6;
+          border-radius: 999px;
+          overflow: hidden;
+          margin-top: 2px;
+        }
+
+        .big-progress-fill {
+          height: 100%;
+          background: ${PRIMARY_COLOR};
+          border-radius: 999px;
+          transition: width 0.4s ease;
+        }
+
+        .big-progress-date {
+          font-size: 0.8rem;
+          color: #6b7280;
+          margin-top: 2px;
+          font-weight: 500;
+        }
 
       `}</style>
 
@@ -472,71 +484,67 @@ labels: weeklyLabels,
           </Link>
         </div>
 
+        {/* نسبة التقدم الإجمالية (فوق) */}
+        <div className="big-progress-card">
+          <div className="big-progress-top">
+            <GaugeCircle size={20} color={PRIMARY_COLOR} />
+            <div className="big-title">نسبة التقدّم الإجمالية</div>
+          </div>
+
+          <div className="big-progress-value">{progressPercent}%</div>
+
+          <div className="big-progress-bar">
+            <div
+              className="big-progress-fill"
+              style={{ width: `${progressPercent}%` }}
+            ></div>
+          </div>
+
+          {data?.date && (
+            <div className="big-progress-date">
+              حتى تاريخ {formatArabicGregorianDateFromISO(data.date)}
+            </div>
+          )}
+        </div>
+
         {/* كروت المؤشرات */}
-<div className="big-progress-card">
-  <div className="big-progress-top">
-    <GaugeCircle size={26} color={PRIMARY_COLOR} />
-    <div className="big-title">نسبة التقدّم الإجمالية</div>
-  </div>
+        <div className="cards-row">
+          <KpiCard
+            icon={CheckCircle}
+            title="المهام المنجزة"
+            value={`${data.completedTasks} / ${data.totalTasks}`}
+            subText="عدد المهام التي أنهيتها من إجمالي مهامك."
+            pill1={`منجزة: ${data.completedTasks}`}
+            pill2={`متبقية: ${Math.max(
+              (data.totalTasks || 0) - (data.completedTasks || 0),
+              0
+            )}`}
+          />
 
-  <div className="big-progress-value">{progressPercent}%</div>
+          <KpiCard
+            icon={Clock}
+            title="الجلسات الدراسية"
+            value={data.sessionsToday}
+            subText="عدد جلسات التركيز التي سجّلها النظام اليوم."
+          />
 
-  <div className="big-progress-bar">
-    <div
-      className="big-progress-fill"
-      style={{ width: `${progressPercent}%` }}
-    ></div>
-  </div>
-
-  {/* <div className="big-progress-date">
-    {data?.date
-      ? `حتى تاريخ ${formatArabicGregorianDateFromISO(data.date)}`
-      : "جاري التحديث"}
-  </div> */}
-</div>
-
-{/* كروت المؤشرات */}
-<div className="cards-row">
-
-  <KpiCard
-    icon={CheckCircle}
-    title="المهام المنجزة"
-    value={`${data.completedTasks} / ${data.totalTasks}`}
-    subText="عدد المهام التي أنهيتها من إجمالي مهامك."
-    pill1={`منجزة: ${data.completedTasks}`}
-    pill2={`متبقية: ${Math.max(
-      (data.totalTasks || 0) - (data.completedTasks || 0),
-      0
-    )}`}
-  />
-
-  <KpiCard
-    icon={Clock}
-    title="الجلسات الدراسية"
-    value={data.sessionsToday}
-    subText="عدد جلسات التركيز التي سجّلها النظام اليوم."
-  />
-
-  <KpiCard
-    icon={TrendingUp}
-    title="تحسّن نتائج الاختبار"
-    value={improvement > 0 ? `+${improvement}` : improvement}
-    subText="هذا جزء من رحلة التطور. استمرّ!"
-    pillColor={improvement > 0 ? "#10b981" : "#ef4444"}
-  />
-
-</div>
-
+          <KpiCard
+            icon={TrendingUp}
+            title="تحسّن نتائج الاختبار"
+            value={improvement > 0 ? `+${improvement}` : improvement}
+            subText="هذا جزء من رحلة التطور. استمرّ!"
+            pillColor={improvement > 0 ? "#10b981" : "#ef4444"}
+          />
+        </div>
 
         {/* الرسم البياني */}
         <div className="weekly-section">
           <h4 className="weekly-title"> ملخص التقدم  </h4>
           <p className="chart-description">
-  تابع رحلتك الاسبوعية بكل وضوح! 
-  هذا الرسم البياني يوضّح مستوى تقدّمك خلال الأسبوع،
-  وكل ارتفاع صغير في الخط يعكس تحسّنًا في نشاطك وإنجازك يومًا بعد يوم ✨
-</p>
-
+            تابع رحلتك الاسبوعية بكل وضوح! 
+            هذا الرسم البياني يوضّح مستوى تقدّمك خلال الأسبوع،
+            وكل ارتفاع صغير في الخط يعكس تحسّنًا في نشاطك وإنجازك يومًا بعد يوم ✨
+          </p>
 
           {history.length > 0 ? (
             <div className="chart-card">

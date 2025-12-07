@@ -133,6 +133,7 @@ function QuizFlashcardsBox() {
 
 /* ========== 5) التقدم الأسبوعي ========== */
 /* ========== 5) التقدم الأسبوعي ========== */
+/* ========== 5) التقدم الأسبوعي - دوائر صغيرة مودرن مع تاريخ كامل ========== */
 function WeeklyProgress() {
   const [weekData, setWeekData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -147,6 +148,34 @@ function WeeklyProgress() {
     "السبت",
   ];
 
+  // تحويل الأرقام إلى أرقام عربية (٠١٢٣٤٥٦٧٨٩)
+  const toArabicDigits = (num) =>
+    String(num).replace(/[0-9]/g, (d) => "٠١٢٣٤٥٦٧٨٩"[d]);
+
+  // تنسيق التاريخ بالشكل: ٧ ديسمبر ٢٠٢٥
+  const formatArabicFullDate = (date) => {
+    const months = [
+      "يناير",
+      "فبراير",
+      "مارس",
+      "أبريل",
+      "مايو",
+      "يونيو",
+      "يوليو",
+      "أغسطس",
+      "سبتمبر",
+      "أكتوبر",
+      "نوفمبر",
+      "ديسمبر",
+    ];
+
+    const day = date.getDate();
+    const monthName = months[date.getMonth()];
+    const year = date.getFullYear();
+
+    return `${toArabicDigits(day)} ${monthName} ${toArabicDigits(year)}`;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -159,14 +188,22 @@ function WeeklyProgress() {
         );
 
         const data = res.data.data || [];
-
         const today = new Date();
-        const week = daysOfWeek.map((name, i) => {
+
+        const week = daysOfWeek.map((dayName, i) => {
           const day = new Date(today);
+          // نخلي آخر عنصر = اليوم الحالي، والباقي للأيام السابقة
           day.setDate(today.getDate() - (6 - i));
+
           const iso = day.toISOString().slice(0, 10);
           const match = data.find((d) => d.date === iso);
-          return { day: name, percent: match ? match.percent : 0 };
+          const percent = match ? match.percent : 0;
+
+          return {
+            dayName,
+            dateLabel: formatArabicFullDate(day), // ⭐ هنا الفورمات الجديد
+            percent,
+          };
         });
 
         setWeekData(week);
@@ -180,16 +217,18 @@ function WeeklyProgress() {
     fetchData();
   }, []);
 
-  // نفس المتغيرات موجودة (من غير ما نكسر اللوجيك),
-  // حتى لو ما استخدمناها في الـ UI الآن
-  const R = 20,
-    C = 2 * Math.PI * R;
-  const dash = (p) => C - (C * p) / 100;
+  // إعداد الدائرة المصغّرة
+  const R = 18; // نصف القطر (صغير)
+  const C = 2 * Math.PI * R;
+  const dash = (p) => {
+    const clamped = Math.max(0, Math.min(100, p || 0));
+    return C - (C * clamped) / 100;
+  };
 
   return (
     <section className="panel wpBars" id="section-progress" dir="rtl">
       <div className="wp2Header">
-        <h2 className="panel__title">تقدمّك الأسبوعي</h2>
+        <h2 className="panel__title">تقدّمك الأسبوعي</h2>
       </div>
 
       {loading ? (
@@ -199,28 +238,52 @@ function WeeklyProgress() {
       ) : (
         <div className="wpBarsGrid">
           {weekData.map((x, i) => {
-            const p = Math.round(x.percent);
+            const p = Math.round(x.percent || 0);
 
             return (
               <div
                 key={i}
-                className="wpBarCard"
+                className="wpDayCard"
                 role="group"
-                aria-label={`${x.day}: ${p}%`}
+                aria-label={`${x.dayName}: ${p}% في ${x.dateLabel}`}
               >
-                <div className="wpBarTop">
-                  <span className="wpBarDay">{x.day}</span>
-                  <span className="wpBarPercent">{p}%</span>
+                <div className="wpCircleWrap">
+                  <svg viewBox="0 0 50 50">
+                    {/* الخلفية */}
+                    <circle
+                      className="wpCircleBg"
+                      cx="25"
+                      cy="25"
+                      r={R}
+                    />
+                    {/* دائرة التقدّم البرتقالية */}
+                    <circle
+                      className="wpCircleFg"
+                      cx="25"
+                      cy="25"
+                      r={R}
+                      style={{
+                        strokeDasharray: C,
+                        strokeDashoffset: dash(p),
+                      }}
+                    />
+                    {/* النسبة في الوسط */}
+                    <text
+                      x="50%"
+                      y="50%"
+                      textAnchor="middle"
+                      dy="0.35em"
+                      className="wpCircleText"
+                    >
+                      {p}%
+                    </text>
+                  </svg>
                 </div>
 
-                <div className="wpBarTrack">
-                  <div
-                    className="wpBarFill"
-                    style={{ "--p": `${p}%` }}
-                  ></div>
+                <div className="wpDayMeta">
+                  <div className="wpDayName">{x.dayName}</div>
+                  <div className="wpDayDate">{x.dateLabel}</div>
                 </div>
-
-              
               </div>
             );
           })}

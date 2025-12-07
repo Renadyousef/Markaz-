@@ -15,6 +15,7 @@ export default function AuthPage({ setToken: parentSetToken, initialTab = "signi
   const [successMessage, setSuccessMessage] = useState("");
 
   // كومبوننت المودال + الستايل داخله
+  // كومبوننت المودال + الستايل داخله
   const AuthSuccessModal = ({ open, onClose, message }) => {
     if (!open) return null;
 
@@ -43,9 +44,11 @@ export default function AuthPage({ setToken: parentSetToken, initialTab = "signi
             animation: auth-pop 0.25s ease;
           }
 
+          /* النص داخل المودال يكون بولد مثل مودال الخطط */
           .auth-success-modal p {
             font-size: 17px;
             margin-bottom: 18px;
+            font-weight: 700; /* ⬅️ هنا صار بولد */
           }
 
           .auth-success-modal button {
@@ -72,6 +75,7 @@ export default function AuthPage({ setToken: parentSetToken, initialTab = "signi
 
         <div className="auth-success-backdrop">
           <div className="auth-success-modal" dir="rtl">
+            {/* نخلي الرسالة نفسها بولد */}
             <p>{message}</p>
             <button onClick={onClose}>حسناً</button>
           </div>
@@ -79,6 +83,7 @@ export default function AuthPage({ setToken: parentSetToken, initialTab = "signi
       </>
     );
   };
+
 
   // هذه الدالة تُرسل إلى SignIn و SignUp بدل setToken مباشرة
   const handleAuthToken = (token) => {
