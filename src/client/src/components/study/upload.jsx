@@ -500,6 +500,7 @@ form.append("customName", customName);
   const f = e.target.files?.[0];
   if (f) {
     setFile(f);              // نخزن الملف
+    setDisplayName(f.name); // ← الاسم الأساسي
     setNamePromptOpen(true); // نفتح البوب-أب
   }
   e.target.value = "";
@@ -774,7 +775,7 @@ setNamePromptOpen(true);
         {namePromptOpen && (
   <div className="practice-modal">
     <div className="practice-modal__body">
-      <h3>اسمّي ملف الـ PDF</h3>
+      <h3>سمّ ملف الـ PDF</h3>
 
       <input
         type="text"
@@ -783,7 +784,7 @@ setNamePromptOpen(true);
           setPdfName(e.target.value);
           setNameError(""); // حذف الخطأ أثناء الكتابة
         }}
-        placeholder="اكتبي اسم الملف"
+        placeholder="اكتب اسم الملف"
         style={{
           width: "100%",
           padding: "12px",
