@@ -782,38 +782,44 @@ if (!quiz) {
           <TTSControls key={currentIndex} text={ttsText} />
         </div>
 
-        {/* Options */}
-        <div style={{ display: "grid", gap: 12, marginBottom: 20 }}>
-          {(isMCQ ? options : ["صح", "خطأ"]).map((opt, idx) => {
-            let borderColor = selected === opt ? "#f59e0b" : "#d1d5db";
-            if (showAnswer) {
-              const correctAnswer = quiz[currentIndex]?.answer;
-              if (opt === correctAnswer) borderColor = "green";
-              else if (opt === selected && selected !== correctAnswer) borderColor = "red";
-            }
-            return (
-              <button
-                key={idx}
-                onClick={() => !showAnswer && setSelected(opt)}
-                style={{
-                  padding: "10px 16px",
-                  borderRadius: 12,
-                  border: `2px solid ${borderColor}`,
-                  background: selected === opt ? "#fff7ed" : "#fff",
-                  cursor: showAnswer ? "not-allowed" : "pointer",
-                  fontWeight: 600,
-                  transition: "0.2s",
-                  textAlign: "center",
-                  fontSize: `${optionFontSize}px`,
-                  lineHeight: a11y.lineHeight,
-                  letterSpacing: `${a11y.letterSpacing}px`,
-                }}
-              >
-                {opt}
-              </button>
-            );
-          })}
-        </div>
+       {/* Options */}
+<div style={{ display: "grid", gap: 12, marginBottom: 20 }}>
+  {(isMCQ ? options : ["صح", "خطأ"]).map((opt, idx) => {
+    const isTF = !isMCQ;
+    // Convert string to boolean for TF comparison
+    const optValue = isTF ? (opt === "صح") : opt;
+
+    // Determine border color
+    let borderColor = selected === optValue ? "#f59e0b" : "#d1d5db";
+    if (showAnswer) {
+      const correctAnswer = quiz[currentIndex]?.answer;
+      if (optValue === correctAnswer) borderColor = "green";
+      else if (selected === optValue && selected !== correctAnswer) borderColor = "red";
+    }
+
+    return (
+      <button
+        key={idx}
+        onClick={() => !showAnswer && setSelected(optValue)}
+        style={{
+          padding: "10px 16px",
+          borderRadius: 12,
+          border: `2px solid ${borderColor}`,
+          background: selected === optValue ? "#fff7ed" : "#fff",
+          cursor: showAnswer ? "not-allowed" : "pointer",
+          fontWeight: 600,
+          transition: "0.2s",
+          textAlign: "center",
+          fontSize: `${optionFontSize}px`,
+          lineHeight: a11y.lineHeight,
+          letterSpacing: `${a11y.letterSpacing}px`,
+        }}
+      >
+        {opt}
+      </button>
+    );
+  })}
+</div>
 
         {/* Controls */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
