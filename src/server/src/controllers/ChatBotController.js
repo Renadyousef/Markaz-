@@ -17,7 +17,7 @@ const ChatBot = async (req, res) => {
       if (docSnap.exists) {
         const pdfText = docSnap.data().text;
 
-        // --- Split PDF into chunks to avoid exceeding token limit ---
+        //  Split PDF into chunks to avoid exceeding token limit ---
         const MAX_CHARS = 8000;
         const paragraphs = pdfText.split("\n\n");
         let chunks = [];
@@ -33,7 +33,7 @@ const ChatBot = async (req, res) => {
         }
         if (currentChunk) chunks.push(currentChunk);
 
-        // --- Send all chunks in parallel and collect responses ---
+        //  Send all chunks in parallel and collect responses ---
         const responses = await Promise.all(
           chunks.map((chunk) =>
             client.chat.completions.create({

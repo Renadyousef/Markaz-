@@ -598,8 +598,9 @@ if (!quiz) {
                 fontSize: `${Math.max(14, a11y.baseSize - 1)}px`,
                 minWidth: 130,
               }}
-            >
-              إعادة الاختبار
+           title="سيتم مسح تقدمك الحالي، ويمكنك اختيار المستوى مرة أخرى"
+           >
+         إعادة المحاولة
             </button>
             <button
               onClick={exitQuiz}
