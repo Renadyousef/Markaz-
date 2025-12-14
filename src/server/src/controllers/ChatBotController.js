@@ -1,7 +1,7 @@
 const { pdf } = require("../config/firebase-config"); // Firestore reference
 const OpenAI = require("openai");
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const client = new OpenAI({ apiKey: process.env.Chat_Bot_Key });
 
 const ChatBot = async (req, res) => {
   try {
