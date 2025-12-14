@@ -22,7 +22,7 @@ const generateQuiz = async (req, res) => {
 //after testing we find that i forgot to map levle to english
     // Save quiz to Firebase
     const docRef = await Quizzes.add({
-      questions: quizData.questions,
+
       student_Id: studentId,
       pdfId: pdfId,
        level: englishLevel,
