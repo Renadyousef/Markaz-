@@ -127,6 +127,7 @@ export default function TTSControls({ text }) {
     >
       {/* ▶️ زر التشغيل / الإيقاف – صوت البنت فقط */}
       <button
+       title="قراءة السؤال صوتيًا"
         style={{
           padding: "8px 16px",
           background: "#f59e0b",
